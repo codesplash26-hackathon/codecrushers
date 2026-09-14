@@ -1,0 +1,25 @@
+[
+  {
+    "routeCode": "BUS-KDY-CMB-1",
+    "routeName": "Kandy to Colombo Fort Bus",
+    "mode": "BUS",
+    "provider": "SLTB / Private Bus Co.",
+    "stops": [
+      { "stopCode": "KDY-CENTRAL", "sequenceOrder": 1, "travelTimeFromPrev": 0 },
+      { "stopCode": "KRN-BUS", "sequenceOrder": 2, "travelTimeFromPrev": 60 },
+      { "stopCode": "CMB-FORT-BUS", "sequenceOrder": 3, "travelTimeFromPrev": 120 }
+    ],
+    "reliabilityScore": 0.92
+  },
+  {
+    "routeCode": "TRN-CMB-GL-1",
+    "routeName": "Colombo Fort to Galle Express Train",
+    "mode": "TRAIN",
+    "provider": "Sri Lanka Railways",
+    "stops": [
+      { "stopCode": "CMB-FORT-RLY", "sequenceOrder": 1, "travelTimeFromPrev": 0 },
+      { "stopCode": "GL-RLY", "sequenceOrder": 2, "travelTimeFromPrev": 135 }
+    ],
+    "reliabilityScore": 0.96
+  }
+]

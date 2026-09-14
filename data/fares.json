@@ -1,0 +1,14 @@
+[
+  {
+    "fromStop": "KDY-CENTRAL",
+    "toStop": "CMB-FORT-BUS",
+    "mode": "BUS",
+    "costLKR": 380
+  },
+  {
+    "fromStop": "CMB-FORT-RLY",
+    "toStop": "GL-RLY",
+    "mode": "TRAIN",
+    "costLKR": 240
+  }
+]

@@ -1,0 +1,16 @@
+[
+  {
+    "routeCode": "BUS-KDY-CMB-1",
+    "tripId": "TRIP-B101",
+    "departureTime": "06:30",
+    "arrivalTime": "09:30",
+    "operatingDays": ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
+  },
+  {
+    "routeCode": "TRN-CMB-GL-1",
+    "tripId": "TRIP-T202",
+    "departureTime": "10:15",
+    "arrivalTime": "12:30",
+    "operatingDays": ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
+  }
+]

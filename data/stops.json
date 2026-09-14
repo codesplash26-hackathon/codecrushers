@@ -1,0 +1,23 @@
+[
+  {
+    "code": "KDY-CENTRAL",
+    "name": "Kandy Goods Shed Bus Stand",
+    "city": "Kandy",
+    "coordinates": [80.6337, 7.2906],
+    "availableModes": ["BUS", "TAXI", "THREE_WHEELER"]
+  },
+  {
+    "code": "CMB-FORT-BUS",
+    "name": "Colombo Fort Central Bus Stand",
+    "city": "Colombo",
+    "coordinates": [79.8528, 6.9344],
+    "availableModes": ["BUS", "TAXI", "THREE_WHEELER"]
+  },
+  {
+    "code": "CMB-FORT-RLY",
+    "name": "Colombo Fort Railway Station",
+    "city": "Colombo",
+    "coordinates": [79.8519, 6.9338],
+    "availableModes": ["TRAIN", "TAXI", "WALK"]
+  }
+]

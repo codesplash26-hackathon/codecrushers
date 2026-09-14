@@ -1,0 +1,15 @@
+export const DISRUPTION_CATEGORIES = [
+  'DELAY',
+  'CANCELLATION',
+  'ROAD_CLOSURE',
+  'TRAFFIC',
+  'ROUTE_INTERRUPTION'
+];
+
+export const TRANSPORT_MODES = [
+  'BUS',
+  'TRAIN',
+  'TAXI',
+  'THREE_WHEELER',
+  'WALK'
+];

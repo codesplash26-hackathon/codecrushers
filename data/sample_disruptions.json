@@ -1,0 +1,10 @@
+[
+  {
+    "title": "Train #T202 Coastal Line Signal Failure Delay",
+    "disruptionType": "DELAY",
+    "affectedRouteCode": "TRN-CMB-GL-1",
+    "delayMinutes": 35,
+    "description": "Signal error at Panadura station causing 35-minute delay on Southern Coastal line.",
+    "status": "ACTIVE"
+  }
+]
