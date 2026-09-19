@@ -1,2 +1,0 @@
-PORT=5000
-MONGO_URI= mongodb://bestroute005_db_user:c8KyNplW4yU6dg52@ac-byvlmkb-shard-00-00.kfztjty.mongodb.net:27017,ac-byvlmkb-shard-00-01.kfztjty.mongodb.net:27017,ac-byvlmkb-shard-00-02.kfztjty.mongodb.net:27017/?ssl=true&replicaSet=atlas-118t44-shard-0&authSource=admin&appName=BestRouteCluster
