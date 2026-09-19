@@ -1,56 +1,194 @@
-# Welcome to your Expo app 👋
+# BestRoute – Mobile Application
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+The **BestRoute Mobile Application** is the passenger-facing component of the BestRoute intelligent multimodal public transportation optimization platform.
 
-## Get started
+It helps passengers plan, compare, and monitor complete journeys across multiple transportation modes such as **buses, trains, taxis, three-wheelers, and walking**.
 
-1. Install dependencies
+Instead of planning each part of a journey separately, the application provides a unified view of the complete journey and helps passengers select routes based on their preferences.
 
-   ```bash
-   npm install
-   ```
+## Features
 
-2. Start the app
+* **User Authentication**
 
-   ```bash
-   npx expo start
-   ```
+  * Passenger registration and login
+  * Secure authentication using JWT
 
-In the output, you'll find options to open the app in a
+* **Journey Planning**
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+  * Enter origin and destination
+  * Select departure or arrival time
+  * Search for available multimodal journeys
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+* **Personalized Route Optimization**
 
-## Get a fresh project
+  * Fastest route
+  * Cheapest route
+  * Minimum walking
+  * Minimum transfers
+  * Most reliable route
 
-When you're ready, run:
+* **Route Comparison**
 
-```bash
-npm run reset-project
+  * Compare multiple journey options
+  * View total travel time
+  * View estimated cost
+  * View waiting time
+  * View number of transfers
+  * View walking distance
+  * View connection risk
+
+* **Connection-Risk Detection**
+
+  * Identifies potentially difficult transfers
+  * Helps passengers avoid connections with insufficient transfer time
+
+* **Journey Monitoring**
+
+  * Monitor an active journey
+  * Track journey progress
+  * Receive relevant journey updates
+
+* **Disruption Notifications**
+
+  * Delay notifications
+  * Cancellation alerts
+  * Connection-risk alerts
+  * Journey change notifications
+
+* **Dynamic Re-routing**
+
+  * Detects disruptions affecting the selected journey
+  * Generates alternative journey options
+  * Provides updated route recommendations
+
+* **Favourite Journeys**
+
+  * Save frequently used journeys for easier access
+
+## Technology Stack
+
+| Technology                 | Purpose                          |
+| -------------------------- | -------------------------------- |
+| React Native               | Mobile application development   |
+| Expo                       | Development and testing          |
+| NativeWind                 | Styling and responsive UI        |
+| Node.js                    | Backend runtime                  |
+| Express.js                 | REST API                         |
+| MongoDB                    | Data storage                     |
+| JWT                        | Authentication                   |
+| Mapping / Geolocation APIs | Location and route visualization |
+| Git & GitHub               | Version control                  |
+| Figma                      | UI/UX design                     |
+
+The project proposal specifies React Native for the passenger mobile application, Node.js and Express.js for backend services, MongoDB for data storage, mapping/geolocation services, JWT authentication, and Git/GitHub for version control.
+
+## Application Flow
+
+```text
+Login / Registration
+        ↓
+Enter Origin & Destination
+        ↓
+Select Journey Preferences
+        ↓
+Search Available Journeys
+        ↓
+Generate Multimodal Routes
+        ↓
+Evaluate & Rank Routes
+        ↓
+Compare Routes
+        ↓
+Select Journey
+        ↓
+Monitor Journey
+        ↓
+Receive Disruption Alert
+        ↓
+Re-optimize Journey if Required
+        ↓
+Complete Journey
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+This follows the passenger flow defined in the project proposal.
 
-### Other setup steps
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Getting Started
 
-## Learn more
+### 1. Clone the Repository
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+git clone <repository-url>
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### 2. Navigate to the Mobile App
 
-## Join the community
+```bash
+cd mobile-app
+```
 
-Join our community of developers creating universal apps.
+### 3. Install Dependencies
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npm install
+```
+
+### 4. Start the Expo Development Server
+
+```bash
+npx expo start
+```
+
+### 5. Run the Application
+
+You can run the application using:
+
+* **Expo Go** on a physical Android/iOS device
+* **Android Emulator**
+* **iOS Simulator** (macOS)
+
+## Backend Connection
+
+The mobile application communicates with the BestRoute backend through REST APIs.
+
+The general communication flow is:
+
+```text
+Mobile Application
+        ↓
+Backend API
+        ↓
+Journey Planning / Optimization Services
+        ↓
+Transportation Data
+        ↓
+Route Recommendation
+        ↓
+Mobile Application
+```
+
+The proposed architecture follows this passenger-application → backend API → optimization engine → transportation data/external services → route recommendation flow.
+
+## Main Passenger Functions
+
+| Function           | Description                                             |
+| ------------------ | ------------------------------------------------------- |
+| Authentication     | Register and securely access the application            |
+| Journey Search     | Search for multimodal journeys                          |
+| Route Optimization | Rank journeys according to passenger preferences        |
+| Route Comparison   | Compare journey time, cost, transfers, walking and risk |
+| Journey Selection  | Select a suitable recommended journey                   |
+| Journey Monitoring | Monitor an active journey                               |
+| Disruption Alerts  | Receive notifications about journey disruptions         |
+| Dynamic Re-routing | Receive alternative routes when disruptions occur       |
+| Favourite Journeys | Save frequently used journeys                           |
+
+## Development Status
+
+🚧 **Currently in Development**
+
+The mobile application is being developed as part of the **CodeCrushers – BestRoute** project for **CodeSplash '26 Theme 05: Intelligent Public Transportation Optimization System**.
+
+
+
+
