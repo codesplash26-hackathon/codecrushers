@@ -28,9 +28,16 @@ const userSchema = new mongoose.Schema(
     },
 
     preferences: {
-      type: String,
-      default: "fastest",
-    },
+    type: String,
+    enum: [
+    "fastest",
+    "cheapest",
+    "minimum_walking",
+    "minimum_transfers",
+    "most_reliable"
+    ],
+    default: "fastest"
+    }
   },
   {
     timestamps: true,
