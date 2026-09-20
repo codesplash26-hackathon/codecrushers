@@ -5,6 +5,10 @@ require("dotenv").config();
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
+const transportServiceRoutes = require("./routes/transportServiceRoutes");
+const stopRoutes = require("./routes/stopRoutes");
+const routeRoutes = require("./routes/routeRoutes");
+const scheduleRoutes = require("./routes/scheduleRoutes");
 
 const app = express();
 
@@ -26,10 +30,13 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Authentication routes
+//  routes
 app.use("/api/auth", authRoutes);
-// User routes
 app.use("/api/users", userRoutes);
+app.use("/api/services", transportServiceRoutes);
+app.use("/api/stops", stopRoutes);
+app.use("/api/routes", routeRoutes);
+app.use("/api/schedules", scheduleRoutes);
 
 const PORT = process.env.PORT || 5000;
 
