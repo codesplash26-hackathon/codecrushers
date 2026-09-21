@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Journey = require("../models/Journey");
 
 const {
   generateCandidateJourneys,
@@ -8,8 +9,12 @@ const {
   rankCandidates,
 } = require("../services/routeScoringService");
 
+const {
+  rerouteJourney,
+} = require("../services/reroutingService");
+
 // Search, generate and rank candidate journeys
-const searchJourneyController = async (req, res) => {
+const searchJourneyController = async (req, res, next) => {
   try {
     const { origin, destination, preference } = req.body;
 
@@ -78,6 +83,7 @@ const searchJourneyController = async (req, res) => {
       },
     });
   } catch (error) {
+    if (next) return next(error);
     console.error("Journey search error:", error);
 
     res.status(500).json({
@@ -88,6 +94,79 @@ const searchJourneyController = async (req, res) => {
   }
 };
 
+/**
+ * Save an active journey for a passenger
+ * POST /api/journeys/active
+ */
+const createActiveJourneyController = async (req, res, next) => {
+  try {
+    const { origin, destination, legs, departureTime, arrivalTime, totalTravelTime, totalFare, transfers } = req.body;
+
+    if (!origin || !destination) {
+      return res.status(400).json({
+        success: false,
+        message: "Origin and destination are required",
+      });
+    }
+
+    const journey = await Journey.create({
+      user: req.user._id,
+      origin,
+      destination,
+      departureTime,
+      arrivalTime,
+      totalTravelTime,
+      totalFare,
+      transfers: transfers || (legs ? Math.max(0, legs.length - 1) : 0),
+      legs: legs || [],
+      status: "active",
+    });
+
+    const populatedJourney = await Journey.findById(journey._id)
+      .populate("legs.service")
+      .populate("legs.route")
+      .populate("legs.departureStop")
+      .populate("legs.arrivalStop");
+
+    return res.status(201).json({
+      success: true,
+      message: "Active journey created successfully",
+      data: populatedJourney,
+    });
+  } catch (error) {
+    if (next) return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create active journey",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Manually trigger re-routing for a journey
+ * POST /api/journeys/:id/reroute
+ */
+const rerouteJourneyController = async (req, res, next) => {
+  try {
+    const result = await rerouteJourney(req.params.id);
+    return res.status(200).json({
+      success: true,
+      message: "Journey rerouting check completed",
+      data: result,
+    });
+  } catch (error) {
+    if (next) return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to reroute journey",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   searchJourneyController,
+  createActiveJourneyController,
+  rerouteJourneyController,
 };
