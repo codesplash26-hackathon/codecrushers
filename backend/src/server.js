@@ -10,6 +10,10 @@ const stopRoutes = require("./routes/stopRoutes");
 const routeRoutes = require("./routes/routeRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
 const journeyRoutes = require("./routes/journeyRoutes");
+const connectionRiskRoutes = require("./routes/connectionRiskRoutes");
+const disruptionRoutes = require("./routes/disruptionRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
@@ -31,7 +35,7 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-//  routes
+// Register API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/services", transportServiceRoutes);
@@ -39,6 +43,12 @@ app.use("/api/stops", stopRoutes);
 app.use("/api/routes", routeRoutes);
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/journeys", journeyRoutes);
+app.use("/api/connection-risk", connectionRiskRoutes);
+app.use("/api/disruptions", disruptionRoutes);
+app.use("/api/notifications", notificationRoutes);
+
+// Centralized error handler
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
