@@ -129,6 +129,7 @@ const generateCandidateJourneys = async (origin, destination) => {
             walkingToOriginStop: originStopData.distance,
             walkingFromDestinationStop: destinationStopData.distance,
             transfers: 0,
+            modes: [route.service ? route.service.type : null].filter(Boolean),
           });
         }
       }
@@ -148,6 +149,9 @@ const generateCandidateJourneys = async (origin, destination) => {
     ...candidates,
     ...transferCandidates,
   ];
+
+  // Sort all candidates by travel time
+  allCandidates.sort((a, b) => a.travelTime - b.travelTime);
 
   return {
     origin,
@@ -336,6 +340,11 @@ const generateOneTransferJourneys = async (
             walkingFromDestinationStop:
               destinationStopData.distance,
 
+            modes: [
+              firstRoute.service ? firstRoute.service.type : null,
+              secondRoute.service ? secondRoute.service.type : null,
+            ].filter(Boolean),
+
             legs: [
               {
                 service: firstRoute.service,
@@ -364,7 +373,25 @@ const generateOneTransferJourneys = async (
     }
   }
 
-  return candidates;
+  // Remove duplicate candidates
+  const uniqueCandidates = candidates.filter(
+    (candidate, index, self) =>
+      index ===
+      self.findIndex(
+        (item) =>
+          item.legs[0].route._id.toString() ===
+            candidate.legs[0].route._id.toString() &&
+          item.legs[1].route._id.toString() ===
+            candidate.legs[1].route._id.toString() &&
+          item.departureTime === candidate.departureTime &&
+          item.arrivalTime === candidate.arrivalTime
+      )
+  );
+
+  // Sort by total travel time
+  uniqueCandidates.sort((a, b) => a.travelTime - b.travelTime);
+
+  return uniqueCandidates;
 };
 
 module.exports = {
