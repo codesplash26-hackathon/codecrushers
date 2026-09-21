@@ -1,6 +1,8 @@
-const { searchJourney } = require("../services/journeyService");
+const {
+  generateCandidateJourneys,
+} = require("../services/journeyService");
 
-// Search for possible journeys
+// Search and generate candidate journeys
 const searchJourneyController = async (req, res) => {
   try {
     const { origin, destination } = req.body;
@@ -12,6 +14,7 @@ const searchJourneyController = async (req, res) => {
       origin.longitude === undefined
     ) {
       return res.status(400).json({
+        success: false,
         message: "Origin latitude and longitude are required",
       });
     }
@@ -23,21 +26,27 @@ const searchJourneyController = async (req, res) => {
       destination.longitude === undefined
     ) {
       return res.status(400).json({
+        success: false,
         message: "Destination latitude and longitude are required",
       });
     }
 
-    const journeyData = await searchJourney(origin, destination);
+    const journeyData = await generateCandidateJourneys(
+      origin,
+      destination
+    );
 
     res.status(200).json({
       success: true,
-      message: "Journey search completed successfully",
+      message: "Candidate journeys generated successfully",
       data: journeyData,
     });
   } catch (error) {
+    console.error("Journey search error:", error);
+
     res.status(500).json({
       success: false,
-      message: "Failed to search for journey",
+      message: "Failed to generate candidate journeys",
       error: error.message,
     });
   }
