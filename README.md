@@ -224,47 +224,21 @@ BestRoute/
 │   ├── package.json               # Backend dependencies & npm scripts
 │   └── server.js                  # Main Express Server Entrypoint
 │
-├── mobile/                        # React Native Passenger Mobile Application (Expo)
+├── mobile-app/                    # React Native Passenger Mobile Application (Expo)
 │   ├── src/
 │   │   ├── components/            # Reusable UI Components
-│   │   │   ├── DisruptionAlertModal.jsx # Real-time disruption alert modal
-│   │   │   ├── JourneyMap.jsx           # Interactive route map component
-│   │   │   ├── PreferenceSelector.jsx   # Passenger preference filter selector
-│   │   │   ├── RouteCard.jsx            # Journey option comparison card
-│   │   │   ├── SearchBar.jsx            # Location search bar
-│   │   │   ├── TransferRiskBadge.jsx    # Risk indicator badge
-│   │   │   └── TransportBadge.jsx       # Mode icon badge (Bus/Train/Taxi/Walk)
 │   │   ├── constants/             # Application Theme & System Constants
-│   │   │   ├── config.js
-│   │   │   └── theme.js
-│   │   ├── context/               # React Context Providers
-│   │   │   ├── AuthContext.js
-│   │   │   ├── JourneyContext.js
-│   │   │   └── LocationContext.js
-│   │   ├── navigation/            # React Navigation Setup
-│   │   │   ├── AppNavigator.jsx         # Main Stack Navigator
-│   │   │   ├── AuthNavigator.jsx        # Login / Register Stack Navigator
-│   │   │   └── TabNavigator.jsx         # Bottom Tab Navigation
+│   │   │   └── theme.ts
+│   │   ├── navigations/           # React Navigation Setup
+│   │   │   └── AppNavigator.tsx   # Main Stack Navigator
 │   │   ├── screens/               # Mobile Screens & Pages
-│   │   │   ├── DisruptionAlertScreen.jsx # Re-routing recommendation screen
-│   │   │   ├── HomeScreen.jsx           # Main passenger landing screen
-│   │   │   ├── JourneyDetailsScreen.jsx  # Detailed itinerary & leg breakdown
-│   │   │   ├── JourneySearchScreen.jsx   # Origin/Destination search screen
-│   │   │   ├── LiveTrackingScreen.jsx    # Live active journey tracking screen
-│   │   │   ├── LoginScreen.jsx          # Authentication screen
-│   │   │   ├── PreferencesScreen.jsx    # Passenger preference settings screen
-│   │   │   ├── RegisterScreen.jsx       # Account registration screen
-│   │   │   ├── RouteComparisonScreen.jsx # Ranked route alternatives screen
-│   │   │   └── SavedJourneysScreen.jsx  # Favorite routes screen
-│   │   ├── services/              # API & Location Services
-│   │   │   ├── api.js                   # Axios API instance
-│   │   │   ├── authService.js           # Authentication API service
-│   │   │   ├── journeyService.js        # Journey planning API service
-│   │   │   ├── locationService.js       # Device GPS service
-│   │   │   └── notificationService.js   # Expo Push Notification service
-│   │   └── utils/                 # Mobile Helper Utilities
-│   │       └── formatters.js            # Time & Currency formatters
-│   ├── App.js                     # Mobile App Main Root Component
+│   │   │   ├── SplashScreen.tsx   # Animated Splash screen
+│   │   │   ├── OnboardingScreen.tsx # 3-step Multimodal Onboarding flow
+│   │   │   ├── loginscreen.tsx    # Authentication screen
+│   │   │   └── HomeScreen.tsx     # Main passenger landing screen
+│   │   └── services/              # API & Location Services
+│   │       └── api.js             # Axios API instance
+│   ├── App.tsx                    # Mobile App Main Root Component
 │   ├── app.json                   # Expo Application Configuration
 │   └── package.json               # Mobile dependencies & Expo scripts
 │
@@ -385,7 +359,7 @@ The backend API will run on the configured local port.
 Open a new terminal and navigate to:
 
 ```bash
-cd mobile
+cd mobile-app
 ```
 
 Install dependencies:

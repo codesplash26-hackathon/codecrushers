@@ -43,7 +43,7 @@ export default function SplashScreen({ navigation }: Props) {
 
   const navigateNext = () => {
     if (navigation) {
-      navigation.replace("Login");
+      navigation.replace("Onboarding");
     }
   };
 
