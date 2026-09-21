@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "BestRoute",
+    "slug": "bestroute",
+    "scheme": "bestroute",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "primaryColor": "#1664D9",
+    "splash": {
+      "image": "./assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B3C95"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.codecrushers.bestroute"
+    },
+    "android": {
+      "package": "com.codecrushers.bestroute",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B3C95",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
