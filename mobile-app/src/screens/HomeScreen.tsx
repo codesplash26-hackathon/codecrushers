@@ -164,6 +164,17 @@ export default function HomeScreen({ navigation }: Props) {
   const handleApplyCustomize = () => {
     setSelectedOptimization(primaryPreference);
     setIsCustomizeVisible(false);
+    navigation.navigate("RouteResults", {
+      from: fromLocation,
+      to: toLocation || "Colombo Fort",
+    });
+  };
+
+  const handleFindRoutes = () => {
+    navigation.navigate("RouteResults", {
+      from: fromLocation,
+      to: toLocation || "Colombo Fort",
+    });
   };
 
   // Filtered lists based on search input
@@ -393,6 +404,7 @@ export default function HomeScreen({ navigation }: Props) {
               <TouchableOpacity
                 style={styles.confirmButton}
                 activeOpacity={0.85}
+                onPress={handleFindRoutes}
               >
                 <Text style={styles.confirmButtonText}>Confirm</Text>
               </TouchableOpacity>
@@ -494,6 +506,7 @@ export default function HomeScreen({ navigation }: Props) {
           <TouchableOpacity
             style={styles.findRoutesButton}
             activeOpacity={0.85}
+            onPress={handleFindRoutes}
           >
             <Text style={styles.findRoutesText}>Find Best Routes ➔</Text>
           </TouchableOpacity>
