@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -6,11 +6,13 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  Animated,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../navigations/AppNavigator";
+import RealisticRouteMap from "../components/RealisticRouteMap";
 
 type RouteResultsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -27,277 +29,439 @@ interface Props {
   route: RouteResultsScreenRouteProp;
 }
 
+const CHECKLIST_STEPS = [
+  { id: 1, label: "Checking nearby services" },
+  { id: 2, label: "Comparing schedules" },
+  { id: 3, label: "Evaluating connections" },
+  { id: 4, label: "Calculating total cost" },
+  { id: 5, label: "Ranking routes" },
+];
+
 export default function RouteResultsScreen({ navigation, route }: Props) {
   const fromCity = route.params?.from || "Kandy";
   const toCity = route.params?.to || "Colombo Fort";
+  const skipLoading = route.params?.skipLoading ?? false;
 
   // Step 1: Loading / Optimizing state
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!skipLoading);
   const [loadingStep, setLoadingStep] = useState(1);
-  const [progressWidth, setProgressWidth] = useState(25);
+  const [evalCombinations, setEvalCombinations] = useState(24);
+  const [restartKey, setRestartKey] = useState(0);
+
   const [activeFilter, setActiveFilter] = useState<
     "recommended" | "fastest" | "cheapest" | "reliable"
   >("recommended");
 
+  // Smooth animated progress bar (0 to 1)
+  const progressAnim = useRef(new Animated.Value(0.14)).current;
+
+  // Pulsing animation for the active step bullseye
+  const pulseTargetAnim = useRef(new Animated.Value(1)).current;
+
+  // Animated particle moving along the cyan route curve on the map
+  const mapBeamAnim = useRef(new Animated.Value(0)).current;
+
+  // Radar expanding pulse on map stop dots
+  const radarStopAnim = useRef(new Animated.Value(1)).current;
+
+  // Fade animation for transition
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+
   useEffect(() => {
-    // Animate the checking steps
-    const timer1 = setTimeout(() => {
-      setLoadingStep(2);
-      setProgressWidth(50);
-    }, 600);
+    // 1. Continuous smooth looping beam along the cyan route curve
+    const beamLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(mapBeamAnim, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: false,
+        }),
+        Animated.timing(mapBeamAnim, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: false,
+        }),
+      ])
+    );
+    beamLoop.start();
 
-    const timer2 = setTimeout(() => {
-      setLoadingStep(3);
-      setProgressWidth(75);
-    }, 1300);
+    // 2. Continuous smooth breathing pulse for active target bullseye
+    const pulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseTargetAnim, {
+          toValue: 1.25,
+          duration: 650,
+          useNativeDriver: false,
+        }),
+        Animated.timing(pulseTargetAnim, {
+          toValue: 1,
+          duration: 650,
+          useNativeDriver: false,
+        }),
+      ])
+    );
+    pulseLoop.start();
 
-    const timer3 = setTimeout(() => {
-      setLoadingStep(4);
-      setProgressWidth(90);
-    }, 2000);
+    // 3. Expanding radar rings around map stops
+    const radarLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(radarStopAnim, {
+          toValue: 2.2,
+          duration: 1600,
+          useNativeDriver: false,
+        }),
+        Animated.timing(radarStopAnim, {
+          toValue: 1,
+          duration: 0,
+          useNativeDriver: false,
+        }),
+      ])
+    );
+    radarLoop.start();
 
-    const timer4 = setTimeout(() => {
-      setLoadingStep(5);
-      setProgressWidth(100);
-    }, 2600);
-
-    // Transition to results
-    const finalTimer = setTimeout(() => {
+    if (skipLoading) {
       setIsLoading(false);
-    }, 3200);
+      return;
+    }
+
+    // Smooth continuous progress animation from ~14% to 100%
+    Animated.timing(progressAnim, {
+      toValue: 1,
+      duration: 4400,
+      useNativeDriver: false,
+    }).start();
+
+    // Natural step progression
+    const timerStep2 = setTimeout(() => {
+      setLoadingStep(2);
+      setEvalCombinations(54);
+    }, 850);
+
+    const timerStep3 = setTimeout(() => {
+      setLoadingStep(3);
+      setEvalCombinations(86);
+    }, 1700);
+
+    const timerStep4 = setTimeout(() => {
+      setLoadingStep(4);
+      setEvalCombinations(108);
+    }, 2550);
+
+    const timerStep5 = setTimeout(() => {
+      setLoadingStep(5);
+      setEvalCombinations(116);
+    }, 3450);
+
+    const timerComplete = setTimeout(() => {
+      setLoadingStep(6); // All completed
+    }, 4150);
+
+    const finishTimer = setTimeout(() => {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 380,
+        useNativeDriver: false,
+      }).start(() => {
+        setIsLoading(false);
+      });
+    }, 4750);
 
     return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-      clearTimeout(timer4);
-      clearTimeout(finalTimer);
+      beamLoop.stop();
+      pulseLoop.stop();
+      radarLoop.stop();
+      clearTimeout(timerStep2);
+      clearTimeout(timerStep3);
+      clearTimeout(timerStep4);
+      clearTimeout(timerStep5);
+      clearTimeout(timerComplete);
+      clearTimeout(finishTimer);
     };
-  }, []);
+  }, [skipLoading, restartKey]);
 
-  // If in loading/optimization phase (First Interface in Photo)
+  const handleSkipLoading = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 250,
+      useNativeDriver: false,
+    }).start(() => {
+      setIsLoading(false);
+    });
+  };
+
+  const handleRestartOptimization = () => {
+    fadeAnim.setValue(1);
+    progressAnim.setValue(0.14);
+    setLoadingStep(1);
+    setEvalCombinations(24);
+    setIsLoading(true);
+    setRestartKey((k) => k + 1);
+  };
+
+  const progressBarWidth = progressAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["10%", "100%"],
+  });
+
+  // Precise interpolation along the cyan route curve
+  const beamLeft = mapBeamAnim.interpolate({
+    inputRange: [0, 0.12, 0.28, 0.44, 0.6, 0.74, 0.88, 1],
+    outputRange: ["4%", "14%", "28%", "42%", "58%", "72%", "86%", "96%"],
+  });
+
+  const beamTop = mapBeamAnim.interpolate({
+    inputRange: [0, 0.12, 0.28, 0.44, 0.6, 0.74, 0.88, 1],
+    outputRange: ["64%", "60%", "53%", "47%", "42%", "35%", "27%", "19%"],
+  });
+
+  // Ghost trailing beam for comet trail effect
+  const ghostLeft = mapBeamAnim.interpolate({
+    inputRange: [0, 0.14, 0.3, 0.46, 0.62, 0.76, 0.9, 1],
+    outputRange: ["2%", "10%", "24%", "38%", "54%", "68%", "82%", "92%"],
+  });
+
+  const ghostTop = mapBeamAnim.interpolate({
+    inputRange: [0, 0.14, 0.3, 0.46, 0.62, 0.76, 0.9, 1],
+    outputRange: ["66%", "62%", "55%", "49%", "44%", "37%", "29%", "21%"],
+  });
+
+  const stopRadarScale = radarStopAnim.interpolate({
+    inputRange: [1, 2.2],
+    outputRange: [1, 2.3],
+  });
+
+  const stopRadarOpacity = radarStopAnim.interpolate({
+    inputRange: [1, 2.2],
+    outputRange: [0.65, 0],
+  });
+
+  // ================= 1. OPTIMIZATION LOADING SCREEN (Matches Provided Photo) =================
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <StatusBar style="dark" />
+      <Animated.View style={[styles.loadingContainer, { opacity: fadeAnim }]}>
+        <StatusBar style="light" />
 
-        {/* Top Stylized Map Background */}
-        <View style={styles.mapArea}>
-          {/* Map Grid Building Blocks */}
-          <View style={styles.mapGridRow}>
-            <View style={styles.mapBlock} />
-            <View style={styles.mapBlock} />
-            <View style={[styles.mapBlock, styles.mapBlockPark]} />
-          </View>
-          <View style={styles.mapGridRow}>
-            <View style={styles.mapBlock} />
-            <View style={styles.mapBlock} />
-            <View style={styles.mapBlock} />
-          </View>
-          <View style={styles.mapGridRow}>
-            <View style={styles.mapBlock} />
-            <View style={styles.mapBlock} />
-            <View style={styles.mapBlockWater} />
+        {/* Top Stylized Map Canvas */}
+        <View style={styles.optMapArea}>
+          {/* Street Grid Blocks Texture (4 Rows matching photo) */}
+          <View style={styles.optGridRow}>
+            <View style={styles.optBlockSquare} />
+            <View style={styles.optBlockSquare} />
+            <View style={[styles.optBlockSquare, styles.optBlockPark]} />
           </View>
 
-          {/* SVG/Styled Transit Route Curves */}
-          <View style={styles.routeCurveCyan1} />
-          <View style={styles.routeCurveCyan2} />
-          <View style={styles.routeDashedLine}>
-            <View style={styles.stationRing}>
-              <View style={styles.stationInnerDot} />
-            </View>
+          <View style={styles.optGridRow}>
+            <View style={styles.optBlockSquare} />
+            <View style={styles.optBlockSquare} />
+            <View style={[styles.optBlockSquare, styles.optBlockPark]} />
           </View>
 
-          {/* Floating Dark Status Pill */}
-          <View style={styles.floatingStatusPill}>
-            <Text style={styles.floatingStatusTitle}>
+          <View style={styles.optGridRow}>
+            <View style={styles.optBlockSquare} />
+            <View style={styles.optBlockSquare} />
+            <View style={styles.optBlockSquare} />
+          </View>
+
+          <View style={styles.optGridRow}>
+            <View style={styles.optBlockSquare} />
+            <View style={styles.optBlockSquare} />
+            <View style={styles.optBlockWaterCorner} />
+          </View>
+
+          {/* Dashed Transit Track Base */}
+          <View style={styles.optDashedTrack} />
+
+          {/* Concentric Station Rings on Dashed Line (left: 37.5%, top: 48%) */}
+          <View style={styles.optStationRing}>
+            <View style={styles.optStationInnerDot} />
+          </View>
+
+          {/* Luminous Glowing Cyan Route Curves (Exact to Photo) */}
+          <View style={styles.optCyanCurveGlow} />
+          <View style={styles.optCyanCurveMain} />
+          <View style={styles.optCyanBranch1} />
+          <View style={styles.optCyanBranch2} />
+
+          {/* Cyan Transit Stop Dots Along the Curve with Radar Halo */}
+          <Animated.View
+            style={[
+              styles.optStopRadarRing,
+              {
+                left: "14%",
+                top: "62%",
+                transform: [{ scale: stopRadarScale }],
+                opacity: stopRadarOpacity,
+              },
+            ]}
+          />
+          <View style={[styles.optCyanStopDot, { left: "14%", top: "62%" }]} />
+
+          <Animated.View
+            style={[
+              styles.optStopRadarRing,
+              {
+                left: "34%",
+                top: "49%",
+                transform: [{ scale: stopRadarScale }],
+                opacity: stopRadarOpacity,
+              },
+            ]}
+          />
+          <View style={[styles.optCyanStopDot, { left: "34%", top: "49%" }]} />
+
+          <Animated.View
+            style={[
+              styles.optStopRadarRing,
+              {
+                left: "52%",
+                top: "43%",
+                transform: [{ scale: stopRadarScale }],
+                opacity: stopRadarOpacity,
+              },
+            ]}
+          />
+          <View style={[styles.optCyanStopDot, { left: "52%", top: "43%" }]} />
+
+          <Animated.View
+            style={[
+              styles.optStopRadarRing,
+              {
+                left: "74%",
+                top: "30%",
+                transform: [{ scale: stopRadarScale }],
+                opacity: stopRadarOpacity,
+              },
+            ]}
+          />
+          <View style={[styles.optCyanStopDot, { left: "74%", top: "30%" }]} />
+
+          {/* Ghost Comet Tail Particle */}
+          <Animated.View
+            style={[
+              styles.optGhostPulse,
+              {
+                left: ghostLeft as any,
+                top: ghostTop as any,
+              },
+            ]}
+          />
+
+          {/* Animated Light Pulse Traveling on the Curve */}
+          <Animated.View
+            style={[
+              styles.optMovingCyanPulse,
+              {
+                left: beamLeft as any,
+                top: beamTop as any,
+              },
+            ]}
+          >
+            <View style={styles.optPulseAura} />
+            <View style={styles.optPulseCore} />
+          </Animated.View>
+
+          {/* Watermark Badge */}
+          <View style={styles.optWatermarkBadge}>
+            <Text style={styles.optWatermarkText}>BestRoute Maps</Text>
+          </View>
+
+          {/* Floating Dark Status Pill at Top */}
+          <View style={styles.optFloatingStatusPill}>
+            <Text style={styles.optFloatingTitle}>
               Finding the best routes...
             </Text>
-            <Text style={styles.floatingStatusSubtitle}>
-              • {fromCity} ➔ {toCity}
+            <Text style={styles.optFloatingSubtitle}>
+              <Text style={styles.optCyanBullet}>• </Text>
+              {fromCity} ➔ {toCity}
             </Text>
-          </View>
-
-          {/* Map Watermark */}
-          <View style={styles.mapWatermark}>
-            <Text style={styles.mapWatermarkText}>BestRoute Maps</Text>
           </View>
         </View>
 
-        {/* Bottom Progress & Checklist Sheet */}
-        <View style={styles.bottomLoadingCard}>
-          {/* Progress Bar */}
-          <View style={styles.progressBarTrack}>
-            <View
+        {/* Dark Navy Band Above Bottom Sheet */}
+        <View style={styles.darkNavyBand} />
+
+        {/* Bottom White Progress & Checklist Sheet */}
+        <TouchableOpacity
+          style={styles.bottomSheetCard}
+          activeOpacity={0.95}
+          onPress={handleSkipLoading}
+        >
+          {/* Smooth Animated Progress Bar */}
+          <View style={styles.progressTrack}>
+            <Animated.View
               style={[
-                styles.progressBarFill,
-                { width: `${progressWidth}%` },
+                styles.progressFill,
+                { width: progressBarWidth as any },
               ]}
             />
           </View>
 
-          {/* Checklist Items */}
-          <View style={styles.checklistContainer}>
-            {/* Step 1 */}
-            <View style={styles.checklistItem}>
-              <View style={styles.checkIconSuccess}>
-                <Text style={styles.checkMarkSymbol}>✓</Text>
-              </View>
-              <Text style={styles.checklistTextSuccess}>
-                Checking nearby services
-              </Text>
-            </View>
+          {/* 5 Checklist Items with Smooth Transitions */}
+          <View style={styles.checklistList}>
+            {CHECKLIST_STEPS.map((step) => {
+              const isDone = loadingStep > step.id;
+              const isActive = loadingStep === step.id;
 
-            {/* Step 2 */}
-            <View style={styles.checklistItem}>
-              <View
-                style={
-                  loadingStep >= 2
-                    ? styles.checkIconSuccess
-                    : styles.checkIconPending
-                }
-              >
-                <Text
-                  style={
-                    loadingStep >= 2
-                      ? styles.checkMarkSymbol
-                      : styles.pendingSymbol
-                  }
-                >
-                  {loadingStep >= 2 ? "✓" : "○"}
-                </Text>
-              </View>
-              <Text
-                style={
-                  loadingStep >= 2
-                    ? styles.checklistTextSuccess
-                    : styles.checklistTextPending
-                }
-              >
-                Comparing schedules
-              </Text>
-            </View>
+              return (
+                <View key={step.id} style={styles.checklistRow}>
+                  {isDone ? (
+                    <View style={styles.iconCircleSuccess}>
+                      <Text style={styles.checkmarkIcon}>✔</Text>
+                    </View>
+                  ) : isActive ? (
+                    <View style={styles.targetIconContainer}>
+                      <Animated.View
+                        style={[
+                          styles.iconCircleActiveBullseye,
+                          { transform: [{ scale: pulseTargetAnim }] },
+                        ]}
+                      >
+                        <View style={styles.targetInnerWhiteRing}>
+                          <View style={styles.targetInnerBlueCore} />
+                        </View>
+                      </Animated.View>
+                    </View>
+                  ) : (
+                    <View style={styles.iconCirclePending}>
+                      <View style={styles.pendingDotGhost} />
+                    </View>
+                  )}
 
-            {/* Step 3 */}
-            <View style={styles.checklistItem}>
-              <View
-                style={
-                  loadingStep >= 3
-                    ? styles.checkIconSuccess
-                    : styles.checkIconPending
-                }
-              >
-                <Text
-                  style={
-                    loadingStep >= 3
-                      ? styles.checkMarkSymbol
-                      : styles.pendingSymbol
-                  }
-                >
-                  {loadingStep >= 3 ? "✓" : "○"}
-                </Text>
-              </View>
-              <Text
-                style={
-                  loadingStep >= 3
-                    ? styles.checklistTextSuccess
-                    : styles.checklistTextPending
-                }
-              >
-                Evaluating connections
-              </Text>
-            </View>
-
-            {/* Step 4 */}
-            <View style={styles.checklistItem}>
-              <View
-                style={
-                  loadingStep >= 4
-                    ? styles.checkIconSuccess
-                    : loadingStep === 3
-                    ? styles.checkIconActive
-                    : styles.checkIconPending
-                }
-              >
-                <Text
-                  style={
-                    loadingStep >= 4
-                      ? styles.checkMarkSymbol
-                      : loadingStep === 3
-                      ? styles.activeSymbol
-                      : styles.pendingSymbol
-                  }
-                >
-                  {loadingStep >= 4 ? "✓" : loadingStep === 3 ? "◉" : "○"}
-                </Text>
-              </View>
-              <Text
-                style={
-                  loadingStep >= 4
-                    ? styles.checklistTextSuccess
-                    : loadingStep === 3
-                    ? styles.checklistTextActive
-                    : styles.checklistTextPending
-                }
-              >
-                Calculating total cost
-              </Text>
-            </View>
-
-            {/* Step 5 */}
-            <View style={styles.checklistItem}>
-              <View
-                style={
-                  loadingStep >= 5
-                    ? styles.checkIconSuccess
-                    : styles.checkIconPending
-                }
-              >
-                <Text
-                  style={
-                    loadingStep >= 5
-                      ? styles.checkMarkSymbol
-                      : styles.pendingSymbol
-                  }
-                >
-                  {loadingStep >= 5 ? "✓" : "○"}
-                </Text>
-              </View>
-              <Text
-                style={
-                  loadingStep >= 5
-                    ? styles.checklistTextSuccess
-                    : styles.checklistTextPending
-                }
-              >
-                Ranking routes
-              </Text>
-            </View>
+                  <Text
+                    style={[
+                      styles.stepTextBase,
+                      isDone && styles.stepTextSuccess,
+                      isActive && styles.stepTextActive,
+                      !isDone && !isActive && styles.stepTextPending,
+                    ]}
+                  >
+                    {step.label}
+                  </Text>
+                </View>
+              );
+            })}
           </View>
 
-          {/* Footer note & skip tap */}
-          <TouchableOpacity
-            style={styles.loadingFooter}
-            activeOpacity={0.7}
-            onPress={() => setIsLoading(false)}
-          >
-            <Text style={styles.optimizingTitle}>Optimizing your journey...</Text>
-            <Text style={styles.optimizingSubtitle}>
-              Evaluating 116+ route combinations (tap to skip)
+          {/* Footer Note */}
+          <View style={styles.sheetFooter}>
+            <Text style={styles.footerMainText}>
+              Optimizing your journey...
             </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+            <Text style={styles.footerSubText}>
+              Evaluating {evalCombinations}+ route combinations
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
     );
   }
 
-  // Step 2: Route Results View (Second Interface in Photo)
+  // ================= 2. ROUTE RESULTS VIEW (Second Interface in Photo) =================
   return (
     <View style={styles.resultsContainer}>
       <StatusBar style="dark" />
 
-      {/* Header */}
+      {/* Header with Back and Replay Buttons */}
       <View style={styles.resultsHeader}>
         <TouchableOpacity
           style={styles.backButton}
@@ -313,6 +477,14 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
             Today · Departing 8:30 AM · 3 routes found
           </Text>
         </View>
+
+        <TouchableOpacity
+          style={styles.replayButton}
+          activeOpacity={0.7}
+          onPress={handleRestartOptimization}
+        >
+          <Text style={styles.replayButtonText}>↻</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -320,45 +492,14 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
         contentContainerStyle={styles.resultsScrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Top Mini Map Preview */}
+        {/* Top Mini Map Preview with Animated Route */}
         <View style={styles.miniMapCard}>
-          <View style={styles.miniMapBg}>
-            <View style={styles.miniMapRow}>
-              <View style={styles.miniBlock} />
-              <View style={styles.miniBlock} />
-              <View style={styles.miniBlock} />
-            </View>
-            <View style={styles.miniMapRow}>
-              <View style={styles.miniBlock} />
-              <View style={styles.miniBlock} />
-              <View style={styles.miniBlock} />
-            </View>
-
-            {/* Route track on map */}
-            <View style={styles.miniRouteTrackBlue} />
-            <View style={styles.miniStartPin}>
-              <Text style={styles.miniPinText}>📍</Text>
-            </View>
-            <View style={styles.miniEndPin}>
-              <Text style={styles.miniPinText}>🚩</Text>
-            </View>
-
-            {/* Zoom Controls */}
-            <View style={styles.mapZoomControls}>
-              <TouchableOpacity style={styles.zoomButton}>
-                <Text style={styles.zoomText}>+</Text>
-              </TouchableOpacity>
-              <View style={styles.zoomDivider} />
-              <TouchableOpacity style={styles.zoomButton}>
-                <Text style={styles.zoomText}>−</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Map Watermark */}
-            <View style={styles.miniMapWatermark}>
-              <Text style={styles.miniWatermarkText}>BestRoute Maps</Text>
-            </View>
-          </View>
+          <RealisticRouteMap
+            height={105}
+            showLiveVehicle={true}
+            from={fromCity}
+            to={toCity}
+          />
         </View>
 
         {/* Filter Pills */}
@@ -462,7 +603,21 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
           </View>
 
           {/* Primary View Route Button */}
-          <TouchableOpacity style={styles.viewRouteButtonPrimary} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.viewRouteButtonPrimary}
+            activeOpacity={0.85}
+            onPress={() =>
+              navigation.navigate("RouteDetail", {
+                from: fromCity,
+                to: toCity,
+                routeType: "BEST MATCH",
+                fare: "Rs. 320",
+                duration: "1h 35m",
+                departureTime: "8:30 AM",
+                arrivalTime: "10:05 AM",
+              })
+            }
+          >
             <Text style={styles.viewRouteButtonTextPrimary}>View Route</Text>
           </TouchableOpacity>
         </View>
@@ -528,7 +683,21 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.viewRouteButtonSecondary} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.viewRouteButtonSecondary}
+            activeOpacity={0.85}
+            onPress={() =>
+              navigation.navigate("RouteDetail", {
+                from: fromCity,
+                to: toCity,
+                routeType: "FASTEST",
+                fare: "Rs. 450",
+                duration: "1h 20m",
+                departureTime: "8:45 AM",
+                arrivalTime: "10:05 AM",
+              })
+            }
+          >
             <Text style={styles.viewRouteButtonTextSecondary}>View Route</Text>
           </TouchableOpacity>
         </View>
@@ -594,13 +763,41 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.viewRouteButtonSecondary} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.viewRouteButtonSecondary}
+            activeOpacity={0.85}
+            onPress={() =>
+              navigation.navigate("RouteDetail", {
+                from: fromCity,
+                to: toCity,
+                routeType: "CHEAPEST",
+                fare: "Rs. 220",
+                duration: "2h 05m",
+                departureTime: "8:30 AM",
+                arrivalTime: "10:35 AM",
+              })
+            }
+          >
             <Text style={styles.viewRouteButtonTextSecondary}>View Route</Text>
           </TouchableOpacity>
         </View>
 
         {/* Compare All Routes Button */}
-        <TouchableOpacity style={styles.compareAllButton} activeOpacity={0.85}>
+        <TouchableOpacity
+          style={styles.compareAllButton}
+          activeOpacity={0.85}
+          onPress={() =>
+            navigation.navigate("RouteDetail", {
+              from: fromCity,
+              to: toCity,
+              routeType: "BEST MATCH",
+              fare: "Rs. 320",
+              duration: "1h 35m",
+              departureTime: "8:30 AM",
+              arrivalTime: "10:05 AM",
+            })
+          }
+        >
           <Text style={styles.compareAllButtonText}>Compare All Routes</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -609,77 +806,59 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  /* ================= LOADING SCREEN STYLES ================= */
+  /* ================= 1. LOADING SCREEN STYLES (EXACT TO USER PHOTO) ================= */
   loadingContainer: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#0A1120",
   },
-  mapArea: {
+  optMapArea: {
     flex: 1,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#EEF5EE",
     position: "relative",
     overflow: "hidden",
   },
-  mapGridRow: {
+  optGridRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginVertical: 10,
-    paddingHorizontal: 12,
+    marginVertical: 8,
+    paddingHorizontal: 16,
   },
-  mapBlock: {
+  optBlockSquare: {
     width: "30%",
-    height: 70,
+    height: 50,
     backgroundColor: "#EFF4F9",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: "#D6E0EA",
   },
-  mapBlockPark: {
+  optBlockPark: {
     backgroundColor: "#DCFCE7",
     borderColor: "#BBF7D0",
   },
-  mapBlockWater: {
-    backgroundColor: "#E0F2FE",
+  optBlockWaterCorner: {
+    width: "30%",
+    height: 50,
+    backgroundColor: "#DCEEFE",
+    borderTopLeftRadius: 36,
+    borderBottomRightRadius: 8,
+    borderWidth: 1.5,
     borderColor: "#BAE6FD",
-    width: "40%",
   },
-  routeCurveCyan1: {
-    position: "absolute",
-    left: -20,
-    top: "30%",
-    width: 320,
-    height: 180,
-    borderRadius: 90,
-    borderWidth: 6,
-    borderColor: "#38BDF8",
-    opacity: 0.75,
-    transform: [{ rotate: "25deg" }],
-  },
-  routeCurveCyan2: {
-    position: "absolute",
-    right: -40,
-    top: "20%",
-    width: 300,
-    height: 160,
-    borderRadius: 80,
-    borderWidth: 6,
-    borderColor: "#0284C7",
-    opacity: 0.8,
-    transform: [{ rotate: "-15deg" }],
-  },
-  routeDashedLine: {
+  optDashedTrack: {
     position: "absolute",
     left: 0,
     right: 0,
-    top: "52%",
+    top: "48%",
     height: 3,
-    borderWidth: 1.5,
+    borderBottomWidth: 3,
     borderColor: "#64748B",
     borderStyle: "dashed",
-    justifyContent: "center",
-    alignItems: "center",
   },
-  stationRing: {
+  optStationRing: {
+    position: "absolute",
+    left: "37.5%",
+    top: "48%",
+    marginTop: -11,
     width: 22,
     height: 22,
     borderRadius: 11,
@@ -688,72 +867,181 @@ const styles = StyleSheet.create({
     borderColor: "#475569",
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 6,
   },
-  stationInnerDot: {
+  optStationInnerDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#0284C7",
+    backgroundColor: "#334155",
   },
-  floatingStatusPill: {
+  optCyanCurveGlow: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 54 : 36,
-    alignSelf: "center",
-    backgroundColor: "rgba(15, 23, 42, 0.94)",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 16,
+    left: "-8%",
+    top: "16%",
+    width: "116%",
+    height: "82%",
+    borderWidth: 14,
+    borderColor: "rgba(56, 189, 248, 0.32)",
+    borderRadius: 200,
+    transform: [{ rotate: "22deg" }],
+    zIndex: 3,
+  },
+  optCyanCurveMain: {
+    position: "absolute",
+    left: "-8%",
+    top: "16%",
+    width: "116%",
+    height: "82%",
+    borderWidth: 5,
+    borderColor: "#38BDF8",
+    borderRadius: 200,
+    transform: [{ rotate: "22deg" }],
+    zIndex: 4,
+  },
+  optCyanBranch1: {
+    position: "absolute",
+    left: "28%",
+    top: "45%",
+    width: 70,
+    height: 5,
+    backgroundColor: "#38BDF8",
+    borderRadius: 2.5,
+    transform: [{ rotate: "-18deg" }],
+    zIndex: 5,
+  },
+  optCyanBranch2: {
+    position: "absolute",
+    right: "8%",
+    top: "42%",
+    width: 95,
+    height: 5,
+    backgroundColor: "#38BDF8",
+    borderRadius: 2.5,
+    transform: [{ rotate: "-4deg" }],
+    zIndex: 5,
+  },
+  optStopRadarRing: {
+    position: "absolute",
+    width: 26,
+    height: 26,
+    marginLeft: -6,
+    marginTop: -6,
+    borderRadius: 13,
+    backgroundColor: "rgba(56, 189, 248, 0.4)",
+    zIndex: 6,
+  },
+  optCyanStopDot: {
+    position: "absolute",
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: "#38BDF8",
+    borderWidth: 2.5,
+    borderColor: "#FFFFFF",
+    zIndex: 7,
+  },
+  optGhostPulse: {
+    position: "absolute",
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: "rgba(56, 189, 248, 0.45)",
+    zIndex: 9,
+  },
+  optMovingCyanPulse: {
+    position: "absolute",
+    zIndex: 10,
+    justifyContent: "center",
     alignItems: "center",
-    ...Platform.select({
-      web: {
-        boxShadow: "0 6px 16px rgba(0,0,0,0.3)",
-      },
-      default: {
-        elevation: 6,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-      },
-    }),
   },
-  floatingStatusTitle: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "800",
-  },
-  floatingStatusSubtitle: {
-    color: "#38BDF8",
-    fontSize: 11,
-    fontWeight: "700",
-    marginTop: 2,
-  },
-  mapWatermark: {
+  optPulseAura: {
     position: "absolute",
-    right: 12,
-    bottom: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.85)",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(56, 189, 248, 0.45)",
+  },
+  optPulseCore: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#0284C7",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+  },
+  optWatermarkBadge: {
+    position: "absolute",
+    right: 14,
+    bottom: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.92)",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
+    borderWidth: 0.5,
+    borderColor: "#E2E8F0",
+    zIndex: 8,
   },
-  mapWatermarkText: {
+  optWatermarkText: {
     fontSize: 9,
     color: "#64748B",
     fontWeight: "600",
   },
+  optFloatingStatusPill: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 52 : 36,
+    alignSelf: "center",
+    backgroundColor: "#000000",
+    paddingVertical: 10,
+    paddingHorizontal: 22,
+    borderRadius: 18,
+    alignItems: "center",
+    zIndex: 20,
+    ...Platform.select({
+      web: {
+        boxShadow: "0 6px 18px rgba(0,0,0,0.35)",
+      },
+      default: {
+        elevation: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.35,
+        shadowRadius: 8,
+      },
+    }),
+  },
+  optFloatingTitle: {
+    color: "#FFFFFF",
+    fontSize: 14.5,
+    fontWeight: "800",
+  },
+  optFloatingSubtitle: {
+    color: "#38BDF8",
+    fontSize: 11.5,
+    fontWeight: "700",
+    marginTop: 2,
+  },
+  optCyanBullet: {
+    color: "#00E5FF",
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  darkNavyBand: {
+    height: 34,
+    backgroundColor: "#0A1120",
+  },
 
-  /* Bottom Loading Card */
-  bottomLoadingCard: {
+  /* Bottom White Sheet */
+  bottomSheetCard: {
     backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingTop: 16,
-    paddingBottom: Platform.OS === "ios" ? 38 : 24,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    paddingTop: 18,
+    paddingBottom: Platform.OS === "ios" ? 36 : 24,
     paddingHorizontal: 22,
     ...Platform.select({
       web: {
-        boxShadow: "0 -8px 24px rgba(15, 23, 42, 0.12)",
+        boxShadow: "0 -8px 24px rgba(15, 23, 42, 0.15)",
       },
       default: {
         elevation: 10,
@@ -764,26 +1052,26 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  progressBarTrack: {
+  progressTrack: {
     height: 5,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#EBF1F6",
     borderRadius: 3,
     overflow: "hidden",
     marginBottom: 20,
   },
-  progressBarFill: {
+  progressFill: {
     height: "100%",
     backgroundColor: "#1D64EC",
     borderRadius: 3,
   },
-  checklistContainer: {
-    gap: 14,
+  checklistList: {
+    gap: 13,
   },
-  checklistItem: {
+  checklistRow: {
     flexDirection: "row",
     alignItems: "center",
   },
-  checkIconSuccess: {
+  iconCircleSuccess: {
     width: 22,
     height: 22,
     borderRadius: 11,
@@ -792,68 +1080,102 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
-  checkMarkSymbol: {
+  checkmarkIcon: {
     color: "#FFFFFF",
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: "bold",
   },
-  checklistTextSuccess: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#059669",
-  },
-  checkIconActive: {
+  targetIconContainer: {
     width: 22,
     height: 22,
-    borderRadius: 11,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  iconCircleActiveBullseye: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: "#1D64EC",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
   },
-  activeSymbol: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "bold",
+  targetInnerWhiteRing: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  checklistTextActive: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#1D64EC",
+  targetInnerBlueCore: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#1D64EC",
   },
-  checkIconPending: {
+  iconCirclePending: {
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#EFF4F9",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
   },
-  pendingSymbol: {
-    color: "#94A3B8",
-    fontSize: 11,
+  pendingDotGhost: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#CBD5E1",
   },
-  checklistTextPending: {
-    fontSize: 13,
-    color: "#94A3B8",
+  stepTextBase: {
+    fontSize: 13.5,
+    fontWeight: "500",
   },
-  loadingFooter: {
-    alignItems: "center",
-    marginTop: 24,
-  },
-  optimizingTitle: {
-    fontSize: 12,
+  stepTextSuccess: {
     fontWeight: "700",
-    color: "#475569",
+    color: "#059669",
   },
-  optimizingSubtitle: {
-    fontSize: 10,
+  stepTextActive: {
+    fontWeight: "800",
+    color: "#1D64EC",
+  },
+  stepTextPending: {
     color: "#94A3B8",
-    marginTop: 2,
+  },
+  sheetFooter: {
+    alignItems: "center",
+    marginTop: 22,
+  },
+  footerMainText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#64748B",
+  },
+  footerSubText: {
+    fontSize: 11,
+    color: "#94A3B8",
+    marginTop: 3,
+  },
+  replayButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#F1F5F9",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 8,
+  },
+  replayButtonText: {
+    fontSize: 18,
+    color: "#1D64EC",
+    fontWeight: "bold",
   },
 
-  /* ================= RESULTS SCREEN STYLES ================= */
+  /* ================= 2. RESULTS SCREEN STYLES ================= */
   resultsContainer: {
     flex: 1,
     backgroundColor: "#F8FAFC",
@@ -902,90 +1224,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 40,
   },
-
-  /* Mini Map Preview */
   miniMapCard: {
-    height: 90,
-    borderRadius: 14,
+    borderRadius: 16,
     overflow: "hidden",
     marginVertical: 12,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
   },
-  miniMapBg: {
-    flex: 1,
-    backgroundColor: "#E2E8F0",
-    position: "relative",
-  },
-  miniMapRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 10,
-    marginVertical: 6,
-  },
-  miniBlock: {
-    width: "30%",
-    height: 32,
-    backgroundColor: "#EFF4F9",
-    borderRadius: 8,
-  },
-  miniRouteTrackBlue: {
-    position: "absolute",
-    left: 20,
-    right: 30,
-    top: 42,
-    height: 3,
-    backgroundColor: "#2563EB",
-    borderRadius: 2,
-  },
-  miniStartPin: {
-    position: "absolute",
-    left: 30,
-    top: 26,
-  },
-  miniEndPin: {
-    position: "absolute",
-    right: 40,
-    top: 26,
-  },
-  miniPinText: {
-    fontSize: 14,
-  },
-  mapZoomControls: {
-    position: "absolute",
-    right: 8,
-    top: 8,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-  },
-  zoomButton: {
-    width: 24,
-    height: 22,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  zoomDivider: {
-    height: 1,
-    backgroundColor: "#E2E8F0",
-  },
-  zoomText: {
-    fontSize: 13,
-    fontWeight: "bold",
-    color: "#475569",
-  },
-  miniMapWatermark: {
-    position: "absolute",
-    right: 8,
-    bottom: 6,
-  },
-  miniWatermarkText: {
-    fontSize: 8,
-    color: "#64748B",
-  },
-
-  /* Filter Pills */
   filterPillsRow: {
     flexDirection: "row",
     gap: 8,
@@ -1013,8 +1256,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "700",
   },
-
-  /* Route Cards */
   routeCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 18,
@@ -1084,8 +1325,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#D97706",
   },
-
-  /* Time & Price */
   timePriceRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1128,8 +1367,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#94A3B8",
   },
-
-  /* Transit Flow Pills */
   transitModeFlowRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1177,8 +1414,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#94A3B8",
   },
-
-  /* Metrics */
   metricsRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1194,8 +1429,6 @@ const styles = StyleSheet.create({
     color: "#CBD5E1",
     marginHorizontal: 6,
   },
-
-  /* Reliability */
   reliabilityRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1222,8 +1455,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
   },
-
-  /* Buttons */
   viewRouteButtonPrimary: {
     backgroundColor: "#1D64EC",
     borderRadius: 12,

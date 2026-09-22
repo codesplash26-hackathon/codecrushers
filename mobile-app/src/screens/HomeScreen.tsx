@@ -522,7 +522,17 @@ export default function HomeScreen({ navigation }: Props) {
           </View>
 
           {/* Recent Card 1 */}
-          <View style={styles.recentCard}>
+          <TouchableOpacity
+            style={styles.recentCard}
+            activeOpacity={0.8}
+            onPress={() =>
+              navigation.navigate("RouteResults", {
+                from: "Kandy City",
+                to: "Colombo Fort",
+                skipLoading: true,
+              })
+            }
+          >
             <View style={styles.recentPinBox}>
               <Text style={styles.recentPinIcon}>📍</Text>
             </View>
@@ -543,10 +553,20 @@ export default function HomeScreen({ navigation }: Props) {
                 {isFavorited1 ? "❤️" : "♡"}
               </Text>
             </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
 
           {/* Recent Card 2 */}
-          <View style={styles.recentCard}>
+          <TouchableOpacity
+            style={styles.recentCard}
+            activeOpacity={0.8}
+            onPress={() =>
+              navigation.navigate("RouteResults", {
+                from: "University of Sri Jay.",
+                to: "Kandy",
+                skipLoading: true,
+              })
+            }
+          >
             <View style={styles.recentPinBox}>
               <Text style={styles.recentPinIcon}>📍</Text>
             </View>
@@ -567,7 +587,7 @@ export default function HomeScreen({ navigation }: Props) {
                 {isFavorited2 ? "❤️" : "♡"}
               </Text>
             </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Your Travel Summary Section */}
