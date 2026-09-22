@@ -8,6 +8,7 @@ import {
   ScrollView,
   Platform,
   Modal,
+  Switch,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
@@ -48,7 +49,7 @@ export default function HomeScreen({ navigation }: Props) {
   const [selectedDate, setSelectedDate] = useState("Today");
   const [selectedTime, setSelectedTime] = useState("8:30 AM");
   const [selectedOptimization, setSelectedOptimization] = useState<
-    "fastest" | "cheapest" | "walking"
+    "fastest" | "cheapest" | "walking" | "transfers" | "reliable"
   >("fastest");
   const [isFavorited1, setIsFavorited1] = useState(true);
   const [isFavorited2, setIsFavorited2] = useState(false);
@@ -60,6 +61,15 @@ export default function HomeScreen({ navigation }: Props) {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [searchTarget, setSearchTarget] = useState<"from" | "to">("to");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Customize Journey ("More options") modal state
+  const [isCustomizeVisible, setIsCustomizeVisible] = useState(false);
+  const [primaryPreference, setPrimaryPreference] = useState<
+    "fastest" | "cheapest" | "walking" | "transfers" | "reliable"
+  >("fastest");
+  const [avoidWalking, setAvoidWalking] = useState(false);
+  const [maxTransfers, setMaxTransfers] = useState<"1" | "2" | "3+">("2");
+  const [maxWalkingDistance, setMaxWalkingDistance] = useState(10); // in minutes
 
   const quickAccessList: QuickAccessItem[] = [
     {
@@ -149,6 +159,11 @@ export default function HomeScreen({ navigation }: Props) {
       setToLocation(locationName);
     }
     setIsSearchVisible(false);
+  };
+
+  const handleApplyCustomize = () => {
+    setSelectedOptimization(primaryPreference);
+    setIsCustomizeVisible(false);
   };
 
   // Filtered lists based on search input
@@ -389,7 +404,13 @@ export default function HomeScreen({ navigation }: Props) {
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionHeading}>Optimize your journey</Text>
-            <TouchableOpacity activeOpacity={0.7}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => {
+                setPrimaryPreference(selectedOptimization);
+                setIsCustomizeVisible(true);
+              }}
+            >
               <Text style={styles.sectionLink}>More options</Text>
             </TouchableOpacity>
           </View>
@@ -460,8 +481,12 @@ export default function HomeScreen({ navigation }: Props) {
             <TouchableOpacity
               style={styles.filterIconPill}
               activeOpacity={0.8}
+              onPress={() => {
+                setPrimaryPreference(selectedOptimization);
+                setIsCustomizeVisible(true);
+              }}
             >
-              <Text style={styles.filterExtraIcon}>☑</Text>
+              <Text style={styles.filterExtraIcon}>⚙️</Text>
             </TouchableOpacity>
           </ScrollView>
 
@@ -675,7 +700,7 @@ export default function HomeScreen({ navigation }: Props) {
         </TouchableOpacity>
       </View>
 
-      {/* Location Search Modal (Matches Provided Picture) */}
+      {/* ================= LOCATION SEARCH MODAL ================= */}
       <Modal
         visible={isSearchVisible}
         animationType="slide"
@@ -699,7 +724,7 @@ export default function HomeScreen({ navigation }: Props) {
               <Text style={styles.modalTitle}>
                 {searchTarget === "from"
                   ? "Where are you starting?"
-                  : "Where are you starting?"}
+                  : "Where are you going?"}
               </Text>
               <Text style={styles.modalSubtitle}>
                 Search for a location, station or stop
@@ -859,6 +884,312 @@ export default function HomeScreen({ navigation }: Props) {
               ))}
             </View>
           </ScrollView>
+        </View>
+      </Modal>
+
+      {/* ================= CUSTOMIZE YOUR JOURNEY MODAL ================= */}
+      <Modal
+        visible={isCustomizeVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setIsCustomizeVisible(false)}
+      >
+        <View style={styles.customizeModalContainer}>
+          <StatusBar style="dark" />
+
+          {/* Header */}
+          <View style={styles.modalHeader}>
+            <TouchableOpacity
+              style={styles.modalBackButton}
+              activeOpacity={0.7}
+              onPress={() => setIsCustomizeVisible(false)}
+            >
+              <Text style={styles.modalBackIcon}>‹</Text>
+            </TouchableOpacity>
+
+            <View style={styles.modalTitleContainer}>
+              <Text style={styles.modalTitle}>Customize your journey</Text>
+              <Text style={styles.modalSubtitle}>Tell us what matters most</Text>
+            </View>
+          </View>
+
+          <ScrollView
+            style={styles.modalScroll}
+            contentContainerStyle={styles.customizeScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* PRIMARY PREFERENCE Section */}
+            <Text style={styles.modalSectionHeading}>PRIMARY PREFERENCE</Text>
+
+            {/* Option 1: Fastest */}
+            <TouchableOpacity
+              style={[
+                styles.preferenceCard,
+                primaryPreference === "fastest" && styles.preferenceCardActive,
+              ]}
+              activeOpacity={0.8}
+              onPress={() => setPrimaryPreference("fastest")}
+            >
+              <View style={[styles.prefIconBox, styles.prefIconFastest]}>
+                <Text style={styles.prefIconSymbol}>⚡</Text>
+              </View>
+              <View style={styles.prefTextContainer}>
+                <Text style={styles.prefTitle}>Fastest</Text>
+                <Text style={styles.prefSubtitle}>
+                  Minimize total travel time
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.radioButton,
+                  primaryPreference === "fastest" && styles.radioButtonActive,
+                ]}
+              >
+                {primaryPreference === "fastest" && (
+                  <View style={styles.radioDot} />
+                )}
+              </View>
+            </TouchableOpacity>
+
+            {/* Option 2: Cheapest */}
+            <TouchableOpacity
+              style={[
+                styles.preferenceCard,
+                primaryPreference === "cheapest" && styles.preferenceCardActive,
+              ]}
+              activeOpacity={0.8}
+              onPress={() => setPrimaryPreference("cheapest")}
+            >
+              <View style={[styles.prefIconBox, styles.prefIconCheapest]}>
+                <Text style={styles.prefIconSymbol}>💰</Text>
+              </View>
+              <View style={styles.prefTextContainer}>
+                <Text style={styles.prefTitle}>Cheapest</Text>
+                <Text style={styles.prefSubtitle}>
+                  Minimize total journey cost
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.radioButton,
+                  primaryPreference === "cheapest" && styles.radioButtonActive,
+                ]}
+              >
+                {primaryPreference === "cheapest" && (
+                  <View style={styles.radioDot} />
+                )}
+              </View>
+            </TouchableOpacity>
+
+            {/* Option 3: Less Walking */}
+            <TouchableOpacity
+              style={[
+                styles.preferenceCard,
+                primaryPreference === "walking" && styles.preferenceCardActive,
+              ]}
+              activeOpacity={0.8}
+              onPress={() => setPrimaryPreference("walking")}
+            >
+              <View style={[styles.prefIconBox, styles.prefIconWalking]}>
+                <Text style={styles.prefIconSymbol}>🚶</Text>
+              </View>
+              <View style={styles.prefTextContainer}>
+                <Text style={styles.prefTitle}>Less Walking</Text>
+                <Text style={styles.prefSubtitle}>
+                  Minimize walking distance
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.radioButton,
+                  primaryPreference === "walking" && styles.radioButtonActive,
+                ]}
+              >
+                {primaryPreference === "walking" && (
+                  <View style={styles.radioDot} />
+                )}
+              </View>
+            </TouchableOpacity>
+
+            {/* Option 4: Fewer Transfers */}
+            <TouchableOpacity
+              style={[
+                styles.preferenceCard,
+                primaryPreference === "transfers" &&
+                  styles.preferenceCardActive,
+              ]}
+              activeOpacity={0.8}
+              onPress={() => setPrimaryPreference("transfers")}
+            >
+              <View style={[styles.prefIconBox, styles.prefIconTransfers]}>
+                <Text style={styles.prefIconSymbol}>🔄</Text>
+              </View>
+              <View style={styles.prefTextContainer}>
+                <Text style={styles.prefTitle}>Fewer Transfers</Text>
+                <Text style={styles.prefSubtitle}>
+                  Reduce transportation changes
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.radioButton,
+                  primaryPreference === "transfers" && styles.radioButtonActive,
+                ]}
+              >
+                {primaryPreference === "transfers" && (
+                  <View style={styles.radioDot} />
+                )}
+              </View>
+            </TouchableOpacity>
+
+            {/* Option 5: Most Reliable */}
+            <TouchableOpacity
+              style={[
+                styles.preferenceCard,
+                primaryPreference === "reliable" && styles.preferenceCardActive,
+              ]}
+              activeOpacity={0.8}
+              onPress={() => setPrimaryPreference("reliable")}
+            >
+              <View style={[styles.prefIconBox, styles.prefIconReliable]}>
+                <Text style={styles.prefIconSymbol}>🛡️</Text>
+              </View>
+              <View style={styles.prefTextContainer}>
+                <Text style={styles.prefTitle}>Most Reliable</Text>
+                <Text style={styles.prefSubtitle}>
+                  Prioritize reliable connections
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.radioButton,
+                  primaryPreference === "reliable" && styles.radioButtonActive,
+                ]}
+              >
+                {primaryPreference === "reliable" && (
+                  <View style={styles.radioDot} />
+                )}
+              </View>
+            </TouchableOpacity>
+
+            {/* ADVANCED OPTIONS Section */}
+            <Text style={[styles.modalSectionHeading, { marginTop: 22 }]}>
+              ADVANCED OPTIONS
+            </Text>
+
+            <View style={styles.advancedOptionsCard}>
+              {/* Avoid Walking Row */}
+              <View style={styles.advancedRow}>
+                <View style={styles.advancedTextWrapper}>
+                  <Text style={styles.advancedRowTitle}>Avoid walking</Text>
+                  <Text style={styles.advancedRowSubtitle}>
+                    Prefer transport over walking
+                  </Text>
+                </View>
+                <Switch
+                  value={avoidWalking}
+                  onValueChange={setAvoidWalking}
+                  trackColor={{ false: "#E2E8F0", true: "#93C5FD" }}
+                  thumbColor={avoidWalking ? "#2563EB" : "#FFFFFF"}
+                />
+              </View>
+
+              <View style={styles.advancedDivider} />
+
+              {/* Maximum Transfers Row */}
+              <View style={styles.transfersHeaderRow}>
+                <View style={styles.advancedTextWrapper}>
+                  <Text style={styles.advancedRowTitle}>Maximum transfers</Text>
+                  <Text style={styles.advancedRowSubtitle}>
+                    Route connection changes
+                  </Text>
+                </View>
+                <Text style={styles.transfersCurrentValue}>{maxTransfers}</Text>
+              </View>
+
+              {/* Transfers Segment Buttons */}
+              <View style={styles.transfersButtonGroup}>
+                {(["1", "2", "3+"] as const).map((count) => {
+                  const isSelected = maxTransfers === count;
+                  return (
+                    <TouchableOpacity
+                      key={count}
+                      style={[
+                        styles.transferOptionButton,
+                        isSelected && styles.transferOptionButtonActive,
+                      ]}
+                      onPress={() => setMaxTransfers(count)}
+                      activeOpacity={0.8}
+                    >
+                      <Text
+                        style={[
+                          styles.transferOptionText,
+                          isSelected && styles.transferOptionTextActive,
+                        ]}
+                      >
+                        {count}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View style={styles.advancedDivider} />
+
+              {/* Max Walking Distance Row */}
+              <View style={styles.distanceHeaderRow}>
+                <Text style={styles.advancedRowTitle}>
+                  Max walking distance
+                </Text>
+                <Text style={styles.distanceValueText}>
+                  {maxWalkingDistance} min
+                </Text>
+              </View>
+
+              {/* Distance Steps Selector */}
+              <View style={styles.distanceSliderRow}>
+                {[5, 10, 15, 20, 30].map((mins) => {
+                  const isSelected = maxWalkingDistance === mins;
+                  return (
+                    <TouchableOpacity
+                      key={mins}
+                      style={[
+                        styles.distanceStepPill,
+                        isSelected && styles.distanceStepPillActive,
+                      ]}
+                      onPress={() => setMaxWalkingDistance(mins)}
+                      activeOpacity={0.8}
+                    >
+                      <Text
+                        style={[
+                          styles.distanceStepText,
+                          isSelected && styles.distanceStepTextActive,
+                        ]}
+                      >
+                        {mins}m
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View style={styles.distanceMinMaxRow}>
+                <Text style={styles.minMaxLabel}>5 min</Text>
+                <Text style={styles.minMaxLabel}>30 min</Text>
+              </View>
+            </View>
+          </ScrollView>
+
+          {/* Bottom Show Routes Button */}
+          <View style={styles.customizeBottomBar}>
+            <TouchableOpacity
+              style={styles.showRoutesButton}
+              activeOpacity={0.85}
+              onPress={handleApplyCustomize}
+            >
+              <Text style={styles.showRoutesButtonText}>Show Routes</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     </View>
@@ -1696,5 +2027,274 @@ const styles = StyleSheet.create({
   },
   nearbyBadgeTextTrain: {
     color: "#16A34A",
+  },
+
+  /* ================= CUSTOMIZE JOURNEY MODAL ================= */
+  customizeModalContainer: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+    paddingTop: Platform.OS === "ios" ? 52 : 36,
+  },
+  customizeScrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 110,
+  },
+  preferenceCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    paddingVertical: 13,
+    paddingHorizontal: 14,
+    marginBottom: 10,
+    borderWidth: 1.5,
+    borderColor: "#F1F5F9",
+    ...Platform.select({
+      web: {
+        boxShadow: "0 2px 6px rgba(0,0,0,0.03)",
+      },
+      default: {
+        elevation: 1,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.03,
+        shadowRadius: 2,
+      },
+    }),
+  },
+  preferenceCardActive: {
+    borderColor: "#3B82F6",
+    backgroundColor: "#FFFFFF",
+  },
+  prefIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 14,
+  },
+  prefIconFastest: {
+    backgroundColor: "#2563EB",
+  },
+  prefIconCheapest: {
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+  },
+  prefIconWalking: {
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+  },
+  prefIconTransfers: {
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+  },
+  prefIconReliable: {
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+  },
+  prefIconSymbol: {
+    fontSize: 18,
+  },
+  prefTextContainer: {
+    flex: 1,
+  },
+  prefTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  prefSubtitle: {
+    fontSize: 12,
+    color: "#94A3B8",
+    marginTop: 2,
+  },
+  radioButton: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    borderColor: "#CBD5E1",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  radioButtonActive: {
+    borderColor: "#2563EB",
+  },
+  radioDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#2563EB",
+  },
+
+  /* Advanced Options Card */
+  advancedOptionsCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    ...Platform.select({
+      web: {
+        boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+      },
+      default: {
+        elevation: 1,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.03,
+        shadowRadius: 3,
+      },
+    }),
+  },
+  advancedRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  advancedTextWrapper: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  advancedRowTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#1E293B",
+  },
+  advancedRowSubtitle: {
+    fontSize: 11,
+    color: "#94A3B8",
+    marginTop: 2,
+  },
+  advancedDivider: {
+    height: 1,
+    backgroundColor: "#F1F5F9",
+    marginVertical: 14,
+  },
+  transfersHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  transfersCurrentValue: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#2563EB",
+  },
+  transfersButtonGroup: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  transferOptionButton: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 10,
+    paddingVertical: 9,
+    alignItems: "center",
+  },
+  transferOptionButtonActive: {
+    backgroundColor: "#2563EB",
+    borderColor: "#2563EB",
+  },
+  transferOptionText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#334155",
+  },
+  transferOptionTextActive: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+  },
+  distanceHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  distanceValueText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#2563EB",
+  },
+  distanceSliderRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 6,
+  },
+  distanceStepPill: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 8,
+    paddingVertical: 6,
+    alignItems: "center",
+  },
+  distanceStepPillActive: {
+    backgroundColor: "#EFF6FF",
+    borderColor: "#2563EB",
+  },
+  distanceStepText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#64748B",
+  },
+  distanceStepTextActive: {
+    color: "#2563EB",
+    fontWeight: "700",
+  },
+  distanceMinMaxRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 2,
+  },
+  minMaxLabel: {
+    fontSize: 10,
+    color: "#94A3B8",
+  },
+
+  /* Customize Bottom Bar */
+  customizeBottomBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === "ios" ? 34 : 20,
+    borderTopWidth: 1,
+    borderTopColor: "#F1F5F9",
+  },
+  showRoutesButton: {
+    backgroundColor: "#165FE9",
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+    ...Platform.select({
+      web: {
+        boxShadow: "0 6px 16px rgba(22, 95, 233, 0.35)",
+      },
+      default: {
+        elevation: 4,
+        shadowColor: "#165FE9",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+      },
+    }),
+  },
+  showRoutesButtonText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
   },
 });
