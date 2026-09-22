@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,8 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
-  Animated,
-  Dimensions,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -24,628 +22,716 @@ type RouteDetailScreenRouteProp = RouteProp<
   "RouteDetail"
 >;
 
+import RealisticRouteMap from "../components/RealisticRouteMap";
+
 interface Props {
   navigation: RouteDetailScreenNavigationProp;
   route: RouteDetailScreenRouteProp;
 }
 
 export default function RouteDetailScreen({ navigation, route }: Props) {
-  const fromCity = route.params?.from || "Kandy City";
+  const fromCity = route.params?.from || "Kandy";
   const toCity = route.params?.to || "Colombo Fort";
-  const routeType = route.params?.routeType || "BEST MATCH";
   const fare = route.params?.fare || "Rs. 320";
-  const duration = route.params?.duration || "1h 35m";
-  const departureTime = route.params?.departureTime || "8:30 AM";
-  const arrivalTime = route.params?.arrivalTime || "10:05 AM";
 
-  // Animated vehicle progress along the map
-  const vehicleProgress = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(vehicleProgress, {
-          toValue: 1,
-          duration: 4000,
-          useNativeDriver: false,
-        }),
-        Animated.delay(800),
-        Animated.timing(vehicleProgress, {
-          toValue: 0,
-          duration: 0,
-          useNativeDriver: false,
-        }),
-      ])
-    ).start();
-  }, [vehicleProgress]);
-
-  const vehicleLeft = vehicleProgress.interpolate({
-    inputRange: [0, 0.3, 0.7, 1],
-    outputRange: ["10%", "35%", "65%", "88%"],
-  });
-
-  const vehicleTop = vehicleProgress.interpolate({
-    inputRange: [0, 0.3, 0.7, 1],
-    outputRange: ["68%", "45%", "42%", "30%"],
-  });
+  const [isFavorited, setIsFavorited] = useState(false);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.screen}>
       <StatusBar style="dark" />
 
-      {/* Header Bar */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          activeOpacity={0.7}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>‹</Text>
-        </TouchableOpacity>
-
-        <View style={styles.headerTitles}>
-          <Text style={styles.headerTitle}>{fromCity} ➔ {toCity}</Text>
-          <Text style={styles.headerSubtitle}>
-            {departureTime} - {arrivalTime} · {duration} · {fare}
-          </Text>
-        </View>
-
-        <TouchableOpacity style={styles.shareIconButton} activeOpacity={0.7}>
-          <Text style={styles.shareIconText}>↗</Text>
-        </TouchableOpacity>
-      </View>
-
       <ScrollView
-        style={styles.scrollArea}
+        style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Animated Map Section */}
-        <View style={styles.mapCard}>
-          <View style={styles.mapCanvas}>
-            {/* Map Grid Background */}
-            <View style={styles.mapRow}>
-              <View style={styles.mapBlock} />
-              <View style={[styles.mapBlock, styles.mapPark]} />
-              <View style={styles.mapBlock} />
-            </View>
-            <View style={styles.mapRow}>
-              <View style={styles.mapBlock} />
-              <View style={styles.mapBlock} />
-              <View style={[styles.mapBlock, styles.mapWater]} />
-            </View>
-            <View style={styles.mapRow}>
-              <View style={styles.mapBlock} />
-              <View style={styles.mapBlock} />
-              <View style={styles.mapBlock} />
-            </View>
+        {/* Top Map Section with Floating Badges */}
+        <View style={styles.mapArea}>
+          <RealisticRouteMap
+            height={165}
+            showLiveVehicle={true}
+            vehicleType="train"
+            from={fromCity}
+            to={toCity}
+          />
 
-            {/* Base Dashed Railway Track */}
-            <View style={styles.railTrackDashed} />
+          {/* Floating Back Button */}
+          <TouchableOpacity
+            style={styles.floatingBackButton}
+            activeOpacity={0.7}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.floatingBackIcon}>‹</Text>
+          </TouchableOpacity>
 
-            {/* Solid Active Blue Route Line */}
-            <View style={styles.activeRouteLineDiagonal} />
-            <View style={styles.activeRouteLineHorizontal} />
+          {/* Floating "Recommended Route" Badge */}
+          <View style={styles.recommendedRouteBadge}>
+            <Text style={styles.recommendedRouteText}>Recommended Route</Text>
+          </View>
 
-            {/* Station Rings */}
-            <View style={[styles.stationNode, { left: "10%", top: "66%" }]}>
-              <View style={styles.stationCoreBlue} />
-            </View>
-            <View style={[styles.stationNode, { left: "35%", top: "45%" }]}>
-              <View style={styles.stationCoreDark} />
-            </View>
-            <View style={[styles.stationNode, { left: "65%", top: "43%" }]}>
-              <View style={styles.stationCoreDark} />
-            </View>
-            <View style={[styles.destinationPin, { left: "88%", top: "22%" }]}>
-              <Text style={styles.pinIconText}>📍</Text>
-            </View>
+          {/* Floating Zoom Control */}
+          <TouchableOpacity style={styles.mapZoomButton}>
+            <Text style={styles.zoomButtonText}>−</Text>
+          </TouchableOpacity>
 
-            {/* Animated Vehicle Dot */}
-            <Animated.View
-              style={[
-                styles.movingVehiclePill,
-                {
-                  left: vehicleLeft,
-                  top: vehicleTop,
-                },
-              ]}
-            >
-              <View style={styles.vehiclePulsingHalo} />
-              <View style={styles.vehicleCoreDot}>
-                <Text style={styles.vehicleEmojiText}>🚆</Text>
-              </View>
-            </Animated.View>
-
-            {/* Live Indicator Pill on Map */}
-            <View style={styles.mapLiveBadge}>
-              <View style={styles.livePulseDot} />
-              <Text style={styles.mapLiveText}>Live Route Tracking</Text>
-            </View>
-
-            {/* Watermark */}
-            <View style={styles.watermarkContainer}>
-              <Text style={styles.watermarkText}>BestRoute Maps</Text>
-            </View>
+          {/* Watermark */}
+          <View style={styles.mapWatermark}>
+            <Text style={styles.watermarkText}>BestRoute Maps</Text>
           </View>
         </View>
 
-        {/* Route Summary Overview Card */}
-        <View style={styles.summaryOverviewCard}>
-          <View style={styles.summaryTopRow}>
-            <View style={styles.badgeWrapper}>
-              <Text style={styles.badgeLabelText}>{routeType}</Text>
+        {/* Floating "Your Journey" Summary Card */}
+        <View style={styles.journeySummaryCard}>
+          {/* Title & Fare Row */}
+          <View style={styles.summaryTitleRow}>
+            <View>
+              <Text style={styles.summaryTitle}>Your Journey</Text>
+              <Text style={styles.summarySubtitle}>
+                {fromCity} ➔ {toCity}
+              </Text>
             </View>
-            <View style={styles.lowRiskBadge}>
+
+            <View style={styles.priceColumn}>
+              <Text style={styles.priceAmount}>{fare}</Text>
+              <Text style={styles.priceLabel}>Estimated total</Text>
+            </View>
+          </View>
+
+          {/* 4 Stat Boxes Row */}
+          <View style={styles.statBoxesRow}>
+            {/* Stat 1: Duration */}
+            <View style={[styles.statBox, styles.statBoxBlue]}>
+              <Text style={styles.statBoxIcon}>⏱️</Text>
+              <Text style={styles.statValueBlue}>1h 35m</Text>
+              <Text style={styles.statLabel}>Duration</Text>
+            </View>
+
+            {/* Stat 2: Walking */}
+            <View style={[styles.statBox, styles.statBoxCyan]}>
+              <Text style={styles.statBoxIcon}>🚶</Text>
+              <Text style={styles.statValueCyan}>8 min</Text>
+              <Text style={styles.statLabel}>Walking</Text>
+            </View>
+
+            {/* Stat 3: Transfers */}
+            <View style={[styles.statBox, styles.statBoxPurple]}>
+              <Text style={styles.statBoxIcon}>🔄</Text>
+              <Text style={styles.statValuePurple}>2</Text>
+              <Text style={styles.statLabel}>Transfers</Text>
+            </View>
+
+            {/* Stat 4: Reliability */}
+            <View style={[styles.statBox, styles.statBoxGreen]}>
+              <Text style={styles.statBoxIcon}>🛡️</Text>
+              <Text style={styles.statValueGreen}>High</Text>
+              <Text style={styles.statLabel}>Reliability</Text>
+            </View>
+          </View>
+
+          {/* Connection Risk Banner */}
+          <View style={styles.connectionRiskBanner}>
+            <View style={styles.riskLeftCol}>
               <View style={styles.greenRiskDot} />
-              <Text style={styles.greenRiskText}>Low Connection Risk</Text>
+              <Text style={styles.greenRiskText}>Connection Risk: Low</Text>
             </View>
+            <TouchableOpacity activeOpacity={0.7}>
+              <Text style={styles.riskDetailsLink}>Details ➔</Text>
+            </TouchableOpacity>
           </View>
+        </View>
 
-          <View style={styles.overviewStatsRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statBoxLabel}>DEPART</Text>
-              <Text style={styles.statBoxValue}>{departureTime}</Text>
+        {/* JOURNEY TIMELINE SECTION */}
+        <View style={styles.timelineSection}>
+          <Text style={styles.timelineHeading}>JOURNEY TIMELINE</Text>
+
+          <View style={styles.timelineContainer}>
+            {/* Step 1: Bus 654 */}
+            <View style={styles.timelineRow}>
+              <View style={styles.timelineLeftTrack}>
+                <Text style={styles.timelineTimeText}>8:30 AM</Text>
+                <View style={[styles.timelineNode, styles.nodeBus]}>
+                  <Text style={styles.nodeIcon}>🚌</Text>
+                </View>
+                <View style={styles.verticalTrackLine} />
+              </View>
+
+              <View style={styles.timelineContentCard}>
+                <Text style={styles.cardStepTitle}>
+                  Board Bus 654 — Colombo Fort
+                </Text>
+                <Text style={styles.cardStepLocation}>
+                  Kandy Bus Stand, Platform 3
+                </Text>
+
+                <View style={styles.cardFooterRow}>
+                  <Text style={styles.cardFooterInfo}>
+                    Departs 8:30 AM · Rs. 120
+                  </Text>
+                  <View style={styles.pillDurationBlue}>
+                    <Text style={styles.pillDurationTextBlue}>20 min</Text>
+                  </View>
+                </View>
+              </View>
             </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statBox}>
-              <Text style={styles.statBoxLabel}>ARRIVE</Text>
-              <Text style={styles.statBoxValue}>{arrivalTime}</Text>
+
+            {/* Step 2: Walk */}
+            <View style={styles.timelineRow}>
+              <View style={styles.timelineLeftTrack}>
+                <Text style={styles.timelineTimeText}>8:50 AM</Text>
+                <View style={[styles.timelineNode, styles.nodeWalk]}>
+                  <Text style={styles.nodeIcon}>🚶</Text>
+                </View>
+                <View style={styles.verticalTrackLine} />
+              </View>
+
+              <View style={styles.timelineContentCard}>
+                <Text style={styles.cardStepTitle}>
+                  Walk to Fort Railway Station
+                </Text>
+                <Text style={styles.cardStepLocation}>
+                  Via Colombo Street
+                </Text>
+
+                <View style={styles.cardFooterRow}>
+                  <Text style={styles.cardFooterInfo}>~380 m</Text>
+                  <View style={styles.pillDurationGray}>
+                    <Text style={styles.pillDurationTextGray}>5 min</Text>
+                  </View>
+                </View>
+              </View>
             </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statBox}>
-              <Text style={styles.statBoxLabel}>TOTAL FARE</Text>
-              <Text style={styles.statBoxFareValue}>{fare}</Text>
+
+            {/* Step 3: Train */}
+            <View style={styles.timelineRow}>
+              <View style={styles.timelineLeftTrack}>
+                <Text style={styles.timelineTimeText}>8:55 AM</Text>
+                <View style={[styles.timelineNode, styles.nodeTrain]}>
+                  <Text style={styles.nodeIcon}>🚆</Text>
+                </View>
+                <View style={styles.verticalTrackLine} />
+              </View>
+
+              <View style={styles.timelineContentCard}>
+                <Text style={styles.cardStepTitle}>
+                  Intercity Express — Colombo Fort
+                </Text>
+                <Text style={styles.cardStepLocation}>
+                  Platform 1, Coach C
+                </Text>
+
+                <View style={styles.cardFooterRow}>
+                  <Text style={styles.cardFooterInfo}>
+                    Departs 8:55 AM · Rs. 160 · Platform 1
+                  </Text>
+                  <View style={styles.pillDurationGreen}>
+                    <Text style={styles.pillDurationTextGreen}>55 min</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* Step 4: Tuk-tuk */}
+            <View style={styles.timelineRow}>
+              <View style={styles.timelineLeftTrack}>
+                <Text style={styles.timelineTimeText}>9:50 AM</Text>
+                <View style={[styles.timelineNode, styles.nodeTuk]}>
+                  <Text style={styles.nodeIcon}>🛺</Text>
+                </View>
+                <View style={styles.verticalTrackLine} />
+              </View>
+
+              <View style={styles.timelineContentCard}>
+                <Text style={styles.cardStepTitle}>
+                  Tuk-tuk to Destination
+                </Text>
+                <Text style={styles.cardStepLocation}>
+                  Colombo Fort Station Exit
+                </Text>
+
+                <View style={styles.cardFooterRow}>
+                  <Text style={styles.cardFooterInfo}>Estimate Rs. 40</Text>
+                  <View style={styles.pillDurationPink}>
+                    <Text style={styles.pillDurationTextPink}>10 min</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* Step 5: Arrived at Colombo Fort */}
+            <View style={styles.timelineRow}>
+              <View style={styles.timelineLeftTrack}>
+                <Text style={styles.timelineTimeText}>10:05 AM</Text>
+                <View style={[styles.timelineNode, styles.nodeDestination]}>
+                  <Text style={styles.nodeIconWhite}>📍</Text>
+                </View>
+              </View>
+
+              <View style={[styles.timelineContentCard, styles.cardArrived]}>
+                <Text style={styles.cardArrivedTitle}>Colombo Fort</Text>
+                <Text style={styles.cardArrivedSubtitle}>
+                  Arrived · Journey complete
+                </Text>
+              </View>
             </View>
           </View>
         </View>
 
-        {/* Step-by-Step Multimodal Timeline */}
-        <Text style={styles.timelineSectionHeading}>JOURNEY TIMELINE</Text>
-
-        <View style={styles.timelineCard}>
-          {/* Step 1: Start Walk */}
-          <View style={styles.timelineStep}>
-            <View style={styles.timelineLeftColumn}>
-              <View style={[styles.timelineNodeCircle, styles.nodeWalk]}>
-                <Text style={styles.stepEmoji}>🚶</Text>
-              </View>
-              <View style={styles.timelineVerticalLine} />
+        {/* LAST-MILE VEHICLES SECTION */}
+        <View style={styles.lastMileContainer}>
+          {/* Top Info Header */}
+          <View style={styles.lastMileHeaderRow}>
+            <View style={styles.lastMileTitleWrapper}>
+              <Text style={styles.lastMileTitle}>🛺 LAST-MILE VEHICLES</Text>
             </View>
-            <View style={styles.timelineContentColumn}>
-              <View style={styles.timelineStepHeader}>
-                <Text style={styles.stepTitleText}>Walk to Kandy Clock Tower Bus Stand</Text>
-                <Text style={styles.stepTimeText}>8:30 AM</Text>
-              </View>
-              <Text style={styles.stepDetailSubtext}>450m · 6 min walk · Flat terrain</Text>
+            <View style={styles.arrivalLocationBadge}>
+              <Text style={styles.arrivalLocationBadgeText}>
+                Colombo Fort arrival
+              </Text>
             </View>
           </View>
 
-          {/* Step 2: Bus */}
-          <View style={styles.timelineStep}>
-            <View style={styles.timelineLeftColumn}>
-              <View style={[styles.timelineNodeCircle, styles.nodeBus]}>
-                <Text style={styles.stepEmoji}>🚌</Text>
-              </View>
-              <View style={styles.timelineVerticalLine} />
+          <Text style={styles.lastMileDescription}>
+            Expected vehicles available when your train arrives at 10:05 AM
+          </Text>
+
+          {/* Two Vehicle Option Cards */}
+          <View style={styles.vehiclesTwoColRow}>
+            {/* Taxi Box */}
+            <View style={styles.vehicleColBox}>
+              <Text style={styles.vehicleBoxHeading}>🚕 Taxi</Text>
+              <Text style={styles.vehicleCountText}>8+</Text>
+              <Text style={styles.vehicleFareInfo}>~2 min · Rs. 350-500</Text>
             </View>
-            <View style={styles.timelineContentColumn}>
-              <View style={styles.timelineStepHeader}>
-                <Text style={styles.stepTitleText}>Local Bus #654 (Kandy Station Link)</Text>
-                <Text style={styles.stepTimeText}>8:38 AM</Text>
-              </View>
-              <Text style={styles.stepDetailSubtext}>Board at Stand 3 · 3 stops · Rs. 40</Text>
-              <View style={styles.statusPillOnTime}>
-                <Text style={styles.statusPillOnTimeText}>On time · Every 5 mins</Text>
-              </View>
+
+            {/* Tuk-tuk Box */}
+            <View style={styles.vehicleColBox}>
+              <Text style={styles.vehicleBoxHeading}>🛺 Tuk-tuk</Text>
+              <Text style={styles.vehicleCountText}>12+</Text>
+              <Text style={styles.vehicleFareInfo}>~1 min · Rs. 150-250</Text>
             </View>
           </View>
 
-          {/* Step 3: Train Transfer */}
-          <View style={styles.timelineStep}>
-            <View style={styles.timelineLeftColumn}>
-              <View style={[styles.timelineNodeCircle, styles.nodeTrain]}>
-                <Text style={styles.stepEmoji}>🚆</Text>
-              </View>
-              <View style={styles.timelineVerticalLine} />
-            </View>
-            <View style={styles.timelineContentColumn}>
-              <View style={styles.timelineStepHeader}>
-                <Text style={styles.stepTitleText}>Intercity Express #1008 to Colombo Fort</Text>
-                <Text style={styles.stepTimeText}>8:55 AM</Text>
-              </View>
-              <Text style={styles.stepDetailSubtext}>Platform 1 · 2nd Class Reserved · Rs. 240</Text>
-              <View style={styles.statusPillHighReliability}>
-                <Text style={styles.statusPillHighReliabilityText}>98% On-time reliability</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Step 4: Tuk / Last Mile */}
-          <View style={styles.timelineStep}>
-            <View style={styles.timelineLeftColumn}>
-              <View style={[styles.timelineNodeCircle, styles.nodeTuk]}>
-                <Text style={styles.stepEmoji}>🛺</Text>
-              </View>
-            </View>
-            <View style={styles.timelineContentColumn}>
-              <View style={styles.timelineStepHeader}>
-                <Text style={styles.stepTitleText}>Arrive at Colombo Fort Station</Text>
-                <Text style={styles.stepTimeText}>10:05 AM</Text>
-              </View>
-              <Text style={styles.stepDetailSubtext}>Exit via Main Concourse · Tuk stands available</Text>
-            </View>
-          </View>
+          {/* View Available Vehicles Button */}
+          <TouchableOpacity
+            style={styles.viewVehiclesButton}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.viewVehiclesButtonText}>
+              View Available Vehicles ➔
+            </Text>
+          </TouchableOpacity>
         </View>
-
-        {/* Start Navigation CTA */}
-        <TouchableOpacity
-          style={styles.startNavigationButton}
-          activeOpacity={0.85}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.startNavButtonText}>Start Navigation ➔</Text>
-        </TouchableOpacity>
       </ScrollView>
+
+      {/* Fixed Bottom Action Bar */}
+      <View style={styles.bottomActionBar}>
+        {/* Favorite Button */}
+        <TouchableOpacity
+          style={styles.favoriteButton}
+          activeOpacity={0.7}
+          onPress={() => setIsFavorited(!isFavorited)}
+        >
+          <Text
+            style={[
+              styles.heartIconText,
+              isFavorited && styles.heartIconActive,
+            ]}
+          >
+            {isFavorited ? "❤️" : "♡"}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Start Journey Button */}
+        <TouchableOpacity
+          style={styles.startJourneyButton}
+          activeOpacity={0.85}
+          onPress={() =>
+            navigation.navigate("LiveTracking", {
+              from: fromCity,
+              to: toCity,
+            })
+          }
+        >
+          <Text style={styles.startJourneyButtonText}>Start Journey ➔</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
     backgroundColor: "#F8FAFC",
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingTop: Platform.OS === "ios" ? 52 : 36,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  backButtonText: {
-    fontSize: 22,
-    color: "#1E293B",
-    marginTop: -2,
-  },
-  headerTitles: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#0F172A",
-  },
-  headerSubtitle: {
-    fontSize: 11,
-    color: "#64748B",
-    marginTop: 2,
-  },
-  shareIconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: "#F1F5F9",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  shareIconText: {
-    fontSize: 16,
-    color: "#334155",
-    fontWeight: "700",
-  },
-  scrollArea: {
+  scrollContainer: {
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 110,
   },
 
-  /* Map Card */
-  mapCard: {
-    height: 190,
-    borderRadius: 18,
-    overflow: "hidden",
-    borderWidth: 1.5,
-    borderColor: "#E2E8F0",
-    marginBottom: 16,
-    ...Platform.select({
-      web: {
-        boxShadow: "0 4px 14px rgba(15, 23, 42, 0.08)",
-      },
-      default: {
-        elevation: 3,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
-      },
-    }),
-  },
-  mapCanvas: {
-    flex: 1,
+  /* Top Map Area */
+  mapArea: {
+    height: 155,
     backgroundColor: "#E2E8F0",
     position: "relative",
     overflow: "hidden",
   },
-  mapRow: {
+  mapGridRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 12,
-    marginVertical: 12,
+    paddingHorizontal: 10,
+    marginVertical: 10,
   },
   mapBlock: {
     width: "30%",
-    height: 40,
+    height: 48,
     backgroundColor: "#EFF4F9",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderRadius: 10,
   },
-  mapPark: {
+  mapBlockPark: {
     backgroundColor: "#DCFCE7",
-    borderColor: "#BBF7D0",
   },
-  mapWater: {
+  mapBlockWater: {
     backgroundColor: "#E0F2FE",
-    borderColor: "#BAE6FD",
   },
-  railTrackDashed: {
+  mapDashedTrack: {
     position: "absolute",
     left: 0,
     right: 0,
-    top: "47%",
-    height: 3,
+    top: "48%",
+    height: 2,
     borderWidth: 1.5,
     borderColor: "#94A3B8",
     borderStyle: "dashed",
   },
-  activeRouteLineDiagonal: {
+  mapActiveRouteSegment1: {
     position: "absolute",
-    left: "12%",
-    top: "47%",
-    width: "28%",
+    left: "14%",
+    top: "56%",
+    width: "26%",
     height: 4,
-    backgroundColor: "#1D64EC",
+    backgroundColor: "#2563EB",
+    borderRadius: 2,
     transform: [{ rotate: "-22deg" }],
-    borderRadius: 2,
-    zIndex: 2,
   },
-  activeRouteLineHorizontal: {
+  mapActiveRouteSegment2: {
     position: "absolute",
-    left: "35%",
-    right: "12%",
-    top: "46%",
+    left: "38%",
+    right: "16%",
+    top: "47%",
     height: 4,
-    backgroundColor: "#1D64EC",
+    backgroundColor: "#2563EB",
     borderRadius: 2,
-    zIndex: 2,
   },
-  stationNode: {
+  mapNodeDot: {
     position: "absolute",
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: "#FFFFFF",
-    borderWidth: 2.5,
+    borderWidth: 2,
     borderColor: "#334155",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 4,
   },
-  stationCoreBlue: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#1D64EC",
+  mapNodeCoreBlue: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#2563EB",
   },
-  stationCoreDark: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+  mapNodeCoreDark: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
     backgroundColor: "#475569",
   },
-  destinationPin: {
+  mapDestinationPin: {
     position: "absolute",
     zIndex: 6,
   },
-  pinIconText: {
-    fontSize: 22,
+  pinSymbol: {
+    fontSize: 18,
   },
-  movingVehiclePill: {
+  floatingBackButton: {
     position: "absolute",
-    zIndex: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  vehiclePulsingHalo: {
-    position: "absolute",
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(29, 100, 236, 0.25)",
-  },
-  vehicleCoreDot: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 2,
-    borderColor: "#1D64EC",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  vehicleEmojiText: {
-    fontSize: 13,
-  },
-  mapLiveBadge: {
-    position: "absolute",
-    top: 10,
-    left: 10,
-    backgroundColor: "rgba(15, 23, 42, 0.88)",
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+    top: Platform.OS === "ios" ? 52 : 36,
+    left: 16,
+    width: 38,
+    height: 38,
     borderRadius: 12,
-    flexDirection: "row",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    justifyContent: "center",
     alignItems: "center",
-    gap: 6,
+    zIndex: 10,
+    ...Platform.select({
+      web: {
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+      },
+      default: {
+        elevation: 3,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+      },
+    }),
   },
-  livePulseDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: "#10B981",
+  floatingBackIcon: {
+    fontSize: 24,
+    color: "#334155",
+    marginTop: -2,
+    fontWeight: "600",
   },
-  mapLiveText: {
-    color: "#FFFFFF",
-    fontSize: 10,
+  recommendedRouteBadge: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 54 : 38,
+    right: 16,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+    zIndex: 10,
+    ...Platform.select({
+      web: {
+        boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+      },
+      default: {
+        elevation: 2,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.08,
+        shadowRadius: 3,
+      },
+    }),
+  },
+  recommendedRouteText: {
+    color: "#2563EB",
+    fontSize: 11,
     fontWeight: "700",
   },
-  watermarkContainer: {
+  mapZoomButton: {
+    position: "absolute",
+    right: 16,
+    top: Platform.OS === "ios" ? 96 : 80,
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  zoomButtonText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#475569",
+  },
+  mapWatermark: {
     position: "absolute",
     right: 8,
-    bottom: 6,
+    bottom: 4,
     backgroundColor: "rgba(255, 255, 255, 0.8)",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
   },
   watermarkText: {
     fontSize: 8,
     color: "#64748B",
-    fontWeight: "600",
   },
 
-  /* Overview Card */
-  summaryOverviewCard: {
+  /* Floating "Your Journey" Summary Card */
+  journeySummaryCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    marginHorizontal: 16,
+    marginTop: -16,
+    borderRadius: 20,
     padding: 16,
-    borderWidth: 1.5,
-    borderColor: "#E2E8F0",
-    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    zIndex: 15,
+    ...Platform.select({
+      web: {
+        boxShadow: "0 6px 20px rgba(15, 23, 42, 0.08)",
+      },
+      default: {
+        elevation: 4,
+        shadowColor: "#0F172A",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+      },
+    }),
   },
-  summaryTopRow: {
+  summaryTitleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 14,
+  },
+  summaryTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+  summarySubtitle: {
+    fontSize: 12,
+    color: "#64748B",
+    marginTop: 2,
+    fontWeight: "500",
+  },
+  priceColumn: {
+    alignItems: "flex-end",
+  },
+  priceAmount: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#1D64EC",
+  },
+  priceLabel: {
+    fontSize: 10,
+    color: "#94A3B8",
+    marginTop: 1,
+  },
+  statBoxesRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 12,
+  },
+  statBox: {
+    flex: 1,
+    borderRadius: 12,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  statBoxBlue: {
+    backgroundColor: "#EFF6FF",
+  },
+  statBoxCyan: {
+    backgroundColor: "#ECFEFF",
+  },
+  statBoxPurple: {
+    backgroundColor: "#F5F3FF",
+  },
+  statBoxGreen: {
+    backgroundColor: "#F0FDF4",
+  },
+  statBoxIcon: {
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  statValueBlue: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#1D64EC",
+  },
+  statValueCyan: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#0891B2",
+  },
+  statValuePurple: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#7C3AED",
+  },
+  statValueGreen: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#16A34A",
+  },
+  statLabel: {
+    fontSize: 10,
+    color: "#64748B",
+    marginTop: 2,
+  },
+  connectionRiskBanner: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 14,
+    backgroundColor: "#F0FDF4",
+    borderWidth: 1,
+    borderColor: "#DCFCE7",
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
-  badgeWrapper: {
-    backgroundColor: "#1D64EC",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  badgeLabelText: {
-    color: "#FFFFFF",
-    fontSize: 11,
-    fontWeight: "800",
-  },
-  lowRiskBadge: {
+  riskLeftCol: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
+    gap: 6,
   },
   greenRiskDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#10B981",
+    backgroundColor: "#16A34A",
   },
   greenRiskText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#059669",
+    color: "#16A34A",
   },
-  overviewStatsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#F8FAFC",
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-  },
-  statBox: {
-    flex: 1,
-    alignItems: "center",
-  },
-  statBoxLabel: {
-    fontSize: 9,
+  riskDetailsLink: {
+    fontSize: 11,
     fontWeight: "700",
-    color: "#94A3B8",
-    letterSpacing: 0.5,
-  },
-  statBoxValue: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#0F172A",
-    marginTop: 2,
-  },
-  statBoxFareValue: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#1D64EC",
-    marginTop: 2,
-  },
-  statDivider: {
-    width: 1,
-    height: 24,
-    backgroundColor: "#E2E8F0",
+    color: "#16A34A",
   },
 
-  /* Timeline */
-  timelineSectionHeading: {
+  /* Journey Timeline Section */
+  timelineSection: {
+    paddingHorizontal: 16,
+    marginTop: 22,
+  },
+  timelineHeading: {
     fontSize: 11,
     fontWeight: "700",
     color: "#94A3B8",
     letterSpacing: 0.6,
-    marginBottom: 10,
+    marginBottom: 12,
   },
-  timelineCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1.5,
-    borderColor: "#E2E8F0",
-    marginBottom: 20,
+  timelineContainer: {
+    gap: 6,
   },
-  timelineStep: {
+  timelineRow: {
     flexDirection: "row",
+    alignItems: "flex-start",
   },
-  timelineLeftColumn: {
+  timelineLeftTrack: {
+    width: 68,
     alignItems: "center",
-    width: 36,
-    marginRight: 10,
+    position: "relative",
+    paddingTop: 4,
   },
-  timelineNodeCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  timelineTimeText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#64748B",
+    marginBottom: 6,
+  },
+  timelineNode: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 2,
+  },
+  nodeBus: {
+    backgroundColor: "#DBEAFE",
   },
   nodeWalk: {
     backgroundColor: "#F1F5F9",
-  },
-  nodeBus: {
-    backgroundColor: "#EFF6FF",
   },
   nodeTrain: {
     backgroundColor: "#DCFCE7",
@@ -653,88 +739,266 @@ const styles = StyleSheet.create({
   nodeTuk: {
     backgroundColor: "#FCE7F3",
   },
-  stepEmoji: {
-    fontSize: 15,
+  nodeDestination: {
+    backgroundColor: "#EF4444",
   },
-  timelineVerticalLine: {
-    width: 2,
-    flex: 1,
+  nodeIcon: {
+    fontSize: 13,
+  },
+  nodeIconWhite: {
+    fontSize: 13,
+    color: "#FFFFFF",
+  },
+  verticalTrackLine: {
+    position: "absolute",
+    top: 48,
+    bottom: -8,
+    width: 1.5,
     backgroundColor: "#E2E8F0",
-    marginVertical: 4,
+    zIndex: 1,
   },
-  timelineContentColumn: {
+
+  /* Timeline Card Content */
+  timelineContentCard: {
     flex: 1,
-    paddingBottom: 22,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    ...Platform.select({
+      web: {
+        boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
+      },
+      default: {
+        elevation: 1,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.03,
+        shadowRadius: 2,
+      },
+    }),
   },
-  timelineStepHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  stepTitleText: {
-    flex: 1,
+  cardStepTitle: {
     fontSize: 13,
     fontWeight: "700",
     color: "#1E293B",
-    paddingRight: 8,
   },
-  stepTimeText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#1D64EC",
+  cardStepLocation: {
+    fontSize: 11,
+    color: "#94A3B8",
+    marginTop: 2,
   },
-  stepDetailSubtext: {
+  cardFooterRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8,
+  },
+  cardFooterInfo: {
     fontSize: 11,
     color: "#64748B",
-    marginTop: 3,
   },
-  statusPillOnTime: {
+  pillDurationBlue: {
     backgroundColor: "#EFF6FF",
-    alignSelf: "flex-start",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
-    marginTop: 6,
   },
-  statusPillOnTimeText: {
+  pillDurationTextBlue: {
     fontSize: 10,
     fontWeight: "700",
     color: "#2563EB",
   },
-  statusPillHighReliability: {
-    backgroundColor: "#DCFCE7",
-    alignSelf: "flex-start",
+  pillDurationGray: {
+    backgroundColor: "#F1F5F9",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
-    marginTop: 6,
   },
-  statusPillHighReliabilityText: {
+  pillDurationTextGray: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#475569",
+  },
+  pillDurationGreen: {
+    backgroundColor: "#DCFCE7",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  pillDurationTextGreen: {
     fontSize: 10,
     fontWeight: "700",
     color: "#16A34A",
   },
+  pillDurationPink: {
+    backgroundColor: "#FCE7F3",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  pillDurationTextPink: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#DB2777",
+  },
 
-  /* Start Navigation CTA */
-  startNavigationButton: {
-    backgroundColor: "#165FE9",
+  /* Arrived Card */
+  cardArrived: {
+    backgroundColor: "#FEF2F2",
+    borderColor: "#FEE2E2",
+  },
+  cardArrivedTitle: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#DC2626",
+  },
+  cardArrivedSubtitle: {
+    fontSize: 11,
+    color: "#EF4444",
+    marginTop: 2,
+  },
+
+  /* Last-Mile Vehicles Section */
+  lastMileContainer: {
+    backgroundColor: "#FFFBEB",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+    borderRadius: 16,
+    padding: 14,
+    marginHorizontal: 16,
+    marginTop: 14,
+  },
+  lastMileHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  lastMileTitleWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  lastMileTitle: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#92400E",
+    letterSpacing: 0.5,
+  },
+  arrivalLocationBadge: {
+    backgroundColor: "#FEF3C7",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  arrivalLocationBadgeText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#B45309",
+  },
+  lastMileDescription: {
+    fontSize: 11,
+    color: "#B45309",
+    marginBottom: 12,
+    lineHeight: 16,
+  },
+  vehiclesTwoColRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 12,
+  },
+  vehicleColBox: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#FEF3C7",
+    padding: 12,
+  },
+  vehicleBoxHeading: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#1E293B",
+    marginBottom: 4,
+  },
+  vehicleCountText: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#D97706",
+    marginBottom: 2,
+  },
+  vehicleFareInfo: {
+    fontSize: 10,
+    color: "#64748B",
+  },
+  viewVehiclesButton: {
+    backgroundColor: "#C25E00",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  viewVehiclesButtonText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+
+  /* Fixed Bottom Action Bar */
+  bottomActionBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: 1,
+    borderTopColor: "#F1F5F9",
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: Platform.OS === "ios" ? 28 : 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  favoriteButton: {
+    width: 48,
+    height: 48,
     borderRadius: 14,
-    paddingVertical: 14,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  heartIconText: {
+    fontSize: 20,
+    color: "#94A3B8",
+  },
+  heartIconActive: {
+    color: "#EF4444",
+  },
+  startJourneyButton: {
+    flex: 1,
+    height: 48,
+    backgroundColor: "#1D64EC",
+    borderRadius: 14,
+    justifyContent: "center",
     alignItems: "center",
     ...Platform.select({
       web: {
-        boxShadow: "0 6px 18px rgba(22, 95, 233, 0.35)",
+        boxShadow: "0 4px 14px rgba(29, 100, 236, 0.35)",
       },
       default: {
         elevation: 4,
-        shadowColor: "#165FE9",
+        shadowColor: "#1D64EC",
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
-        shadowRadius: 10,
+        shadowRadius: 8,
       },
     }),
   },
-  startNavButtonText: {
+  startJourneyButtonText: {
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",

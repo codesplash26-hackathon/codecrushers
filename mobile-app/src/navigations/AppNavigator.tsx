@@ -10,6 +10,7 @@ import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 import HomeScreen from "../screens/HomeScreen";
 import RouteResultsScreen from "../screens/RouteResultsScreen";
 import RouteDetailScreen from "../screens/RouteDetailScreen";
+import LiveTrackingScreen from "../screens/LiveTrackingScreen";
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -32,6 +33,12 @@ export type RootStackParamList = {
         arrivalTime?: string;
       }
     | undefined;
+  LiveTracking:
+    | {
+        from?: string;
+        to?: string;
+      }
+    | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -51,6 +58,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="RouteResults" component={RouteResultsScreen} />
         <Stack.Screen name="RouteDetail" component={RouteDetailScreen} />
+        <Stack.Screen name="LiveTracking" component={LiveTrackingScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
