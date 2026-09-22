@@ -7,6 +7,7 @@ import {
   TextInput,
   ScrollView,
   Platform,
+  Modal,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
@@ -22,8 +23,25 @@ interface Props {
   navigation: HomeScreenNavigationProp;
 }
 
+interface QuickAccessItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  type?: "current" | "train" | "bus" | "location";
+  badge?: string;
+  badgeType?: "train" | "bus";
+}
+
+interface NearbyStopItem {
+  id: string;
+  title: string;
+  distance: string;
+  badge: string;
+  type: "bus" | "train";
+}
+
 export default function HomeScreen({ navigation }: Props) {
-  // State
+  // Main screen states
   const [fromLocation, setFromLocation] = useState("Kandy City");
   const [toLocation, setToLocation] = useState("");
   const [departMode, setDepartMode] = useState<"depart" | "arrive">("depart");
@@ -38,11 +56,111 @@ export default function HomeScreen({ navigation }: Props) {
     "home" | "journeys" | "alerts" | "profile"
   >("home");
 
+  // Search modal state
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [searchTarget, setSearchTarget] = useState<"from" | "to">("to");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const quickAccessList: QuickAccessItem[] = [
+    {
+      id: "1",
+      title: "Current Location",
+      subtitle: "Kandy City Centre",
+      type: "current",
+    },
+    {
+      id: "2",
+      title: "Colombo Fort Railway Station",
+      subtitle: "Train · 1.2 km from Fort",
+      type: "train",
+      badge: "Train",
+      badgeType: "train",
+    },
+    {
+      id: "3",
+      title: "Kandy Railway Station",
+      subtitle: "Train · 850 m from centre",
+      type: "train",
+      badge: "Train",
+      badgeType: "train",
+    },
+    {
+      id: "4",
+      title: "University of Sri Jayewardenepura",
+      subtitle: "Nugegoda, Colombo",
+      type: "location",
+    },
+    {
+      id: "5",
+      title: "Peradeniya Bus Stand",
+      subtitle: "Bus · 3.4 km",
+      type: "bus",
+      badge: "Bus",
+      badgeType: "bus",
+    },
+    {
+      id: "6",
+      title: "Peradeniya Junction",
+      subtitle: "Kandy Road",
+      type: "location",
+    },
+  ];
+
+  const nearbyStopsList: NearbyStopItem[] = [
+    {
+      id: "n1",
+      title: "Kandy Bus Stand",
+      distance: "0.3 km",
+      badge: "Bus",
+      type: "bus",
+    },
+    {
+      id: "n2",
+      title: "Kandy Railway Station",
+      distance: "0.8 km",
+      badge: "Train",
+      type: "train",
+    },
+    {
+      id: "n3",
+      title: "Peradeniya Junction",
+      distance: "3.2 km",
+      badge: "Bus",
+      type: "bus",
+    },
+  ];
+
   const handleSwapLocations = () => {
     const temp = fromLocation;
     setFromLocation(toLocation || "Colombo Fort");
     setToLocation(temp);
   };
+
+  const openSearchModal = (target: "from" | "to") => {
+    setSearchTarget(target);
+    setSearchQuery("");
+    setIsSearchVisible(true);
+  };
+
+  const handleSelectLocation = (locationName: string) => {
+    if (searchTarget === "from") {
+      setFromLocation(locationName);
+    } else {
+      setToLocation(locationName);
+    }
+    setIsSearchVisible(false);
+  };
+
+  // Filtered lists based on search input
+  const filteredQuickAccess = quickAccessList.filter(
+    (item) =>
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.subtitle.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredNearby = nearbyStopsList.filter((item) =>
+    item.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <View style={styles.screen}>
@@ -87,21 +205,27 @@ export default function HomeScreen({ navigation }: Props) {
           {/* Search Card Container Floating in Header */}
           <View style={styles.searchCard}>
             {/* FROM Input Box */}
-            <View style={styles.locationInputBox}>
+            <TouchableOpacity
+              style={styles.locationInputBox}
+              activeOpacity={0.9}
+              onPress={() => openSearchModal("from")}
+            >
               <View style={styles.bluePinOuter}>
                 <View style={styles.bluePinInner} />
               </View>
               <View style={styles.locationTextWrapper}>
                 <Text style={styles.fieldLabel}>FROM</Text>
-                <TextInput
-                  style={styles.locationInput}
-                  value={fromLocation}
-                  onChangeText={setFromLocation}
-                  placeholder="Starting point"
-                  placeholderTextColor="#94A3B8"
-                />
+                <Text
+                  style={[
+                    styles.locationInputText,
+                    !fromLocation && styles.placeholderText,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {fromLocation || "Starting point"}
+                </Text>
               </View>
-            </View>
+            </TouchableOpacity>
 
             {/* Connecting Track & Swap Button */}
             <View style={styles.dividerRow}>
@@ -116,21 +240,27 @@ export default function HomeScreen({ navigation }: Props) {
             </View>
 
             {/* TO Input Box */}
-            <View style={styles.locationInputBox}>
+            <TouchableOpacity
+              style={styles.locationInputBox}
+              activeOpacity={0.9}
+              onPress={() => openSearchModal("to")}
+            >
               <View style={styles.redPinOuter}>
                 <Text style={styles.pinSymbol}>📍</Text>
               </View>
               <View style={styles.locationTextWrapper}>
                 <Text style={styles.fieldLabel}>TO</Text>
-                <TextInput
-                  style={styles.locationInput}
-                  value={toLocation}
-                  onChangeText={setToLocation}
-                  placeholder="Where to?"
-                  placeholderTextColor="#94A3B8"
-                />
+                <Text
+                  style={[
+                    styles.locationInputText,
+                    !toLocation && styles.placeholderText,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {toLocation || "Where to?"}
+                </Text>
               </View>
-            </View>
+            </TouchableOpacity>
 
             {/* Depart At / Arrive By Segmented Toggle */}
             <View style={styles.segmentedContainer}>
@@ -544,6 +674,193 @@ export default function HomeScreen({ navigation }: Props) {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Location Search Modal (Matches Provided Picture) */}
+      <Modal
+        visible={isSearchVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setIsSearchVisible(false)}
+      >
+        <View style={styles.searchModalContainer}>
+          <StatusBar style="dark" />
+
+          {/* Modal Header */}
+          <View style={styles.modalHeader}>
+            <TouchableOpacity
+              style={styles.modalBackButton}
+              activeOpacity={0.7}
+              onPress={() => setIsSearchVisible(false)}
+            >
+              <Text style={styles.modalBackIcon}>‹</Text>
+            </TouchableOpacity>
+
+            <View style={styles.modalTitleContainer}>
+              <Text style={styles.modalTitle}>
+                {searchTarget === "from"
+                  ? "Where are you starting?"
+                  : "Where are you starting?"}
+              </Text>
+              <Text style={styles.modalSubtitle}>
+                Search for a location, station or stop
+              </Text>
+            </View>
+          </View>
+
+          {/* Search Input Box */}
+          <View style={styles.modalSearchBox}>
+            <Text style={styles.modalSearchIcon}>🔍</Text>
+            <TextInput
+              style={styles.modalSearchInput}
+              placeholder="Search location, station or stop"
+              placeholderTextColor="#94A3B8"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+              onSubmitEditing={() => {
+                if (searchQuery.trim()) {
+                  handleSelectLocation(searchQuery.trim());
+                }
+              }}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setSearchQuery("")}
+                style={styles.clearButton}
+              >
+                <Text style={styles.clearIcon}>✕</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <ScrollView
+            style={styles.modalScroll}
+            contentContainerStyle={styles.modalScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Quick Access Section */}
+            <Text style={styles.modalSectionHeading}>QUICK ACCESS</Text>
+            {filteredQuickAccess.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.quickAccessCard}
+                activeOpacity={0.75}
+                onPress={() => handleSelectLocation(item.title)}
+              >
+                {/* Left Icon Container */}
+                <View
+                  style={[
+                    styles.quickAccessIconBox,
+                    item.type === "current" && styles.iconBoxCurrent,
+                    item.type === "train" && styles.iconBoxTrain,
+                    item.type === "bus" && styles.iconBoxBus,
+                    item.type === "location" && styles.iconBoxLocation,
+                  ]}
+                >
+                  {item.type === "current" && (
+                    <Text style={styles.quickAccessSymbol}>🎯</Text>
+                  )}
+                  {item.type === "train" && (
+                    <Text style={styles.quickAccessSymbol}>🚆</Text>
+                  )}
+                  {item.type === "bus" && (
+                    <Text style={styles.quickAccessSymbol}>🚌</Text>
+                  )}
+                  {item.type === "location" && (
+                    <Text style={styles.quickAccessSymbol}>📍</Text>
+                  )}
+                </View>
+
+                {/* Texts */}
+                <View style={styles.quickAccessTextContainer}>
+                  <Text style={styles.quickAccessTitle} numberOfLines={1}>
+                    {item.title}
+                  </Text>
+                  <Text style={styles.quickAccessSubtitle} numberOfLines={1}>
+                    {item.subtitle}
+                  </Text>
+                </View>
+
+                {/* Right Badge if any */}
+                {item.badge && (
+                  <View
+                    style={[
+                      styles.quickBadge,
+                      item.badgeType === "train" && styles.badgeTrain,
+                      item.badgeType === "bus" && styles.badgeBus,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.quickBadgeText,
+                        item.badgeType === "train" && styles.badgeTextTrain,
+                        item.badgeType === "bus" && styles.badgeTextBus,
+                      ]}
+                    >
+                      {item.badge}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+
+            {/* Nearby Stops Section */}
+            <Text style={[styles.modalSectionHeading, { marginTop: 22 }]}>
+              NEARBY STOPS
+            </Text>
+            <View style={styles.nearbyCardContainer}>
+              {filteredNearby.map((stop, index) => (
+                <TouchableOpacity
+                  key={stop.id}
+                  style={[
+                    styles.nearbyRow,
+                    index !== filteredNearby.length - 1 && styles.nearbyDivider,
+                  ]}
+                  activeOpacity={0.75}
+                  onPress={() => handleSelectLocation(stop.title)}
+                >
+                  {/* Color Dot */}
+                  <View
+                    style={[
+                      styles.nearbyDot,
+                      stop.type === "train"
+                        ? styles.nearbyDotGreen
+                        : styles.nearbyDotBlue,
+                    ]}
+                  />
+
+                  {/* Stop Name */}
+                  <Text style={styles.nearbyTitle}>{stop.title}</Text>
+
+                  {/* Distance */}
+                  <Text style={styles.nearbyDistance}>{stop.distance}</Text>
+
+                  {/* Badge */}
+                  <View
+                    style={[
+                      styles.nearbyBadge,
+                      stop.type === "train"
+                        ? styles.nearbyBadgeTrain
+                        : styles.nearbyBadgeBus,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.nearbyBadgeText,
+                        stop.type === "train"
+                          ? styles.nearbyBadgeTextTrain
+                          : styles.nearbyBadgeTextBus,
+                      ]}
+                    >
+                      {stop.badge}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -680,11 +997,14 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 1,
   },
-  locationInput: {
+  locationInputText: {
     fontSize: 15,
     fontWeight: "700",
     color: "#1E293B",
-    padding: 0,
+  },
+  placeholderText: {
+    color: "#94A3B8",
+    fontWeight: "500",
   },
 
   /* Divider & Swap Button */
@@ -1144,5 +1464,237 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 9,
     fontWeight: "800",
+  },
+
+  /* ================= LOCATION SEARCH MODAL ================= */
+  searchModalContainer: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+    paddingTop: Platform.OS === "ios" ? 52 : 36,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    marginBottom: 14,
+  },
+  modalBackButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  modalBackIcon: {
+    fontSize: 22,
+    color: "#334155",
+    fontWeight: "600",
+    marginTop: -2,
+  },
+  modalTitleContainer: {
+    flex: 1,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+  modalSubtitle: {
+    fontSize: 12,
+    color: "#94A3B8",
+    marginTop: 2,
+  },
+  modalSearchBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    marginHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    paddingHorizontal: 12,
+    paddingVertical: Platform.OS === "ios" ? 11 : 9,
+    marginBottom: 12,
+  },
+  modalSearchIcon: {
+    fontSize: 14,
+    marginRight: 8,
+    color: "#94A3B8",
+  },
+  modalSearchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: "#0F172A",
+    padding: 0,
+  },
+  clearButton: {
+    padding: 4,
+  },
+  clearIcon: {
+    fontSize: 13,
+    color: "#94A3B8",
+  },
+  modalScroll: {
+    flex: 1,
+  },
+  modalScrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+  },
+  modalSectionHeading: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#94A3B8",
+    letterSpacing: 0.6,
+    marginBottom: 10,
+    marginTop: 6,
+  },
+
+  /* Quick Access Item */
+  quickAccessCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    paddingVertical: 11,
+    paddingHorizontal: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    ...Platform.select({
+      web: {
+        boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
+      },
+      default: {
+        elevation: 1,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.03,
+        shadowRadius: 2,
+      },
+    }),
+  },
+  quickAccessIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  iconBoxCurrent: {
+    backgroundColor: "#EFF6FF",
+  },
+  iconBoxTrain: {
+    backgroundColor: "#DCFCE7",
+  },
+  iconBoxBus: {
+    backgroundColor: "#FFEDD5",
+  },
+  iconBoxLocation: {
+    backgroundColor: "#F1F5F9",
+  },
+  quickAccessSymbol: {
+    fontSize: 17,
+  },
+  quickAccessTextContainer: {
+    flex: 1,
+  },
+  quickAccessTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  quickAccessSubtitle: {
+    fontSize: 12,
+    color: "#94A3B8",
+    marginTop: 2,
+  },
+  quickBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  badgeTrain: {
+    backgroundColor: "#DCFCE7",
+  },
+  badgeBus: {
+    backgroundColor: "#FFEDD5",
+  },
+  quickBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  badgeTextTrain: {
+    color: "#16A34A",
+  },
+  badgeTextBus: {
+    color: "#EA580C",
+  },
+
+  /* Nearby Stops Container */
+  nearbyCardContainer: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    paddingHorizontal: 14,
+  },
+  nearbyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  nearbyDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F5F9",
+  },
+  nearbyDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    marginRight: 10,
+  },
+  nearbyDotBlue: {
+    backgroundColor: "#2563EB",
+  },
+  nearbyDotGreen: {
+    backgroundColor: "#16A34A",
+  },
+  nearbyTitle: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#1E293B",
+  },
+  nearbyDistance: {
+    fontSize: 12,
+    color: "#94A3B8",
+    marginRight: 10,
+  },
+  nearbyBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  nearbyBadgeBus: {
+    backgroundColor: "#DBEAFE",
+  },
+  nearbyBadgeTrain: {
+    backgroundColor: "#DCFCE7",
+  },
+  nearbyBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  nearbyBadgeTextBus: {
+    color: "#2563EB",
+  },
+  nearbyBadgeTextTrain: {
+    color: "#16A34A",
   },
 });
