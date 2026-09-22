@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  Animated,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -28,18 +29,55 @@ interface Props {
 }
 
 export default function RouteResultsScreen({ navigation, route }: Props) {
-  const fromCity = route.params?.from || "Kandy";
+  const fromCity = route.params?.from || "Kandy City";
   const toCity = route.params?.to || "Colombo Fort";
+  const skipLoading = route.params?.skipLoading ?? false;
 
   // Step 1: Loading / Optimizing state
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!skipLoading);
   const [loadingStep, setLoadingStep] = useState(1);
   const [progressWidth, setProgressWidth] = useState(25);
   const [activeFilter, setActiveFilter] = useState<
     "recommended" | "fastest" | "cheapest" | "reliable"
   >("recommended");
 
+  // Animated vehicle progress on mini-map
+  const mapVehicleAnim = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(mapVehicleAnim, {
+          toValue: 1,
+          duration: 3200,
+          useNativeDriver: false,
+        }),
+        Animated.delay(600),
+        Animated.timing(mapVehicleAnim, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: false,
+        }),
+      ])
+    ).start();
+  }, [mapVehicleAnim]);
+
+  const vehicleLeft = mapVehicleAnim.interpolate({
+    inputRange: [0, 0.32, 0.68, 1],
+    outputRange: ["12%", "36%", "66%", "86%"],
+  });
+
+  const vehicleTop = mapVehicleAnim.interpolate({
+    inputRange: [0, 0.32, 0.68, 1],
+    outputRange: ["64%", "44%", "44%", "28%"],
+  });
+
+  useEffect(() => {
+    if (skipLoading) {
+      setIsLoading(false);
+      return;
+    }
+
     // Animate the checking steps
     const timer1 = setTimeout(() => {
       setLoadingStep(2);
@@ -73,7 +111,7 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
       clearTimeout(timer4);
       clearTimeout(finalTimer);
     };
-  }, []);
+  }, [skipLoading]);
 
   // If in loading/optimization phase (First Interface in Photo)
   if (isLoading) {
@@ -320,30 +358,62 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
         contentContainerStyle={styles.resultsScrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Top Mini Map Preview */}
+        {/* Top Mini Map Preview with Animated Route (Matches Photo 2) */}
         <View style={styles.miniMapCard}>
           <View style={styles.miniMapBg}>
+            {/* Background Grid Blocks */}
+            <View style={styles.miniMapRow}>
+              <View style={styles.miniBlock} />
+              <View style={[styles.miniBlock, styles.miniBlockPark]} />
+              <View style={styles.miniBlock} />
+            </View>
             <View style={styles.miniMapRow}>
               <View style={styles.miniBlock} />
               <View style={styles.miniBlock} />
-              <View style={styles.miniBlock} />
-            </View>
-            <View style={styles.miniMapRow}>
-              <View style={styles.miniBlock} />
-              <View style={styles.miniBlock} />
-              <View style={styles.miniBlock} />
+              <View style={[styles.miniBlock, styles.miniBlockWater]} />
             </View>
 
-            {/* Route track on map */}
-            <View style={styles.miniRouteTrackBlue} />
-            <View style={styles.miniStartPin}>
-              <Text style={styles.miniPinText}>📍</Text>
-            </View>
-            <View style={styles.miniEndPin}>
-              <Text style={styles.miniPinText}>🚩</Text>
+            {/* Dashed Base Line Across Map */}
+            <View style={styles.miniDashedBaseLine} />
+
+            {/* Continuous Blue Route Line Segments */}
+            <View style={styles.miniRouteDiagonalLine} />
+            <View style={styles.miniRouteHorizontalLine} />
+            <View style={styles.miniRouteCurveEndLine} />
+
+            {/* Origin Blue Node Circle */}
+            <View style={[styles.miniStationNode, { left: "12%", top: "62%" }]}>
+              <View style={styles.miniNodeCoreBlue} />
             </View>
 
-            {/* Zoom Controls */}
+            {/* Station Rings */}
+            <View style={[styles.miniStationNode, { left: "36%", top: "42%" }]}>
+              <View style={styles.miniNodeCoreDark} />
+            </View>
+            <View style={[styles.miniStationNode, { left: "66%", top: "42%" }]}>
+              <View style={styles.miniNodeCoreDark} />
+            </View>
+
+            {/* Destination Red Pin */}
+            <View style={[styles.miniDestinationPin, { left: "86%", top: "14%" }]}>
+              <Text style={styles.miniPinSymbol}>📍</Text>
+            </View>
+
+            {/* Animated Transit Marker Moving Along the Path */}
+            <Animated.View
+              style={[
+                styles.miniAnimatedVehicle,
+                {
+                  left: vehicleLeft,
+                  top: vehicleTop,
+                },
+              ]}
+            >
+              <View style={styles.miniVehicleHalo} />
+              <View style={styles.miniVehicleDot} />
+            </Animated.View>
+
+            {/* Zoom Controls (+ / −) */}
             <View style={styles.mapZoomControls}>
               <TouchableOpacity style={styles.zoomButton}>
                 <Text style={styles.zoomText}>+</Text>
@@ -462,7 +532,21 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
           </View>
 
           {/* Primary View Route Button */}
-          <TouchableOpacity style={styles.viewRouteButtonPrimary} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.viewRouteButtonPrimary}
+            activeOpacity={0.85}
+            onPress={() =>
+              navigation.navigate("RouteDetail", {
+                from: fromCity,
+                to: toCity,
+                routeType: "BEST MATCH",
+                fare: "Rs. 320",
+                duration: "1h 35m",
+                departureTime: "8:30 AM",
+                arrivalTime: "10:05 AM",
+              })
+            }
+          >
             <Text style={styles.viewRouteButtonTextPrimary}>View Route</Text>
           </TouchableOpacity>
         </View>
@@ -528,7 +612,21 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.viewRouteButtonSecondary} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.viewRouteButtonSecondary}
+            activeOpacity={0.85}
+            onPress={() =>
+              navigation.navigate("RouteDetail", {
+                from: fromCity,
+                to: toCity,
+                routeType: "FASTEST",
+                fare: "Rs. 450",
+                duration: "1h 20m",
+                departureTime: "8:45 AM",
+                arrivalTime: "10:05 AM",
+              })
+            }
+          >
             <Text style={styles.viewRouteButtonTextSecondary}>View Route</Text>
           </TouchableOpacity>
         </View>
@@ -594,13 +692,41 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.viewRouteButtonSecondary} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.viewRouteButtonSecondary}
+            activeOpacity={0.85}
+            onPress={() =>
+              navigation.navigate("RouteDetail", {
+                from: fromCity,
+                to: toCity,
+                routeType: "CHEAPEST",
+                fare: "Rs. 220",
+                duration: "2h 05m",
+                departureTime: "8:30 AM",
+                arrivalTime: "10:35 AM",
+              })
+            }
+          >
             <Text style={styles.viewRouteButtonTextSecondary}>View Route</Text>
           </TouchableOpacity>
         </View>
 
         {/* Compare All Routes Button */}
-        <TouchableOpacity style={styles.compareAllButton} activeOpacity={0.85}>
+        <TouchableOpacity
+          style={styles.compareAllButton}
+          activeOpacity={0.85}
+          onPress={() =>
+            navigation.navigate("RouteDetail", {
+              from: fromCity,
+              to: toCity,
+              routeType: "BEST MATCH",
+              fare: "Rs. 320",
+              duration: "1h 35m",
+              departureTime: "8:30 AM",
+              arrivalTime: "10:05 AM",
+            })
+          }
+        >
           <Text style={styles.compareAllButtonText}>Compare All Routes</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -905,17 +1031,30 @@ const styles = StyleSheet.create({
 
   /* Mini Map Preview */
   miniMapCard: {
-    height: 90,
-    borderRadius: 14,
+    height: 100,
+    borderRadius: 16,
     overflow: "hidden",
     marginVertical: 12,
     borderWidth: 1,
     borderColor: "#E2E8F0",
+    ...Platform.select({
+      web: {
+        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+      },
+      default: {
+        elevation: 2,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.06,
+        shadowRadius: 4,
+      },
+    }),
   },
   miniMapBg: {
     flex: 1,
     backgroundColor: "#E2E8F0",
     position: "relative",
+    overflow: "hidden",
   },
   miniMapRow: {
     flexDirection: "row",
@@ -925,44 +1064,127 @@ const styles = StyleSheet.create({
   },
   miniBlock: {
     width: "30%",
-    height: 32,
+    height: 34,
     backgroundColor: "#EFF4F9",
     borderRadius: 8,
   },
-  miniRouteTrackBlue: {
+  miniBlockPark: {
+    backgroundColor: "#DCFCE7",
+  },
+  miniBlockWater: {
+    backgroundColor: "#E0F2FE",
+  },
+
+  /* Route tracks */
+  miniDashedBaseLine: {
     position: "absolute",
-    left: 20,
-    right: 30,
-    top: 42,
-    height: 3,
+    left: 0,
+    right: 0,
+    top: "47%",
+    height: 2,
+    borderWidth: 1,
+    borderColor: "#64748B",
+    borderStyle: "dashed",
+  },
+  miniRouteDiagonalLine: {
+    position: "absolute",
+    left: "14%",
+    top: "54%",
+    width: "25%",
+    height: 3.5,
     backgroundColor: "#2563EB",
     borderRadius: 2,
+    transform: [{ rotate: "-22deg" }],
+    zIndex: 2,
   },
-  miniStartPin: {
+  miniRouteHorizontalLine: {
     position: "absolute",
-    left: 30,
-    top: 26,
+    left: "36%",
+    right: "16%",
+    top: "46%",
+    height: 3.5,
+    backgroundColor: "#2563EB",
+    borderRadius: 2,
+    zIndex: 2,
   },
-  miniEndPin: {
+  miniRouteCurveEndLine: {
     position: "absolute",
-    right: 40,
-    top: 26,
+    right: "12%",
+    top: "32%",
+    width: 22,
+    height: 3.5,
+    backgroundColor: "#2563EB",
+    borderRadius: 2,
+    transform: [{ rotate: "-35deg" }],
+    zIndex: 2,
   },
-  miniPinText: {
-    fontSize: 14,
+  miniStationNode: {
+    position: "absolute",
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 2,
+    borderColor: "#334155",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 5,
   },
+  miniNodeCoreBlue: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: "#2563EB",
+  },
+  miniNodeCoreDark: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#475569",
+  },
+  miniDestinationPin: {
+    position: "absolute",
+    zIndex: 6,
+  },
+  miniPinSymbol: {
+    fontSize: 16,
+  },
+  miniAnimatedVehicle: {
+    position: "absolute",
+    zIndex: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  miniVehicleHalo: {
+    position: "absolute",
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "rgba(37, 99, 235, 0.35)",
+  },
+  miniVehicleDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#2563EB",
+    borderWidth: 1.5,
+    borderColor: "#FFFFFF",
+  },
+
+  /* Zoom */
   mapZoomControls: {
     position: "absolute",
     right: 8,
     top: 8,
     backgroundColor: "#FFFFFF",
-    borderRadius: 8,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: "#E2E8F0",
+    zIndex: 12,
   },
   zoomButton: {
-    width: 24,
-    height: 22,
+    width: 22,
+    height: 20,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -971,14 +1193,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#E2E8F0",
   },
   zoomText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "bold",
     color: "#475569",
   },
   miniMapWatermark: {
     position: "absolute",
     right: 8,
-    bottom: 6,
+    bottom: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
   },
   miniWatermarkText: {
     fontSize: 8,

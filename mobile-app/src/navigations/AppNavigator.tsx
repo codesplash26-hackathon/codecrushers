@@ -9,6 +9,7 @@ import RegisterScreen from "../screens/RegisterScreen";
 import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 import HomeScreen from "../screens/HomeScreen";
 import RouteResultsScreen from "../screens/RouteResultsScreen";
+import RouteDetailScreen from "../screens/RouteDetailScreen";
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -17,7 +18,20 @@ export type RootStackParamList = {
   Register: undefined;
   ForgotPassword: undefined;
   Home: undefined;
-  RouteResults: { from?: string; to?: string } | undefined;
+  RouteResults:
+    | { from?: string; to?: string; skipLoading?: boolean }
+    | undefined;
+  RouteDetail:
+    | {
+        from?: string;
+        to?: string;
+        routeType?: string;
+        fare?: string;
+        duration?: string;
+        departureTime?: string;
+        arrivalTime?: string;
+      }
+    | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -36,6 +50,7 @@ export default function AppNavigator() {
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="RouteResults" component={RouteResultsScreen} />
+        <Stack.Screen name="RouteDetail" component={RouteDetailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
