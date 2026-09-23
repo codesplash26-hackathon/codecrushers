@@ -646,7 +646,7 @@ export default function HomeScreen({ navigation }: Props) {
         {/* Journeys Tab */}
         <TouchableOpacity
           style={styles.navItem}
-          onPress={() => setActiveTab("journeys")}
+          onPress={() => navigation.navigate("Journeys")}
           activeOpacity={0.7}
         >
           <Text
@@ -674,7 +674,7 @@ export default function HomeScreen({ navigation }: Props) {
         {/* Alerts Tab */}
         <TouchableOpacity
           style={styles.navItem}
-          onPress={() => setActiveTab("alerts")}
+          onPress={() => navigation.navigate("Notifications")}
           activeOpacity={0.7}
         >
           <View style={styles.alertIconWrapper}>
@@ -707,7 +707,7 @@ export default function HomeScreen({ navigation }: Props) {
         {/* Profile Tab */}
         <TouchableOpacity
           style={styles.navItem}
-          onPress={() => setActiveTab("profile")}
+          onPress={() => navigation.navigate("Profile")}
           activeOpacity={0.7}
         >
           <Text
