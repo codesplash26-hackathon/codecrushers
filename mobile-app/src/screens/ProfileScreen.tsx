@@ -66,48 +66,48 @@ export default function ProfileScreen({ navigation }: Props) {
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Top Profile Header Banner with Gradient */}
-      <LinearGradient
-        colors={["#0B3E9E", "#1763D5", "#1D64EC"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
-      >
-        <SafeAreaView edges={["top"]} style={styles.safeHeader}>
-          <View style={styles.profileHeaderContent}>
-            {/* Avatar container */}
-            <View style={styles.avatarWrapper}>
-              <View style={styles.avatarContainer}>
-                <Text style={styles.avatarEmoji}>👨‍💼</Text>
-              </View>
-              <View style={styles.avatarBadgeDot} />
-            </View>
-
-            {/* User Info */}
-            <View style={styles.userInfo}>
-              <Text style={styles.userName} numberOfLines={1}>
-                Alex Perera
-              </Text>
-              <Text style={styles.userEmail} numberOfLines={1}>
-                alex@example.com
-              </Text>
-              <View style={styles.memberTagRow}>
-                <View style={styles.activeGreenDot} />
-                <Text style={styles.memberTagText}>
-                  24 journeys · Member since 2024
-                </Text>
-              </View>
-            </View>
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
-
       {/* Main Content Area */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Top Profile Header Banner with Gradient */}
+        <LinearGradient
+          colors={["#0B3E9E", "#1763D5", "#1D64EC"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        >
+          <SafeAreaView edges={["top"]} style={styles.safeHeader}>
+            <View style={styles.profileHeaderContent}>
+              {/* Avatar container */}
+              <View style={styles.avatarWrapper}>
+                <View style={styles.avatarContainer}>
+                  <Text style={styles.avatarEmoji}>👨‍💼</Text>
+                </View>
+                <View style={styles.avatarBadgeDot} />
+              </View>
+
+              {/* User Info */}
+              <View style={styles.userInfo}>
+                <Text style={styles.userName} numberOfLines={1}>
+                  Alex Perera
+                </Text>
+                <Text style={styles.userEmail} numberOfLines={1}>
+                  alex@example.com
+                </Text>
+                <View style={styles.memberTagRow}>
+                  <View style={styles.activeGreenDot} />
+                  <Text style={styles.memberTagText}>
+                    24 journeys · Member since 2024
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </SafeAreaView>
+        </LinearGradient>
+
         {/* Floating Quick Stats Card */}
         <View style={styles.statsCard}>
           <View style={styles.statColumn}>
@@ -715,7 +715,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
   },
   headerGradient: {
-    paddingBottom: 40,
+    paddingBottom: 48,
   },
   safeHeader: {
     paddingHorizontal: 20,
@@ -809,20 +809,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
-    paddingVertical: 16,
+    paddingVertical: 18,
     paddingHorizontal: 16,
     marginHorizontal: 16,
-    marginTop: -26,
+    marginTop: -28,
     marginBottom: 16,
+    zIndex: 10,
+    position: "relative",
     ...Platform.select({
-      ios: {
+      web: {
+        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.08)",
+      },
+      default: {
+        elevation: 4,
         shadowColor: "#1E293B",
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.08,
         shadowRadius: 8,
-      },
-      android: {
-        elevation: 3,
       },
     }),
   },

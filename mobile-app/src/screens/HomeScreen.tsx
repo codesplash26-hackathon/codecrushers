@@ -221,9 +221,11 @@ export default function HomeScreen({ navigation }: Props) {
               <TouchableOpacity
                 style={styles.avatarCircle}
                 activeOpacity={0.8}
-                onPress={() => navigation.navigate("Login")}
+                onPress={() => navigation.navigate("Profile")}
               >
-                <View style={styles.avatarInner} />
+                <View style={styles.avatarInner}>
+                  <Text style={styles.avatarIcon}>👤</Text>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -1290,12 +1292,21 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     justifyContent: "center",
     alignItems: "center",
+    ...Platform.select({
+      web: { boxShadow: "0 2px 6px rgba(0, 0, 0, 0.12)" },
+      default: { elevation: 2 },
+    }),
   },
   avatarInner: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "#E2E8F0",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#EFF6FF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarIcon: {
+    fontSize: 17,
   },
 
   /* Search Card */
