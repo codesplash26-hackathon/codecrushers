@@ -182,7 +182,7 @@ export default function ProfileScreen({ navigation }: Props) {
           {/* Become a Driver */}
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => setIsDriverModalVisible(true)}
+            onPress={() => navigation.navigate("DriverRegistration")}
             activeOpacity={0.7}
           >
             <View style={styles.menuLeft}>
@@ -543,10 +543,7 @@ export default function ProfileScreen({ navigation }: Props) {
               style={styles.driverRegisterBtn}
               onPress={() => {
                 setIsDriverModalVisible(false);
-                Alert.alert(
-                  "Application Started",
-                  "Thank you for your interest! A BestRoute partner onboarding specialist will contact you shortly."
-                );
+                navigation.navigate("DriverRegistration");
               }}
               activeOpacity={0.8}
             >
