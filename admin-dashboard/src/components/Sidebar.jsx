@@ -14,10 +14,10 @@ import {
   Truck, 
   Users, 
   Settings, 
-  LogOut,
-  Navigation
+  LogOut
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import logoImg from '../assets/logo.png';
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
   const { user, logout } = useAuth();
@@ -41,15 +41,14 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
 
   return (
     <div className="sidebar">
-      <div className="sidebar-header">
-        <div className="login-logo-icon" style={{ width: '32px', height: '32px', fontSize: '16px' }}>
-          <Navigation size={18} />
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div className="login-logo-text" style={{ fontSize: '18px', lineHeight: '1.2' }}>
-            Best<span>Route</span>
-          </div>
-          <div style={{ fontSize: '10px', color: '#64748B', fontWeight: '600' }}>Admin Console</div>
+      <div className="sidebar-header" style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+        <img 
+          src={logoImg} 
+          alt="BestRoute Logo" 
+          style={{ height: '54px', width: 'auto', objectFit: 'contain' }} 
+        />
+        <div style={{ fontSize: '10px', color: '#64748B', fontWeight: '700', letterSpacing: '0.5px', textTransform: 'uppercase', paddingLeft: '4px' }}>
+          Admin Console
         </div>
       </div>
 
