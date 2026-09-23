@@ -45,21 +45,18 @@ export default function ProfileScreen({ navigation }: Props) {
   const [locationTracking, setLocationTracking] = useState(true);
   const [pushAlerts, setPushAlerts] = useState(true);
 
+  const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
+
   const handleLogout = () => {
-    Alert.alert(
-      "Log Out",
-      "Are you sure you want to log out of your BestRoute account?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Log Out",
-          style: "destructive",
-          onPress: () => {
-            navigation.replace("Login");
-          },
-        },
-      ]
-    );
+    setIsLogoutModalVisible(true);
+  };
+
+  const confirmLogout = () => {
+    setIsLogoutModalVisible(false);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Login" }],
+    });
   };
 
   return (
@@ -705,6 +702,42 @@ export default function ProfileScreen({ navigation }: Props) {
           </ScrollView>
         </SafeAreaView>
       </Modal>
+
+      {/* ================= LOGOUT CONFIRMATION MODAL ================= */}
+      <Modal
+        visible={isLogoutModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsLogoutModalVisible(false)}
+      >
+        <View style={styles.logoutModalOverlay}>
+          <View style={styles.logoutModalCard}>
+            <View style={styles.logoutIconWrapper}>
+              <Text style={styles.logoutModalIcon}>🚪</Text>
+            </View>
+            <Text style={styles.logoutModalTitle}>Log Out</Text>
+            <Text style={styles.logoutModalMessage}>
+              Are you sure you want to log out of your BestRoute account?
+            </Text>
+            <View style={styles.logoutButtonsRow}>
+              <TouchableOpacity
+                style={styles.logoutCancelBtn}
+                onPress={() => setIsLogoutModalVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.logoutCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.logoutConfirmBtn}
+                onPress={confirmLogout}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.logoutConfirmBtnText}>Log Out</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1232,5 +1265,84 @@ const styles = StyleSheet.create({
   supportSub: {
     fontSize: 13,
     color: "#64748B",
+  },
+
+  /* Logout Modal Styles */
+  logoutModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  logoutModalCard: {
+    width: "100%",
+    maxWidth: 340,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 24,
+    alignItems: "center",
+    ...Platform.select({
+      web: { boxShadow: "0 10px 30px rgba(0,0,0,0.2)" },
+      default: { elevation: 6 },
+    }),
+  },
+  logoutIconWrapper: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#FEE2E2",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  logoutModalIcon: {
+    fontSize: 28,
+  },
+  logoutModalTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginBottom: 8,
+  },
+  logoutModalMessage: {
+    fontSize: 13.5,
+    color: "#64748B",
+    textAlign: "center",
+    lineHeight: 19,
+    marginBottom: 22,
+  },
+  logoutButtonsRow: {
+    flexDirection: "row",
+    gap: 12,
+    width: "100%",
+  },
+  logoutCancelBtn: {
+    flex: 1,
+    backgroundColor: "#F1F5F9",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  logoutCancelBtnText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#475569",
+  },
+  logoutConfirmBtn: {
+    flex: 1,
+    backgroundColor: "#EF4444",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    ...Platform.select({
+      web: { boxShadow: "0 2px 8px rgba(239, 68, 68, 0.3)" },
+      default: { elevation: 2 },
+    }),
+  },
+  logoutConfirmBtnText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
 });
