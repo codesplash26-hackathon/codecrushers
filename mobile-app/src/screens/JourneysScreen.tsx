@@ -724,12 +724,7 @@ export default function JourneysScreen({ navigation, route }: Props) {
         {/* Profile Tab */}
         <TouchableOpacity
           style={styles.navItem}
-          onPress={() => {
-            Alert.alert(
-              "Profile",
-              "User: Chamod Perera\nEmail: chamod@bestroute.lk\nPreferences: Eco-friendly / Express"
-            );
-          }}
+          onPress={() => navigation.navigate("Profile")}
           activeOpacity={0.7}
         >
           <Text style={[styles.navIcon, styles.navIconInactive]}>👤</Text>
