@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Bus, Map, Users, CheckCircle, Navigation } from 'lucide-react';
+import logoImg from '../assets/logo.png';
 
 const Login = () => {
   const { login } = useAuth();
@@ -22,14 +22,11 @@ const Login = () => {
       {/* Left Blue Gradient Hero Panel */}
       <div className="login-hero">
         <div className="login-hero-header">
-          <div className="login-logo">
-            <div className="login-logo-icon">
-              <Navigation className="w-6 h-6 text-slate-900" />
-            </div>
-            <div className="login-logo-text">
-              Best<span>Route</span>
-            </div>
-          </div>
+          <img 
+            src={logoImg} 
+            alt="BestRoute Logo" 
+            style={{ height: '84px', width: 'auto', objectFit: 'contain' }} 
+          />
         </div>
 
         <div className="login-hero-content">
@@ -42,25 +39,25 @@ const Login = () => {
 
           <div className="login-stats-grid">
             <div className="login-stat-card">
-              <Bus className="login-stat-icon" />
+              <div className="login-stat-icon">🚌</div>
               <div className="login-stat-value">124</div>
               <div className="login-stat-label">Active Services</div>
             </div>
 
             <div className="login-stat-card">
-              <Map className="login-stat-icon" />
+              <div className="login-stat-icon">🗺️</div>
               <div className="login-stat-value">58</div>
               <div className="login-stat-label">Routes Managed</div>
             </div>
 
             <div className="login-stat-card">
-              <Users className="login-stat-icon" />
+              <div className="login-stat-icon">👥</div>
               <div className="login-stat-value">2,438</div>
               <div className="login-stat-label">Journeys Today</div>
             </div>
 
             <div className="login-stat-card">
-              <CheckCircle className="login-stat-icon text-emerald-400" />
+              <div className="login-stat-icon">✅</div>
               <div className="login-stat-value">92%</div>
               <div className="login-stat-label">On-time Rate</div>
             </div>
@@ -68,7 +65,7 @@ const Login = () => {
         </div>
 
         <div className="login-hero-footer">
-          © 2026 BestRoute - Admin Console - Secure Access
+          © 2026 BestRoute · Admin Console · Secure Access
         </div>
       </div>
 
@@ -118,13 +115,6 @@ const Login = () => {
               Sign In to Admin Console
             </button>
           </form>
-
-          <div className="demo-credentials-box">
-            <div className="demo-title">Demo Credentials</div>
-            <div className="demo-details">
-              Username: <strong>admin</strong> · Password: <strong>admin</strong>
-            </div>
-          </div>
 
           <p className="login-disclaimer">
             This console is for authorized administrators only.
