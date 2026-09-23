@@ -315,6 +315,12 @@ export default function RouteDetailScreen({ navigation, route }: Props) {
           <TouchableOpacity
             style={styles.viewVehiclesButton}
             activeOpacity={0.85}
+            onPress={() =>
+              navigation.navigate("AvailableVehicles", {
+                station: toCity,
+                arrivalTime: "5:40 PM",
+              })
+            }
           >
             <Text style={styles.viewVehiclesButtonText}>
               View Available Vehicles ➔
