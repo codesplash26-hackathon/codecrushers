@@ -17,6 +17,7 @@ import LiveTrackingScreen from "../screens/LiveTrackingScreen";
 import AvailableVehiclesScreen from "../screens/AvailableVehiclesScreen";
 import RideProgressScreen from "../screens/RideProgressScreen";
 import DriverRegistrationScreen from "../screens/DriverRegistrationScreen";
+import CompareRoutesScreen from "../screens/CompareRoutesScreen";
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -68,6 +69,12 @@ export type RootStackParamList = {
       }
     | undefined;
   DriverRegistration: undefined;
+  CompareRoutes:
+    | {
+        from?: string;
+        to?: string;
+      }
+    | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -100,6 +107,7 @@ export default function AppNavigator() {
           name="DriverRegistration"
           component={DriverRegistrationScreen}
         />
+        <Stack.Screen name="CompareRoutes" component={CompareRoutesScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

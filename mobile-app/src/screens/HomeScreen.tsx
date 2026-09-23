@@ -1515,24 +1515,25 @@ const styles = StyleSheet.create({
 
   /* Divider & Swap Button */
   dividerRow: {
-    height: 22,
+    height: 16,
     position: "relative",
     justifyContent: "center",
   },
   verticalLine: {
     position: "absolute",
     left: 27,
-    top: 0,
-    bottom: 0,
+    top: -2,
+    bottom: -2,
     width: 1.5,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#CBD5E1",
   },
   swapButton: {
     position: "absolute",
     right: 18,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    top: -8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#E2E8F0",
@@ -1541,21 +1542,24 @@ const styles = StyleSheet.create({
     zIndex: 10,
     ...Platform.select({
       web: {
-        boxShadow: "0 2px 5px rgba(0, 0, 0, 0.08)",
+        boxShadow: "0 2px 6px rgba(0, 0, 0, 0.12)",
       },
       default: {
-        elevation: 2,
+        elevation: 3,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.12,
         shadowRadius: 3,
       },
     }),
   },
   swapIcon: {
-    fontSize: 13,
+    fontSize: 14,
+    lineHeight: 18,
     color: "#64748B",
     fontWeight: "bold",
+    textAlign: "center",
+    includeFontPadding: false,
   },
 
   /* Segmented Control */
