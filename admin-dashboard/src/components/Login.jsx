@@ -116,13 +116,6 @@ const Login = () => {
             </button>
           </form>
 
-          <div className="demo-credentials-box">
-            <div className="demo-title">Demo Credentials</div>
-            <div className="demo-details">
-              Username: <strong>admin</strong> · Password: <strong>admin</strong>
-            </div>
-          </div>
-
           <p className="login-disclaimer">
             This console is for authorized administrators only.
           </p>
