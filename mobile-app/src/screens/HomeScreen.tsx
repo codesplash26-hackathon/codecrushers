@@ -646,7 +646,7 @@ export default function HomeScreen({ navigation }: Props) {
         {/* Journeys Tab */}
         <TouchableOpacity
           style={styles.navItem}
-          onPress={() => setActiveTab("journeys")}
+          onPress={() => navigation.navigate("Journeys")}
           activeOpacity={0.7}
         >
           <Text
