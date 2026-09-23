@@ -37,11 +37,23 @@ export default function ProfileScreen({ navigation }: Props) {
 
   // Preference states
   const [selectedLanguage, setSelectedLanguage] = useState<"English" | "Sinhala" | "Tamil">("English");
+
+  // Travel Preferences states (matching modern preferences UI)
+  const [defaultPref, setDefaultPref] = useState<"Fastest" | "Cheapest" | "Reliable" | "Less Walk">("Fastest");
+  const [walkingTolerance, setWalkingTolerance] = useState<"Low" | "Medium" | "High">("Medium");
+  const [maxTransfers, setMaxTransfers] = useState<"1" | "2" | "3+">("2");
   const [preferBus, setPreferBus] = useState(true);
   const [preferTrain, setPreferTrain] = useState(true);
+  const [preferTaxi, setPreferTaxi] = useState(true);
   const [preferTuk, setPreferTuk] = useState(true);
-  const [avoidCrowded, setAvoidCrowded] = useState(false);
-  const [ecoFriendly, setEcoFriendly] = useState(true);
+  const [preferWalking, setPreferWalking] = useState(true);
+
+  // Notification toggles in travel preferences
+  const [notifyJourneyUpdates, setNotifyJourneyUpdates] = useState(true);
+  const [notifyConnectionRisks, setNotifyConnectionRisks] = useState(true);
+  const [notifyDisruptions, setNotifyDisruptions] = useState(true);
+  const [notifyAltRoutes, setNotifyAltRoutes] = useState(true);
+
   const [locationTracking, setLocationTracking] = useState(true);
   const [pushAlerts, setPushAlerts] = useState(true);
 
@@ -346,94 +358,331 @@ export default function ProfileScreen({ navigation }: Props) {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsPreferencesVisible(false)}
       >
-        <SafeAreaView style={styles.modalSafeArea} edges={["top", "bottom"]}>
-          <View style={styles.modalHeader}>
+        <SafeAreaView style={styles.tpContainer} edges={["top", "bottom"]}>
+          {/* Header with back button */}
+          <View style={styles.tpHeader}>
             <TouchableOpacity
-              style={styles.modalCloseButton}
+              style={styles.tpBackButton}
               onPress={() => setIsPreferencesVisible(false)}
+              activeOpacity={0.7}
             >
-              <Text style={styles.modalCloseText}>✕</Text>
+              <Text style={styles.tpBackIcon}>‹</Text>
             </TouchableOpacity>
-            <Text style={styles.modalHeaderTitle}>Travel Preferences</Text>
-            <TouchableOpacity
-              style={styles.modalDoneBtn}
-              onPress={() => setIsPreferencesVisible(false)}
-            >
-              <Text style={styles.modalDoneText}>Save</Text>
-            </TouchableOpacity>
+            <Text style={styles.tpHeaderTitle}>Travel Preferences</Text>
           </View>
 
-          <ScrollView style={styles.modalBody}>
-            <Text style={styles.prefSectionTitle}>Preferred Transit Modes</Text>
-            <View style={styles.switchRow}>
-              <View>
-                <Text style={styles.switchLabel}>Public & Highway Buses</Text>
-                <Text style={styles.switchSub}>SLTB & Private Bus Network</Text>
+          {/* Preferences Body */}
+          <ScrollView
+            style={styles.tpScrollView}
+            contentContainerStyle={styles.tpScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Card 1: DEFAULT PREFERENCE */}
+            <View style={styles.tpCard}>
+              <Text style={styles.tpCardLabel}>DEFAULT PREFERENCE</Text>
+              <View style={styles.tpGridRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.tpPrefButton,
+                    defaultPref === "Fastest"
+                      ? styles.tpPrefButtonActive
+                      : styles.tpPrefButtonInactive,
+                  ]}
+                  onPress={() => setDefaultPref("Fastest")}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.tpPrefEmoji}>⚡</Text>
+                  <Text
+                    style={[
+                      styles.tpPrefText,
+                      defaultPref === "Fastest"
+                        ? styles.tpPrefTextActive
+                        : styles.tpPrefTextInactive,
+                    ]}
+                  >
+                    Fastest
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.tpPrefButton,
+                    defaultPref === "Cheapest"
+                      ? styles.tpPrefButtonActive
+                      : styles.tpPrefButtonInactive,
+                  ]}
+                  onPress={() => setDefaultPref("Cheapest")}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.tpPrefEmoji}>💰</Text>
+                  <Text
+                    style={[
+                      styles.tpPrefText,
+                      defaultPref === "Cheapest"
+                        ? styles.tpPrefTextActive
+                        : styles.tpPrefTextInactive,
+                    ]}
+                  >
+                    Cheapest
+                  </Text>
+                </TouchableOpacity>
               </View>
-              <Switch
-                value={preferBus}
-                onValueChange={setPreferBus}
-                trackColor={{ false: "#E2E8F0", true: "#BFDBFE" }}
-                thumbColor={preferBus ? "#1D64EC" : "#94A3B8"}
-              />
+
+              <View style={styles.tpGridRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.tpPrefButton,
+                    defaultPref === "Reliable"
+                      ? styles.tpPrefButtonActive
+                      : styles.tpPrefButtonInactive,
+                  ]}
+                  onPress={() => setDefaultPref("Reliable")}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.tpPrefEmoji}>🛡️</Text>
+                  <Text
+                    style={[
+                      styles.tpPrefText,
+                      defaultPref === "Reliable"
+                        ? styles.tpPrefTextActive
+                        : styles.tpPrefTextInactive,
+                    ]}
+                  >
+                    Reliable
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.tpPrefButton,
+                    defaultPref === "Less Walk"
+                      ? styles.tpPrefButtonActive
+                      : styles.tpPrefButtonInactive,
+                  ]}
+                  onPress={() => setDefaultPref("Less Walk")}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.tpPrefEmoji}>🚶</Text>
+                  <Text
+                    style={[
+                      styles.tpPrefText,
+                      defaultPref === "Less Walk"
+                        ? styles.tpPrefTextActive
+                        : styles.tpPrefTextInactive,
+                    ]}
+                  >
+                    Less Walk
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
-            <View style={styles.switchRow}>
-              <View>
-                <Text style={styles.switchLabel}>Sri Lanka Railways Trains</Text>
-                <Text style={styles.switchSub}>Main Line & Coastal Express</Text>
+            {/* Card 2: WALKING TOLERANCE */}
+            <View style={styles.tpCard}>
+              <Text style={styles.tpCardLabel}>WALKING TOLERANCE</Text>
+              <View style={styles.tpPillsRow}>
+                {(["Low", "Medium", "High"] as const).map((tier) => {
+                  const isSelected = walkingTolerance === tier;
+                  return (
+                    <TouchableOpacity
+                      key={tier}
+                      style={[
+                        styles.tpPillButton,
+                        isSelected
+                          ? styles.tpTolerancePillActive
+                          : styles.tpPillInactive,
+                      ]}
+                      onPress={() => setWalkingTolerance(tier)}
+                      activeOpacity={0.8}
+                    >
+                      <Text
+                        style={[
+                          styles.tpPillText,
+                          isSelected
+                            ? styles.tpPillTextActive
+                            : styles.tpPillTextInactive,
+                        ]}
+                      >
+                        {tier}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
-              <Switch
-                value={preferTrain}
-                onValueChange={setPreferTrain}
-                trackColor={{ false: "#E2E8F0", true: "#BFDBFE" }}
-                thumbColor={preferTrain ? "#1D64EC" : "#94A3B8"}
-              />
             </View>
 
-            <View style={styles.switchRow}>
-              <View>
-                <Text style={styles.switchLabel}>Three-Wheelers (Tuks) & Taxis</Text>
-                <Text style={styles.switchSub}>Last-mile connector rides</Text>
+            {/* Card 3: MAX TRANSFERS */}
+            <View style={styles.tpCard}>
+              <View style={styles.tpCardHeaderBetween}>
+                <Text style={styles.tpCardLabelNoMargin}>MAX TRANSFERS</Text>
+                <Text style={styles.tpTransfersBadge}>{maxTransfers}</Text>
               </View>
-              <Switch
-                value={preferTuk}
-                onValueChange={setPreferTuk}
-                trackColor={{ false: "#E2E8F0", true: "#BFDBFE" }}
-                thumbColor={preferTuk ? "#1D64EC" : "#94A3B8"}
-              />
+              <View style={styles.tpPillsRow}>
+                {(["1", "2", "3+"] as const).map((count) => {
+                  const isSelected = maxTransfers === count;
+                  return (
+                    <TouchableOpacity
+                      key={count}
+                      style={[
+                        styles.tpPillButton,
+                        isSelected
+                          ? styles.tpTransfersPillActive
+                          : styles.tpPillInactive,
+                      ]}
+                      onPress={() => setMaxTransfers(count)}
+                      activeOpacity={0.8}
+                    >
+                      <Text
+                        style={[
+                          styles.tpPillText,
+                          isSelected
+                            ? styles.tpPillTextActive
+                            : styles.tpPillTextInactive,
+                        ]}
+                      >
+                        {count}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
 
-            <Text style={[styles.prefSectionTitle, { marginTop: 24 }]}>
-              Optimization Rules
-            </Text>
+            {/* Card 4: TRANSPORT MODES */}
+            <View style={styles.tpCard}>
+              <Text style={styles.tpCardLabel}>TRANSPORT MODES</Text>
 
-            <View style={styles.switchRow}>
-              <View>
-                <Text style={styles.switchLabel}>Prioritize Eco-friendly Routes</Text>
-                <Text style={styles.switchSub}>Minimizes carbon footprint</Text>
+              <View style={styles.tpToggleRow}>
+                <View style={styles.tpModeLeft}>
+                  <Text style={styles.tpModeEmoji}>🚌</Text>
+                  <Text style={styles.tpModeLabel}>Bus</Text>
+                </View>
+                <Switch
+                  value={preferBus}
+                  onValueChange={setPreferBus}
+                  trackColor={{ false: "#E2E8F0", true: "#2563EB" }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor="#E2E8F0"
+                />
               </View>
-              <Switch
-                value={ecoFriendly}
-                onValueChange={setEcoFriendly}
-                trackColor={{ false: "#E2E8F0", true: "#BBF7D0" }}
-                thumbColor={ecoFriendly ? "#16A34A" : "#94A3B8"}
-              />
+
+              <View style={styles.tpToggleRow}>
+                <View style={styles.tpModeLeft}>
+                  <Text style={styles.tpModeEmoji}>🚆</Text>
+                  <Text style={styles.tpModeLabel}>Train</Text>
+                </View>
+                <Switch
+                  value={preferTrain}
+                  onValueChange={setPreferTrain}
+                  trackColor={{ false: "#E2E8F0", true: "#2563EB" }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor="#E2E8F0"
+                />
+              </View>
+
+              <View style={styles.tpToggleRow}>
+                <View style={styles.tpModeLeft}>
+                  <Text style={styles.tpModeEmoji}>🚕</Text>
+                  <Text style={styles.tpModeLabel}>Taxi</Text>
+                </View>
+                <Switch
+                  value={preferTaxi}
+                  onValueChange={setPreferTaxi}
+                  trackColor={{ false: "#E2E8F0", true: "#2563EB" }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor="#E2E8F0"
+                />
+              </View>
+
+              <View style={styles.tpToggleRow}>
+                <View style={styles.tpModeLeft}>
+                  <Text style={styles.tpModeEmoji}>🛺</Text>
+                  <Text style={styles.tpModeLabel}>Tuk-tuk</Text>
+                </View>
+                <Switch
+                  value={preferTuk}
+                  onValueChange={setPreferTuk}
+                  trackColor={{ false: "#E2E8F0", true: "#2563EB" }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor="#E2E8F0"
+                />
+              </View>
+
+              <View style={[styles.tpToggleRow, { borderBottomWidth: 0 }]}>
+                <View style={styles.tpModeLeft}>
+                  <Text style={styles.tpModeEmoji}>🚶</Text>
+                  <Text style={styles.tpModeLabel}>Walking</Text>
+                </View>
+                <Switch
+                  value={preferWalking}
+                  onValueChange={setPreferWalking}
+                  trackColor={{ false: "#E2E8F0", true: "#2563EB" }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor="#E2E8F0"
+                />
+              </View>
             </View>
 
-            <View style={styles.switchRow}>
-              <View>
-                <Text style={styles.switchLabel}>Avoid Overcrowded Trains/Buses</Text>
-                <Text style={styles.switchSub}>Suggests alternative departure times</Text>
+            {/* Card 5: NOTIFICATIONS */}
+            <View style={styles.tpCard}>
+              <Text style={styles.tpCardLabel}>NOTIFICATIONS</Text>
+
+              <View style={styles.tpToggleRow}>
+                <Text style={styles.tpNotifLabel}>Journey updates</Text>
+                <Switch
+                  value={notifyJourneyUpdates}
+                  onValueChange={setNotifyJourneyUpdates}
+                  trackColor={{ false: "#E2E8F0", true: "#2563EB" }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor="#E2E8F0"
+                />
               </View>
-              <Switch
-                value={avoidCrowded}
-                onValueChange={setAvoidCrowded}
-                trackColor={{ false: "#E2E8F0", true: "#BFDBFE" }}
-                thumbColor={avoidCrowded ? "#1D64EC" : "#94A3B8"}
-              />
+
+              <View style={styles.tpToggleRow}>
+                <Text style={styles.tpNotifLabel}>Connection risks</Text>
+                <Switch
+                  value={notifyConnectionRisks}
+                  onValueChange={setNotifyConnectionRisks}
+                  trackColor={{ false: "#E2E8F0", true: "#2563EB" }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor="#E2E8F0"
+                />
+              </View>
+
+              <View style={styles.tpToggleRow}>
+                <Text style={styles.tpNotifLabel}>Service disruptions</Text>
+                <Switch
+                  value={notifyDisruptions}
+                  onValueChange={setNotifyDisruptions}
+                  trackColor={{ false: "#E2E8F0", true: "#2563EB" }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor="#E2E8F0"
+                />
+              </View>
+
+              <View style={[styles.tpToggleRow, { borderBottomWidth: 0 }]}>
+                <Text style={styles.tpNotifLabel}>Alternative routes</Text>
+                <Switch
+                  value={notifyAltRoutes}
+                  onValueChange={setNotifyAltRoutes}
+                  trackColor={{ false: "#E2E8F0", true: "#2563EB" }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor="#E2E8F0"
+                />
+              </View>
             </View>
           </ScrollView>
+
+          {/* Sticky Bottom Save Preferences */}
+          <View style={styles.tpBottomBar}>
+            <TouchableOpacity
+              style={styles.tpSaveButton}
+              onPress={() => setIsPreferencesVisible(false)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.tpSaveButtonText}>Save Preferences</Text>
+            </TouchableOpacity>
+          </View>
         </SafeAreaView>
       </Modal>
 
@@ -1344,5 +1593,223 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+
+  /* Travel Preferences Modal Styles */
+  tpContainer: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+  },
+  tpHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingTop: 12,
+    paddingBottom: 14,
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F5F9",
+  },
+  tpBackButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "#F1F5F9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tpBackIcon: {
+    fontSize: 24,
+    color: "#334155",
+    fontWeight: "600",
+    marginTop: -2,
+  },
+  tpHeaderTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginLeft: 14,
+    letterSpacing: -0.3,
+  },
+  tpScrollView: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+  },
+  tpScrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 24,
+  },
+  tpCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    padding: 16,
+    marginBottom: 14,
+    ...Platform.select({
+      web: { boxShadow: "0 2px 8px rgba(0,0,0,0.03)" },
+      android: { elevation: 1 },
+    }),
+  },
+  tpCardLabel: {
+    fontSize: 11.5,
+    fontWeight: "800",
+    color: "#94A3B8",
+    letterSpacing: 0.6,
+    marginBottom: 12,
+    textTransform: "uppercase",
+  },
+  tpCardHeaderBetween: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  tpCardLabelNoMargin: {
+    fontSize: 11.5,
+    fontWeight: "800",
+    color: "#94A3B8",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+  },
+  tpTransfersBadge: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#2563EB",
+  },
+  tpGridRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 10,
+  },
+  tpPrefButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 13,
+    paddingHorizontal: 8,
+    borderRadius: 14,
+    gap: 6,
+  },
+  tpPrefButtonActive: {
+    backgroundColor: "#2563EB",
+    borderWidth: 1,
+    borderColor: "#2563EB",
+    ...Platform.select({
+      web: { boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)" },
+      android: { elevation: 2 },
+    }),
+  },
+  tpPrefButtonInactive: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  tpPrefEmoji: {
+    fontSize: 15,
+  },
+  tpPrefText: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  tpPrefTextActive: {
+    color: "#FFFFFF",
+  },
+  tpPrefTextInactive: {
+    color: "#334155",
+  },
+  tpPillsRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  tpPillButton: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+  tpTolerancePillActive: {
+    backgroundColor: "#0284C7", // Cyan/Teal blue
+    borderWidth: 1,
+    borderColor: "#0284C7",
+    ...Platform.select({
+      web: { boxShadow: "0 4px 12px rgba(2, 132, 199, 0.25)" },
+      android: { elevation: 2 },
+    }),
+  },
+  tpTransfersPillActive: {
+    backgroundColor: "#2563EB", // Vibrant Royal Blue
+    borderWidth: 1,
+    borderColor: "#2563EB",
+    ...Platform.select({
+      web: { boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)" },
+      android: { elevation: 2 },
+    }),
+  },
+  tpPillInactive: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  tpPillText: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  tpPillTextActive: {
+    color: "#FFFFFF",
+  },
+  tpPillTextInactive: {
+    color: "#334155",
+  },
+  tpToggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 11,
+  },
+  tpModeLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  tpModeEmoji: {
+    fontSize: 17,
+  },
+  tpModeLabel: {
+    fontSize: 14.5,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  tpNotifLabel: {
+    fontSize: 14.5,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  tpBottomBar: {
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === "ios" ? 28 : 16,
+    borderTopWidth: 1,
+    borderTopColor: "#F1F5F9",
+  },
+  tpSaveButton: {
+    backgroundColor: "#1D64EC",
+    borderRadius: 14,
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    ...Platform.select({
+      web: { boxShadow: "0 6px 16px rgba(29, 100, 236, 0.3)" },
+      android: { elevation: 3 },
+    }),
+  },
+  tpSaveButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "700",
   },
 });
