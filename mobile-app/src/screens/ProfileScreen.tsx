@@ -45,62 +45,23 @@ export default function ProfileScreen({ navigation }: Props) {
   const [locationTracking, setLocationTracking] = useState(true);
   const [pushAlerts, setPushAlerts] = useState(true);
 
+  const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
+
   const handleLogout = () => {
-    Alert.alert(
-      "Log Out",
-      "Are you sure you want to log out of your BestRoute account?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Log Out",
-          style: "destructive",
-          onPress: () => {
-            navigation.replace("Login");
-          },
-        },
-      ]
-    );
+    setIsLogoutModalVisible(true);
+  };
+
+  const confirmLogout = () => {
+    setIsLogoutModalVisible(false);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Login" }],
+    });
   };
 
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-
-      {/* Top Profile Header Banner with Gradient */}
-      <LinearGradient
-        colors={["#0B3E9E", "#1763D5", "#1D64EC"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
-      >
-        <SafeAreaView edges={["top"]} style={styles.safeHeader}>
-          <View style={styles.profileHeaderContent}>
-            {/* Avatar container */}
-            <View style={styles.avatarWrapper}>
-              <View style={styles.avatarContainer}>
-                <Text style={styles.avatarEmoji}>👨‍💼</Text>
-              </View>
-              <View style={styles.avatarBadgeDot} />
-            </View>
-
-            {/* User Info */}
-            <View style={styles.userInfo}>
-              <Text style={styles.userName} numberOfLines={1}>
-                Alex Perera
-              </Text>
-              <Text style={styles.userEmail} numberOfLines={1}>
-                alex@example.com
-              </Text>
-              <View style={styles.memberTagRow}>
-                <View style={styles.activeGreenDot} />
-                <Text style={styles.memberTagText}>
-                  24 journeys · Member since 2024
-                </Text>
-              </View>
-            </View>
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
 
       {/* Main Content Area */}
       <ScrollView
@@ -108,6 +69,42 @@ export default function ProfileScreen({ navigation }: Props) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Top Profile Header Banner with Gradient */}
+        <LinearGradient
+          colors={["#0B3E9E", "#1763D5", "#1D64EC"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        >
+          <SafeAreaView edges={["top"]} style={styles.safeHeader}>
+            <View style={styles.profileHeaderContent}>
+              {/* Avatar container */}
+              <View style={styles.avatarWrapper}>
+                <View style={styles.avatarContainer}>
+                  <Text style={styles.avatarEmoji}>👨‍💼</Text>
+                </View>
+                <View style={styles.avatarBadgeDot} />
+              </View>
+
+              {/* User Info */}
+              <View style={styles.userInfo}>
+                <Text style={styles.userName} numberOfLines={1}>
+                  Alex Perera
+                </Text>
+                <Text style={styles.userEmail} numberOfLines={1}>
+                  alex@example.com
+                </Text>
+                <View style={styles.memberTagRow}>
+                  <View style={styles.activeGreenDot} />
+                  <Text style={styles.memberTagText}>
+                    24 journeys · Member since 2024
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </SafeAreaView>
+        </LinearGradient>
+
         {/* Floating Quick Stats Card */}
         <View style={styles.statsCard}>
           <View style={styles.statColumn}>
@@ -182,7 +179,7 @@ export default function ProfileScreen({ navigation }: Props) {
           {/* Become a Driver */}
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => setIsDriverModalVisible(true)}
+            onPress={() => navigation.navigate("DriverRegistration")}
             activeOpacity={0.7}
           >
             <View style={styles.menuLeft}>
@@ -543,10 +540,7 @@ export default function ProfileScreen({ navigation }: Props) {
               style={styles.driverRegisterBtn}
               onPress={() => {
                 setIsDriverModalVisible(false);
-                Alert.alert(
-                  "Application Started",
-                  "Thank you for your interest! A BestRoute partner onboarding specialist will contact you shortly."
-                );
+                navigation.navigate("DriverRegistration");
               }}
               activeOpacity={0.8}
             >
@@ -708,6 +702,42 @@ export default function ProfileScreen({ navigation }: Props) {
           </ScrollView>
         </SafeAreaView>
       </Modal>
+
+      {/* ================= LOGOUT CONFIRMATION MODAL ================= */}
+      <Modal
+        visible={isLogoutModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsLogoutModalVisible(false)}
+      >
+        <View style={styles.logoutModalOverlay}>
+          <View style={styles.logoutModalCard}>
+            <View style={styles.logoutIconWrapper}>
+              <Text style={styles.logoutModalIcon}>🚪</Text>
+            </View>
+            <Text style={styles.logoutModalTitle}>Log Out</Text>
+            <Text style={styles.logoutModalMessage}>
+              Are you sure you want to log out of your BestRoute account?
+            </Text>
+            <View style={styles.logoutButtonsRow}>
+              <TouchableOpacity
+                style={styles.logoutCancelBtn}
+                onPress={() => setIsLogoutModalVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.logoutCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.logoutConfirmBtn}
+                onPress={confirmLogout}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.logoutConfirmBtnText}>Log Out</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -718,7 +748,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
   },
   headerGradient: {
-    paddingBottom: 40,
+    paddingBottom: 48,
   },
   safeHeader: {
     paddingHorizontal: 20,
@@ -812,20 +842,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
-    paddingVertical: 16,
+    paddingVertical: 18,
     paddingHorizontal: 16,
     marginHorizontal: 16,
-    marginTop: -26,
+    marginTop: -28,
     marginBottom: 16,
+    zIndex: 10,
+    position: "relative",
     ...Platform.select({
-      ios: {
+      web: {
+        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.08)",
+      },
+      default: {
+        elevation: 4,
         shadowColor: "#1E293B",
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.08,
         shadowRadius: 8,
-      },
-      android: {
-        elevation: 3,
       },
     }),
   },
@@ -1232,5 +1265,84 @@ const styles = StyleSheet.create({
   supportSub: {
     fontSize: 13,
     color: "#64748B",
+  },
+
+  /* Logout Modal Styles */
+  logoutModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  logoutModalCard: {
+    width: "100%",
+    maxWidth: 340,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 24,
+    alignItems: "center",
+    ...Platform.select({
+      web: { boxShadow: "0 10px 30px rgba(0,0,0,0.2)" },
+      default: { elevation: 6 },
+    }),
+  },
+  logoutIconWrapper: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#FEE2E2",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  logoutModalIcon: {
+    fontSize: 28,
+  },
+  logoutModalTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginBottom: 8,
+  },
+  logoutModalMessage: {
+    fontSize: 13.5,
+    color: "#64748B",
+    textAlign: "center",
+    lineHeight: 19,
+    marginBottom: 22,
+  },
+  logoutButtonsRow: {
+    flexDirection: "row",
+    gap: 12,
+    width: "100%",
+  },
+  logoutCancelBtn: {
+    flex: 1,
+    backgroundColor: "#F1F5F9",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  logoutCancelBtnText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#475569",
+  },
+  logoutConfirmBtn: {
+    flex: 1,
+    backgroundColor: "#EF4444",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    ...Platform.select({
+      web: { boxShadow: "0 2px 8px rgba(239, 68, 68, 0.3)" },
+      default: { elevation: 2 },
+    }),
+  },
+  logoutConfirmBtnText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
 });

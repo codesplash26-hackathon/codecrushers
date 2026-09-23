@@ -14,6 +14,10 @@ import ProfileScreen from "../screens/ProfileScreen";
 import RouteResultsScreen from "../screens/RouteResultsScreen";
 import RouteDetailScreen from "../screens/RouteDetailScreen";
 import LiveTrackingScreen from "../screens/LiveTrackingScreen";
+import AvailableVehiclesScreen from "../screens/AvailableVehiclesScreen";
+import RideProgressScreen from "../screens/RideProgressScreen";
+import DriverRegistrationScreen from "../screens/DriverRegistrationScreen";
+import CompareRoutesScreen from "../screens/CompareRoutesScreen";
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -47,6 +51,30 @@ export type RootStackParamList = {
         to?: string;
       }
     | undefined;
+  AvailableVehicles:
+    | {
+        station?: string;
+        arrivalTime?: string;
+      }
+    | undefined;
+  RideProgress:
+    | {
+        driverName?: string;
+        driverInitials?: string;
+        rating?: number;
+        vehicleModel?: string;
+        plate?: string;
+        fare?: number;
+        station?: string;
+      }
+    | undefined;
+  DriverRegistration: undefined;
+  CompareRoutes:
+    | {
+        from?: string;
+        to?: string;
+      }
+    | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -70,6 +98,16 @@ export default function AppNavigator() {
         <Stack.Screen name="RouteResults" component={RouteResultsScreen} />
         <Stack.Screen name="RouteDetail" component={RouteDetailScreen} />
         <Stack.Screen name="LiveTracking" component={LiveTrackingScreen} />
+        <Stack.Screen
+          name="AvailableVehicles"
+          component={AvailableVehiclesScreen}
+        />
+        <Stack.Screen name="RideProgress" component={RideProgressScreen} />
+        <Stack.Screen
+          name="DriverRegistration"
+          component={DriverRegistrationScreen}
+        />
+        <Stack.Screen name="CompareRoutes" component={CompareRoutesScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

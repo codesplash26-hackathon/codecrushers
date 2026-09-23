@@ -56,6 +56,7 @@ export default function HomeScreen({ navigation }: Props) {
   const [activeTab, setActiveTab] = useState<
     "home" | "journeys" | "alerts" | "profile"
   >("home");
+  const [isProfilePopupVisible, setIsProfilePopupVisible] = useState(false);
 
   // Search modal state
   const [isSearchVisible, setIsSearchVisible] = useState(false);
@@ -221,9 +222,11 @@ export default function HomeScreen({ navigation }: Props) {
               <TouchableOpacity
                 style={styles.avatarCircle}
                 activeOpacity={0.8}
-                onPress={() => navigation.navigate("Login")}
+                onPress={() => setIsProfilePopupVisible(true)}
               >
-                <View style={styles.avatarInner} />
+                <View style={styles.avatarInner}>
+                  <Text style={styles.avatarIcon}>👤</Text>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -1225,6 +1228,136 @@ export default function HomeScreen({ navigation }: Props) {
           </View>
         </View>
       </Modal>
+
+      {/* QUICK USER PROFILE POPUP CARD */}
+      <Modal
+        visible={isProfilePopupVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsProfilePopupVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.popupOverlay}
+          activeOpacity={1}
+          onPress={() => setIsProfilePopupVisible(false)}
+        >
+          <View
+            style={styles.popupCard}
+            onStartShouldSetResponder={() => true}
+          >
+            {/* User Info Header */}
+            <View style={styles.popupHeaderRow}>
+              <View style={styles.popupAvatarWrapper}>
+                <View style={styles.popupAvatarContainer}>
+                  <Text style={styles.popupAvatarEmoji}>👨‍💼</Text>
+                </View>
+                <View style={styles.popupActiveDot} />
+              </View>
+
+              <View style={styles.popupUserTextCol}>
+                <Text style={styles.popupUserName}>Alex Perera</Text>
+                <Text style={styles.popupUserEmail}>alex@example.com</Text>
+                <View style={styles.popupBadgeRow}>
+                  <Text style={styles.popupBadgeText}>🌟 Verified Traveler</Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.popupCloseBtn}
+                onPress={() => setIsProfilePopupVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.popupCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Stats Row */}
+            <View style={styles.popupStatsBox}>
+              <View style={styles.popupStatItem}>
+                <Text style={styles.popupStatNumBlue}>24</Text>
+                <Text style={styles.popupStatLabel}>Journeys</Text>
+              </View>
+              <View style={styles.popupStatDivider} />
+              <View style={styles.popupStatItem}>
+                <Text style={styles.popupStatNumGreen}>Rs.1.2k</Text>
+                <Text style={styles.popupStatLabel}>Saved</Text>
+              </View>
+              <View style={styles.popupStatDivider} />
+              <View style={styles.popupStatItem}>
+                <Text style={styles.popupStatNumAmber}>4.8★</Text>
+                <Text style={styles.popupStatLabel}>Rating</Text>
+              </View>
+            </View>
+
+            {/* Quick Navigation Items */}
+            <View style={styles.popupActionsList}>
+              <TouchableOpacity
+                style={styles.popupActionItem}
+                onPress={() => {
+                  setIsProfilePopupVisible(false);
+                  navigation.navigate("Profile");
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.popupActionLeft}>
+                  <Text style={styles.popupActionIcon}>👤</Text>
+                  <Text style={styles.popupActionLabel}>View Full Profile</Text>
+                </View>
+                <Text style={styles.popupActionChevron}>›</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.popupActionItem}
+                onPress={() => {
+                  setIsProfilePopupVisible(false);
+                  navigation.navigate("Journeys");
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.popupActionLeft}>
+                  <Text style={styles.popupActionIcon}>🗺️</Text>
+                  <Text style={styles.popupActionLabel}>My Journeys</Text>
+                </View>
+                <Text style={styles.popupActionChevron}>›</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.popupActionItem}
+                onPress={() => {
+                  setIsProfilePopupVisible(false);
+                  navigation.navigate("DriverRegistration");
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.popupActionLeft}>
+                  <Text style={styles.popupActionIcon}>🚖</Text>
+                  <Text style={styles.popupActionLabel}>Become a Driver</Text>
+                </View>
+                <Text style={styles.popupActionChevron}>›</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Divider */}
+            <View style={styles.popupDivider} />
+
+            {/* Sign Out Button */}
+            <TouchableOpacity
+              style={styles.popupSignOutBtn}
+              onPress={() => {
+                setIsProfilePopupVisible(false);
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: "Login" }],
+                });
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.popupSignOutIcon}>🚪</Text>
+              <Text style={styles.popupSignOutText}>Sign Out</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -1290,12 +1423,21 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     justifyContent: "center",
     alignItems: "center",
+    ...Platform.select({
+      web: { boxShadow: "0 2px 6px rgba(0, 0, 0, 0.12)" },
+      default: { elevation: 2 },
+    }),
   },
   avatarInner: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "#E2E8F0",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#EFF6FF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarIcon: {
+    fontSize: 17,
   },
 
   /* Search Card */
@@ -1373,24 +1515,25 @@ const styles = StyleSheet.create({
 
   /* Divider & Swap Button */
   dividerRow: {
-    height: 22,
+    height: 16,
     position: "relative",
     justifyContent: "center",
   },
   verticalLine: {
     position: "absolute",
     left: 27,
-    top: 0,
-    bottom: 0,
+    top: -2,
+    bottom: -2,
     width: 1.5,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#CBD5E1",
   },
   swapButton: {
     position: "absolute",
     right: 18,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    top: -8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#E2E8F0",
@@ -1399,21 +1542,24 @@ const styles = StyleSheet.create({
     zIndex: 10,
     ...Platform.select({
       web: {
-        boxShadow: "0 2px 5px rgba(0, 0, 0, 0.08)",
+        boxShadow: "0 2px 6px rgba(0, 0, 0, 0.12)",
       },
       default: {
-        elevation: 2,
+        elevation: 3,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.12,
         shadowRadius: 3,
       },
     }),
   },
   swapIcon: {
-    fontSize: 13,
+    fontSize: 14,
+    lineHeight: 18,
     color: "#64748B",
     fontWeight: "bold",
+    textAlign: "center",
+    includeFontPadding: false,
   },
 
   /* Segmented Control */
@@ -2329,5 +2475,202 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
+  },
+
+  /* Profile Popup Modal */
+  popupOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.45)",
+    justifyContent: "flex-start",
+    alignItems: "flex-end",
+    paddingTop: Platform.OS === "ios" ? 64 : 48,
+    paddingRight: 16,
+  },
+  popupCard: {
+    width: 310,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 18,
+    ...Platform.select({
+      web: { boxShadow: "0 12px 36px rgba(15, 23, 42, 0.2)" },
+      default: {
+        elevation: 8,
+        shadowColor: "#0F172A",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.18,
+        shadowRadius: 16,
+      },
+    }),
+  },
+  popupHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  popupAvatarWrapper: {
+    position: "relative",
+    marginRight: 12,
+  },
+  popupAvatarContainer: {
+    width: 46,
+    height: 46,
+    borderRadius: 16,
+    backgroundColor: "#EFF6FF",
+    borderWidth: 1.5,
+    borderColor: "#BFDBFE",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  popupAvatarEmoji: {
+    fontSize: 24,
+  },
+  popupActiveDot: {
+    position: "absolute",
+    bottom: -2,
+    right: -2,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#10B981",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+  },
+  popupUserTextCol: {
+    flex: 1,
+  },
+  popupUserName: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginBottom: 1,
+  },
+  popupUserEmail: {
+    fontSize: 12,
+    color: "#64748B",
+    fontWeight: "500",
+  },
+  popupBadgeRow: {
+    marginTop: 3,
+  },
+  popupBadgeText: {
+    fontSize: 10.5,
+    color: "#1D64EC",
+    fontWeight: "700",
+  },
+  popupCloseBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#F1F5F9",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  popupCloseText: {
+    fontSize: 12,
+    color: "#64748B",
+    fontWeight: "700",
+  },
+
+  /* Popup Stats */
+  popupStatsBox: {
+    flexDirection: "row",
+    backgroundColor: "#F8FAFC",
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    alignItems: "center",
+    justifyContent: "space-around",
+    marginBottom: 14,
+  },
+  popupStatItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  popupStatNumBlue: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#2563EB",
+  },
+  popupStatNumGreen: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#16A34A",
+  },
+  popupStatNumAmber: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#D97706",
+  },
+  popupStatLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#94A3B8",
+    marginTop: 1,
+  },
+  popupStatDivider: {
+    width: 1,
+    height: 22,
+    backgroundColor: "#E2E8F0",
+  },
+
+  /* Popup Actions */
+  popupActionsList: {
+    gap: 2,
+    marginBottom: 8,
+  },
+  popupActionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 9,
+    paddingHorizontal: 6,
+    borderRadius: 8,
+  },
+  popupActionLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  popupActionIcon: {
+    fontSize: 16,
+  },
+  popupActionLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#334155",
+  },
+  popupActionChevron: {
+    fontSize: 16,
+    color: "#94A3B8",
+    fontWeight: "600",
+  },
+  popupDivider: {
+    height: 1,
+    backgroundColor: "#F1F5F9",
+    marginVertical: 6,
+  },
+
+  /* Sign Out */
+  popupSignOutBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#FEF2F2",
+    borderRadius: 12,
+    paddingVertical: 11,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: "#FEE2E2",
+  },
+  popupSignOutIcon: {
+    fontSize: 16,
+  },
+  popupSignOutText: {
+    fontSize: 13.5,
+    fontWeight: "700",
+    color: "#EF4444",
   },
 });

@@ -787,14 +787,9 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
           style={styles.compareAllButton}
           activeOpacity={0.85}
           onPress={() =>
-            navigation.navigate("RouteDetail", {
+            navigation.navigate("CompareRoutes", {
               from: fromCity,
               to: toCity,
-              routeType: "BEST MATCH",
-              fare: "Rs. 320",
-              duration: "1h 35m",
-              departureTime: "8:30 AM",
-              arrivalTime: "10:05 AM",
             })
           }
         >
