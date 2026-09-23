@@ -709,12 +709,7 @@ export default function JourneysScreen({ navigation, route }: Props) {
         {/* Alerts Tab */}
         <TouchableOpacity
           style={styles.navItem}
-          onPress={() => {
-            Alert.alert(
-              "Transit Alerts",
-              "1. Signal delay on Main Line train near Polgahawela.\n2. Rain alert for Kandy-Colombo highway bus routes."
-            );
-          }}
+          onPress={() => navigation.navigate("Notifications")}
           activeOpacity={0.7}
         >
           <View style={styles.alertIconWrapper}>

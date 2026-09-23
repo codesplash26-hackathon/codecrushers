@@ -5,3 +5,4 @@ export { default as RegisterScreen } from "./RegisterScreen";
 export { default as ForgotPasswordScreen } from "./ForgotPasswordScreen";
 export { default as HomeScreen } from "./HomeScreen";
 export { default as JourneysScreen } from "./JourneysScreen";
+export { default as NotificationsScreen } from "./NotificationsScreen";

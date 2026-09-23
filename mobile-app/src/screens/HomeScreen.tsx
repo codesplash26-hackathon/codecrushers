@@ -674,7 +674,7 @@ export default function HomeScreen({ navigation }: Props) {
         {/* Alerts Tab */}
         <TouchableOpacity
           style={styles.navItem}
-          onPress={() => setActiveTab("alerts")}
+          onPress={() => navigation.navigate("Notifications")}
           activeOpacity={0.7}
         >
           <View style={styles.alertIconWrapper}>

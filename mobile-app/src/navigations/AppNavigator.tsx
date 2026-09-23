@@ -9,6 +9,7 @@ import RegisterScreen from "../screens/RegisterScreen";
 import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 import HomeScreen from "../screens/HomeScreen";
 import JourneysScreen from "../screens/JourneysScreen";
+import NotificationsScreen from "../screens/NotificationsScreen";
 import RouteResultsScreen from "../screens/RouteResultsScreen";
 import RouteDetailScreen from "../screens/RouteDetailScreen";
 import LiveTrackingScreen from "../screens/LiveTrackingScreen";
@@ -23,6 +24,7 @@ export type RootStackParamList = {
   Journeys:
     | { initialTab?: "upcoming" | "completed" | "saved" }
     | undefined;
+  Notifications: undefined;
   RouteResults:
     | { from?: string; to?: string; skipLoading?: boolean }
     | undefined;
@@ -61,6 +63,7 @@ export default function AppNavigator() {
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Journeys" component={JourneysScreen} />
+        <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="RouteResults" component={RouteResultsScreen} />
         <Stack.Screen name="RouteDetail" component={RouteDetailScreen} />
         <Stack.Screen name="LiveTracking" component={LiveTrackingScreen} />
