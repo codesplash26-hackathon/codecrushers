@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Pressable,
   Dimensions,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
@@ -150,7 +151,6 @@ export default function SplashScreen({ navigation }: Props) {
 
   return (
     <Pressable
-      className="flex-1"
       style={styles.pressableContainer}
       onPress={navigateNext}
     >
@@ -181,7 +181,7 @@ export default function SplashScreen({ navigation }: Props) {
 
       <SafeAreaView style={styles.safeArea}>
         {/* Central Brand Unit */}
-        <View className="flex-1 justify-center items-center px-6">
+        <View style={styles.brandCenterContainer}>
           {/* Logo container with ambient glow */}
           <View style={styles.logoWrapper}>
             {/* Ambient Logo Glow */}
@@ -220,12 +220,12 @@ export default function SplashScreen({ navigation }: Props) {
             ]}
           >
             {/* Tagline */}
-            <Text className="text-white text-xl font-bold tracking-tight text-center mt-6">
+            <Text style={styles.taglineText}>
               Your journey. Optimized.
             </Text>
 
             {/* Three Bouncing / Pulsing Loading Dots */}
-            <View className="flex-row items-center justify-center my-4 space-x-2.5">
+            <View style={styles.dotsContainer}>
               <Animated.View
                 style={[
                   styles.dot,
@@ -238,7 +238,6 @@ export default function SplashScreen({ navigation }: Props) {
               <Animated.View
                 style={[
                   styles.dot,
-                  styles.dotMargin,
                   {
                     opacity: dot2Anim,
                     transform: [{ scale: dot2Scale }],
@@ -248,7 +247,6 @@ export default function SplashScreen({ navigation }: Props) {
               <Animated.View
                 style={[
                   styles.dot,
-                  styles.dotMargin,
                   {
                     opacity: dot3Anim,
                     transform: [{ scale: dot3Scale }],
@@ -258,15 +256,15 @@ export default function SplashScreen({ navigation }: Props) {
             </View>
 
             {/* Loading Status Subtitle */}
-            <Text className="text-blue-200/90 text-sm font-medium tracking-wide text-center">
+            <Text style={styles.subtitleText}>
               Optimizing your travel experience...
             </Text>
           </Animated.View>
         </View>
 
         {/* Multimodal Journey Optimization Footer */}
-        <View className="pb-4 items-center justify-center">
-          <Text className="text-blue-100/60 text-xs font-semibold tracking-wider text-center">
+        <View style={styles.footerContainer}>
+          <Text style={styles.footerText}>
             Multimodal Journey Optimization
           </Text>
         </View>
@@ -352,38 +350,86 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
     transform: [{ rotate: "-38deg" }],
   },
+  // Brand Center Container
+  brandCenterContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    width: "100%",
+  },
   // Logo presentation
   logoWrapper: {
     position: "relative",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   glowBackdrop: {
     position: "absolute",
-    width: 220,
-    height: 220,
-    borderRadius: 110,
+    width: 230,
+    height: 230,
+    borderRadius: 115,
     backgroundColor: "rgba(96, 165, 250, 0.22)",
   },
   logoImage: {
-    width: SCREEN_WIDTH * 0.58,
-    maxWidth: 240,
-    height: SCREEN_WIDTH * 0.58,
-    maxHeight: 240,
+    width: Math.min(SCREEN_WIDTH * 0.58, 220),
+    maxWidth: 220,
+    height: Math.min(SCREEN_WIDTH * 0.58, 220),
+    maxHeight: 220,
   },
   contentContainer: {
     alignItems: "center",
     justifyContent: "center",
+    width: "100%",
+    paddingHorizontal: 20,
     marginTop: 6,
   },
-  dot: {
-    width: 9,
-    height: 9,
-    borderRadius: 4.5,
-    backgroundColor: "#FFFFFF",
+  taglineText: {
+    color: "#FFFFFF",
+    fontSize: 21,
+    fontWeight: "700",
+    letterSpacing: -0.3,
+    textAlign: "center",
+    marginTop: 14,
+    textShadowColor: "rgba(0, 0, 0, 0.25)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
-  dotMargin: {
-    marginLeft: 8,
+  dotsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 16,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FFFFFF",
+    marginHorizontal: 4,
+  },
+  subtitleText: {
+    color: "rgba(224, 242, 254, 0.95)",
+    fontSize: 14,
+    fontWeight: "500",
+    letterSpacing: 0.2,
+    textAlign: "center",
+    maxWidth: 280,
+  },
+  footerContainer: {
+    paddingBottom: Platform.OS === "ios" ? 14 : 20,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+  },
+  footerText: {
+    color: "rgba(255, 255, 255, 0.65)",
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 1.1,
+    textAlign: "center",
+    textTransform: "uppercase",
   },
 });
