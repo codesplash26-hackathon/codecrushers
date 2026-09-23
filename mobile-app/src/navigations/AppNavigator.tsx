@@ -15,6 +15,7 @@ import RouteResultsScreen from "../screens/RouteResultsScreen";
 import RouteDetailScreen from "../screens/RouteDetailScreen";
 import LiveTrackingScreen from "../screens/LiveTrackingScreen";
 import AvailableVehiclesScreen from "../screens/AvailableVehiclesScreen";
+import RideProgressScreen from "../screens/RideProgressScreen";
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -54,6 +55,17 @@ export type RootStackParamList = {
         arrivalTime?: string;
       }
     | undefined;
+  RideProgress:
+    | {
+        driverName?: string;
+        driverInitials?: string;
+        rating?: number;
+        vehicleModel?: string;
+        plate?: string;
+        fare?: number;
+        station?: string;
+      }
+    | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -81,6 +93,7 @@ export default function AppNavigator() {
           name="AvailableVehicles"
           component={AvailableVehiclesScreen}
         />
+        <Stack.Screen name="RideProgress" component={RideProgressScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

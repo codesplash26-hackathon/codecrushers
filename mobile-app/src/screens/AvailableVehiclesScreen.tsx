@@ -159,7 +159,20 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
   };
 
   const handleConfirmBooking = () => {
-    setBookingConfirmed(true);
+    const vehicle = selectedVehicle;
+    setSelectedVehicle(null);
+    setBookingConfirmed(false);
+    if (vehicle) {
+      navigation.navigate("RideProgress", {
+        driverName: vehicle.name,
+        driverInitials: vehicle.initials,
+        rating: vehicle.rating,
+        vehicleModel: vehicle.model,
+        plate: vehicle.plate,
+        fare: vehicle.fare,
+        station: stationName,
+      });
+    }
   };
 
   const handleCloseModal = () => {
