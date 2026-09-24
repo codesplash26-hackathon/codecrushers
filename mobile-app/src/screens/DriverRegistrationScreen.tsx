@@ -60,14 +60,17 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
           ]}
         >
           <TouchableOpacity
-            style={styles.statusBackButton}
+            style={[
+              styles.statusBackButton,
+              isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+            ]}
             onPress={() => navigation.goBack()}
             activeOpacity={0.7}
           >
             <Text
               style={[
                 styles.statusBackArrow,
-                isDarkMode && { color: colors.primaryLight },
+                isDarkMode && { color: colors.textPrimary },
               ]}
             >
               ‹
@@ -86,13 +89,25 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
         </View>
 
         <ScrollView
-          style={styles.statusScrollArea}
+          style={[
+            styles.statusScrollArea,
+            isDarkMode && { backgroundColor: colors.screenBg },
+          ]}
           contentContainerStyle={styles.statusContentContainer}
           showsVerticalScrollIndicator={false}
         >
           {/* Hourglass Icon Container */}
           <View style={styles.hourglassWrapper}>
-            <View style={styles.hourglassCard}>
+            <View
+              style={[
+                styles.hourglassCard,
+                isDarkMode && {
+                  backgroundColor: "rgba(245, 158, 11, 0.18)",
+                  borderColor: "rgba(245, 158, 11, 0.35)",
+                  borderWidth: 1,
+                },
+              ]}
+            >
               <Text style={styles.hourglassEmoji}>⏳</Text>
             </View>
           </View>
@@ -170,7 +185,10 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
               <View
                 style={[
                   styles.grayEmptyCircle,
-                  isDarkMode && { borderColor: colors.borderLight },
+                  isDarkMode && {
+                    borderColor: colors.cardBorder,
+                    backgroundColor: colors.cardSecondaryBg,
+                  },
                 ]}
               />
               <Text
@@ -188,7 +206,10 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
               <View
                 style={[
                   styles.grayEmptyCircle,
-                  isDarkMode && { borderColor: colors.borderLight },
+                  isDarkMode && {
+                    borderColor: colors.cardBorder,
+                    backgroundColor: colors.cardSecondaryBg,
+                  },
                 ]}
               />
               <Text
@@ -214,11 +235,22 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
           ]}
         >
           <TouchableOpacity
-            style={styles.backPassengerBtn}
+            style={[
+              styles.backPassengerBtn,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
             onPress={() => navigation.goBack()}
             activeOpacity={0.8}
           >
-            <Text style={styles.backPassengerBtnText}>
+            <Text
+              style={[
+                styles.backPassengerBtnText,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
               Back to Passenger Mode
             </Text>
           </TouchableOpacity>
@@ -236,7 +268,10 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
       <View style={[styles.header, isDarkMode && { backgroundColor: "#071630" }]}>
         <View style={styles.headerTopRow}>
           <TouchableOpacity
-            style={styles.headerBackButton}
+            style={[
+              styles.headerBackButton,
+              isDarkMode && { backgroundColor: "rgba(255, 255, 255, 0.15)" },
+            ]}
             onPress={() => {
               if (currentStep === 2) {
                 setCurrentStep(1);
@@ -246,7 +281,14 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
             }}
             activeOpacity={0.7}
           >
-            <Text style={styles.headerBackIcon}>‹</Text>
+            <Text
+              style={[
+                styles.headerBackIcon,
+                isDarkMode && { color: "#FFFFFF" },
+              ]}
+            >
+              ‹
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.headerTitleCol}>
@@ -414,7 +456,13 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
                   backgroundColor: colors.cardBg,
                   borderColor: colors.cardBorder,
                 },
-                licenseUploaded && styles.uploadButtonSuccess,
+                licenseUploaded &&
+                  (isDarkMode
+                    ? {
+                        backgroundColor: "rgba(22, 163, 74, 0.18)",
+                        borderColor: "rgba(22, 163, 74, 0.35)",
+                      }
+                    : styles.uploadButtonSuccess),
               ]}
               onPress={() => setLicenseUploaded(!licenseUploaded)}
               activeOpacity={0.7}
@@ -425,7 +473,8 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
               <Text
                 style={[
                   styles.uploadText,
-                  isDarkMode && !licenseUploaded && { color: colors.textPrimary },
+                  isDarkMode &&
+                    !licenseUploaded && { color: colors.textPrimary },
                   licenseUploaded && styles.uploadTextSuccess,
                 ]}
               >
@@ -442,7 +491,13 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
                   backgroundColor: colors.cardBg,
                   borderColor: colors.cardBorder,
                 },
-                photoUploaded && styles.uploadButtonSuccess,
+                photoUploaded &&
+                  (isDarkMode
+                    ? {
+                        backgroundColor: "rgba(22, 163, 74, 0.18)",
+                        borderColor: "rgba(22, 163, 74, 0.35)",
+                      }
+                    : styles.uploadButtonSuccess),
               ]}
               onPress={() => setPhotoUploaded(!photoUploaded)}
               activeOpacity={0.7}
@@ -453,7 +508,8 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
               <Text
                 style={[
                   styles.uploadText,
-                  isDarkMode && !photoUploaded && { color: colors.textPrimary },
+                  isDarkMode &&
+                    !photoUploaded && { color: colors.textPrimary },
                   photoUploaded && styles.uploadTextSuccess,
                 ]}
               >
@@ -503,7 +559,14 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
                       backgroundColor: colors.cardBg,
                       borderColor: colors.cardBorder,
                     },
-                    vehicleType === "Taxi" && styles.vehicleTypeOptionActive,
+                    vehicleType === "Taxi" &&
+                      (isDarkMode
+                        ? {
+                            borderColor: "#3B82F6",
+                            borderWidth: 1.5,
+                            backgroundColor: "rgba(37, 99, 235, 0.25)",
+                          }
+                        : styles.vehicleTypeOptionActive),
                   ]}
                   onPress={() => setVehicleType("Taxi")}
                   activeOpacity={0.7}
@@ -512,6 +575,8 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
                     style={[
                       styles.vehicleTypeOptionText,
                       isDarkMode && { color: colors.textPrimary },
+                      vehicleType === "Taxi" &&
+                        isDarkMode && { color: "#60A5FA" },
                     ]}
                   >
                     🚕 Taxi
@@ -526,7 +591,14 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
                       backgroundColor: colors.cardBg,
                       borderColor: colors.cardBorder,
                     },
-                    vehicleType === "Tuk-tuk" && styles.vehicleTypeOptionActive,
+                    vehicleType === "Tuk-tuk" &&
+                      (isDarkMode
+                        ? {
+                            borderColor: "#3B82F6",
+                            borderWidth: 1.5,
+                            backgroundColor: "rgba(37, 99, 235, 0.25)",
+                          }
+                        : styles.vehicleTypeOptionActive),
                   ]}
                   onPress={() => setVehicleType("Tuk-tuk")}
                   activeOpacity={0.7}
@@ -535,6 +607,8 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
                     style={[
                       styles.vehicleTypeOptionText,
                       isDarkMode && { color: colors.textPrimary },
+                      vehicleType === "Tuk-tuk" &&
+                        isDarkMode && { color: "#60A5FA" },
                     ]}
                   >
                     🛺 Tuk-tuk
@@ -630,7 +704,13 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
                   backgroundColor: colors.cardBg,
                   borderColor: colors.cardBorder,
                 },
-                vehicleDocsUploaded && styles.uploadButtonSuccess,
+                vehicleDocsUploaded &&
+                  (isDarkMode
+                    ? {
+                        backgroundColor: "rgba(22, 163, 74, 0.18)",
+                        borderColor: "rgba(22, 163, 74, 0.35)",
+                      }
+                    : styles.uploadButtonSuccess),
                 { marginTop: 10, marginBottom: 24 },
               ]}
               onPress={() => setVehicleDocsUploaded(!vehicleDocsUploaded)}
@@ -642,7 +722,8 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
               <Text
                 style={[
                   styles.uploadText,
-                  isDarkMode && !vehicleDocsUploaded && { color: colors.textPrimary },
+                  isDarkMode &&
+                    !vehicleDocsUploaded && { color: colors.textPrimary },
                   vehicleDocsUploaded && styles.uploadTextSuccess,
                 ]}
               >

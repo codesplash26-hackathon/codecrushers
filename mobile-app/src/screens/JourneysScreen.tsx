@@ -17,6 +17,7 @@ import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../navigations/AppNavigator";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
+import BottomNavigationBar from "../components/BottomNavigationBar";
 
 type JourneysScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -799,82 +800,8 @@ export default function JourneysScreen({ navigation, route }: Props) {
         )}
       </ScrollView>
 
-      {/* Bottom Navigation Bar */}
-      <View
-        style={[
-          styles.bottomNav,
-          isDarkMode && {
-            backgroundColor: colors.cardBg,
-            borderTopColor: colors.cardBorder,
-          },
-        ]}
-      >
-        {/* Home Tab */}
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate("Home")}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.navIcon, styles.navIconInactive]}>🏠</Text>
-          <Text
-            style={[
-              styles.navLabel,
-              styles.navLabelInactive,
-              isDarkMode && { color: colors.textSecondary },
-            ]}
-          >
-            Home
-          </Text>
-        </TouchableOpacity>
-
-        {/* Journeys Tab (Active) */}
-        <TouchableOpacity style={styles.navItem} activeOpacity={0.8}>
-          <Text style={[styles.navIcon, styles.navIconActive]}>🗺️</Text>
-          <Text style={[styles.navLabel, styles.navLabelActive]}>Journeys</Text>
-          <View style={styles.activeTabIndicator} />
-        </TouchableOpacity>
-
-        {/* Alerts Tab */}
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate("Notifications")}
-          activeOpacity={0.7}
-        >
-          <View style={styles.alertIconWrapper}>
-            <Text style={[styles.navIcon, styles.navIconInactive]}>🔔</Text>
-            <View style={styles.badgeContainer}>
-              <Text style={styles.badgeText}>2</Text>
-            </View>
-          </View>
-          <Text
-            style={[
-              styles.navLabel,
-              styles.navLabelInactive,
-              isDarkMode && { color: colors.textSecondary },
-            ]}
-          >
-            Alerts
-          </Text>
-        </TouchableOpacity>
-
-        {/* Profile Tab */}
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate("Profile")}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.navIcon, styles.navIconInactive]}>👤</Text>
-          <Text
-            style={[
-              styles.navLabel,
-              styles.navLabelInactive,
-              isDarkMode && { color: colors.textSecondary },
-            ]}
-          >
-            Profile
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {/* Unified Fixed-Position Bottom Navigation Bar */}
+      <BottomNavigationBar activeTab="journeys" navigation={navigation} />
 
       {/* ================= JOURNEY DETAIL MODAL ================= */}
       <Modal
@@ -1260,7 +1187,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 12,
-    paddingBottom: 24,
+    paddingBottom: 95,
   },
   // Card
   card: {

@@ -383,14 +383,26 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
         {/* Dark Navy Band Above Bottom Sheet */}
         <View style={styles.darkNavyBand} />
 
-        {/* Bottom White Progress & Checklist Sheet */}
+        {/* Bottom Progress & Checklist Sheet */}
         <TouchableOpacity
-          style={styles.bottomSheetCard}
+          style={[
+            styles.bottomSheetCard,
+            isDarkMode && {
+              backgroundColor: colors.cardBg,
+              borderTopColor: colors.cardBorder,
+              borderTopWidth: 1,
+            },
+          ]}
           activeOpacity={0.95}
           onPress={handleSkipLoading}
         >
           {/* Smooth Animated Progress Bar */}
-          <View style={styles.progressTrack}>
+          <View
+            style={[
+              styles.progressTrack,
+              isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+            ]}
+          >
             <Animated.View
               style={[
                 styles.progressFill,
@@ -425,7 +437,12 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
                       </Animated.View>
                     </View>
                   ) : (
-                    <View style={styles.iconCirclePending}>
+                    <View
+                      style={[
+                        styles.iconCirclePending,
+                        isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+                      ]}
+                    >
                       <View style={styles.pendingDotGhost} />
                     </View>
                   )}
@@ -434,8 +451,15 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
                     style={[
                       styles.stepTextBase,
                       isDone && styles.stepTextSuccess,
-                      isActive && styles.stepTextActive,
-                      !isDone && !isActive && styles.stepTextPending,
+                      isActive && [
+                        styles.stepTextActive,
+                        isDarkMode && { color: colors.textPrimary },
+                      ],
+                      !isDone &&
+                        !isActive && [
+                          styles.stepTextPending,
+                          isDarkMode && { color: colors.textMuted },
+                        ],
                     ]}
                   >
                     {step.label}
@@ -447,10 +471,20 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
 
           {/* Footer Note */}
           <View style={styles.sheetFooter}>
-            <Text style={styles.footerMainText}>
+            <Text
+              style={[
+                styles.footerMainText,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
               Optimizing your journey...
             </Text>
-            <Text style={styles.footerSubText}>
+            <Text
+              style={[
+                styles.footerSubText,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
               Evaluating {evalCombinations}+ route combinations
             </Text>
           </View>
