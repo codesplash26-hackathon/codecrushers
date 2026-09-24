@@ -15,6 +15,8 @@ import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../navigations/AppNavigator";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 type JourneysScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -68,6 +70,7 @@ export interface JourneyItem {
 }
 
 export default function JourneysScreen({ navigation, route }: Props) {
+  const { isDarkMode, colors } = useTheme();
   const initialTab = route?.params?.initialTab || "completed";
   const [activeTab, setActiveTab] = useState<JourneyTab>(initialTab);
   const [selectedJourney, setSelectedJourney] = useState<JourneyItem | null>(null);
@@ -445,12 +448,29 @@ export default function JourneysScreen({ navigation, route }: Props) {
       : savedJourneys;
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <StatusBar style="dark" />
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.screenBg }]}
+      edges={["top"]}
+    >
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
 
       {/* Screen Header - Safe distance below dynamic island / notch */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Journeys</Text>
+      <View
+        style={[
+          styles.header,
+          isDarkMode && { backgroundColor: colors.headerBg },
+        ]}
+      >
+        <Text
+          style={[
+            styles.headerTitle,
+            isDarkMode && { color: colors.textPrimary },
+          ]}
+        >
+          My Journeys
+        </Text>
+        {/* Dark Mode Change Button in Top Right Corner */}
+        <ThemeToggle variant="solid" size={38} />
       </View>
 
       {/* Segmented Tab Pill Control */}
@@ -868,6 +888,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: "#FFFFFF",
   },
   headerTitle: {

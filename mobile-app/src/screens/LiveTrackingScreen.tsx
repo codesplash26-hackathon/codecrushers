@@ -30,8 +30,11 @@ interface Props {
 }
 
 import RealisticRouteMap from "../components/RealisticRouteMap";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function LiveTrackingScreen({ navigation }: Props) {
+  const { isDarkMode, colors } = useTheme();
   // Delay simulation toggle
   const [isDelayed, setIsDelayed] = useState(false);
 
@@ -55,8 +58,11 @@ export default function LiveTrackingScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.screen}>
-      <StatusBar style="dark" />
+    <View style={[styles.screen, { backgroundColor: colors.screenBg }]}>
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
+
+      {/* Floating Dark Mode Button in Top Right Corner */}
+      <ThemeToggle floating={true} size={38} />
 
       <ScrollView
         style={styles.scrollContainer}

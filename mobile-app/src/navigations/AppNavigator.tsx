@@ -1,6 +1,7 @@
 import React from "react";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useTheme } from "../context/ThemeContext";
 
 import SplashScreen from "../screens/SplashScreen";
 import OnboardingScreen from "../screens/OnboardingScreen";
@@ -80,8 +81,22 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
+  const { isDarkMode, colors } = useTheme();
+
+  const navigationTheme = {
+    ...(isDarkMode ? DarkTheme : DefaultTheme),
+    colors: {
+      ...(isDarkMode ? DarkTheme.colors : DefaultTheme.colors),
+      background: colors.screenBg,
+      card: colors.cardBg,
+      text: colors.textPrimary,
+      border: colors.cardBorder,
+      primary: colors.primary,
+    },
+  };
+
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navigationTheme}>
       <Stack.Navigator
         initialRouteName="Splash"
         screenOptions={{ headerShown: false }}

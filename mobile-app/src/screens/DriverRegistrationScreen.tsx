@@ -11,6 +11,8 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 type DriverRegistrationScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -22,6 +24,7 @@ interface Props {
 }
 
 export default function DriverRegistrationScreen({ navigation }: Props) {
+  const { isDarkMode, colors } = useTheme();
   // Step 1: Personal Info, Step 2: Vehicle Info, Step 3: Application Status Pending
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
 
@@ -43,20 +46,43 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
   // STEP 3: APPLICATION STATUS SCREEN
   if (currentStep === 3) {
     return (
-      <View style={styles.statusScreenContainer}>
-        <StatusBar style="dark" />
+      <View style={[styles.statusScreenContainer, { backgroundColor: colors.screenBg }]}>
+        <StatusBar style={isDarkMode ? "light" : "dark"} />
 
         {/* Minimal White Top Bar */}
-        <View style={styles.statusTopBar}>
+        <View
+          style={[
+            styles.statusTopBar,
+            isDarkMode && {
+              backgroundColor: colors.headerBg,
+              borderBottomColor: colors.cardBorder,
+            },
+          ]}
+        >
           <TouchableOpacity
             style={styles.statusBackButton}
             onPress={() => navigation.goBack()}
             activeOpacity={0.7}
           >
-            <Text style={styles.statusBackArrow}>‹</Text>
+            <Text
+              style={[
+                styles.statusBackArrow,
+                isDarkMode && { color: colors.primaryLight },
+              ]}
+            >
+              ‹
+            </Text>
           </TouchableOpacity>
-          <Text style={styles.statusTopBarTitle}>Application Status</Text>
-          <View style={{ width: 32 }} />
+          <Text
+            style={[
+              styles.statusTopBarTitle,
+              isDarkMode && { color: colors.textPrimary },
+            ]}
+          >
+            Application Status
+          </Text>
+          {/* Dark Mode Change Button Displayed in Top Right Corner */}
+          <ThemeToggle variant="solid" size={36} />
         </View>
 
         <ScrollView
@@ -134,11 +160,11 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
 
   // STEP 1 & 2: REGISTRATION FORMS
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colors.screenBg }]}>
       <StatusBar style="light" />
 
       {/* TOP BLUE HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, isDarkMode && { backgroundColor: "#071630" }]}>
         <View style={styles.headerTopRow}>
           <TouchableOpacity
             style={styles.headerBackButton}
@@ -160,6 +186,9 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
             </Text>
             <Text style={styles.stepTitle}>Driver Registration</Text>
           </View>
+
+          {/* Dark Mode Change Button Displayed in Top Right Corner */}
+          <ThemeToggle variant="glass" size={38} />
         </View>
 
         {/* Progress Bar Line */}

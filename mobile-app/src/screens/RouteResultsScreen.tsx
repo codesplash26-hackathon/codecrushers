@@ -13,6 +13,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../navigations/AppNavigator";
 import RealisticRouteMap from "../components/RealisticRouteMap";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 type RouteResultsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -38,6 +40,7 @@ const CHECKLIST_STEPS = [
 ];
 
 export default function RouteResultsScreen({ navigation, route }: Props) {
+  const { isDarkMode, colors } = useTheme();
   const fromCity = route.params?.from || "Kandy";
   const toCity = route.params?.to || "Colombo Fort";
   const skipLoading = route.params?.skipLoading ?? false;
@@ -458,33 +461,80 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
 
   // ================= 2. ROUTE RESULTS VIEW (Second Interface in Photo) =================
   return (
-    <View style={styles.resultsContainer}>
-      <StatusBar style="dark" />
+    <View style={[styles.resultsContainer, { backgroundColor: colors.screenBg }]}>
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
 
-      {/* Header with Back and Replay Buttons */}
-      <View style={styles.resultsHeader}>
+      {/* Header with Back, Replay and Theme Toggle in Top Right Corner */}
+      <View
+        style={[
+          styles.resultsHeader,
+          isDarkMode && { backgroundColor: colors.headerBg },
+        ]}
+      >
         <TouchableOpacity
-          style={styles.backButton}
+          style={[
+            styles.backButton,
+            isDarkMode && {
+              backgroundColor: colors.cardSecondaryBg,
+              borderColor: colors.cardBorder,
+            },
+          ]}
           activeOpacity={0.7}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backButtonText}>‹</Text>
+          <Text
+            style={[
+              styles.backButtonText,
+              isDarkMode && { color: colors.textPrimary },
+            ]}
+          >
+            ‹
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.headerTitles}>
-          <Text style={styles.headerMainTitle}>Routes to {toCity}</Text>
-          <Text style={styles.headerSubtitle}>
+          <Text
+            style={[
+              styles.headerMainTitle,
+              isDarkMode && { color: colors.textPrimary },
+            ]}
+          >
+            Routes to {toCity}
+          </Text>
+          <Text
+            style={[
+              styles.headerSubtitle,
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
             Today · Departing 8:30 AM · 3 routes found
           </Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.replayButton}
-          activeOpacity={0.7}
-          onPress={handleRestartOptimization}
-        >
-          <Text style={styles.replayButtonText}>↻</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <TouchableOpacity
+            style={[
+              styles.replayButton,
+              isDarkMode && {
+                backgroundColor: colors.cardSecondaryBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
+            activeOpacity={0.7}
+            onPress={handleRestartOptimization}
+          >
+            <Text
+              style={[
+                styles.replayButtonText,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
+              ↻
+            </Text>
+          </TouchableOpacity>
+          {/* Dark Mode Change Button Displayed in Top Right Corner */}
+          <ThemeToggle variant="solid" size={36} />
+        </View>
       </View>
 
       <ScrollView

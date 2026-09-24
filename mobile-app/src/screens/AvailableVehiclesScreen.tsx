@@ -12,6 +12,8 @@ import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../navigations/AppNavigator";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 type AvailableVehiclesScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -123,6 +125,7 @@ const VEHICLES_DATA: VehicleItem[] = [
 ];
 
 export default function AvailableVehiclesScreen({ navigation, route }: Props) {
+  const { isDarkMode, colors } = useTheme();
   const stationName = route.params?.station || "Colombo Fort";
   const arrivalTime = route.params?.arrivalTime || "5:40 PM";
 
@@ -181,11 +184,11 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
   };
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colors.screenBg }]}>
       <StatusBar style="light" />
 
       {/* HEADER SECTION (Deep Blue) */}
-      <View style={styles.header}>
+      <View style={[styles.header, isDarkMode && { backgroundColor: "#071630" }]}>
         {/* Top Bar Row */}
         <View style={styles.topBarRow}>
           <TouchableOpacity
@@ -239,6 +242,9 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
               </Text>
             </TouchableOpacity>
           </View>
+
+          {/* Dark Mode Change Button Displayed in Top Right Corner */}
+          <ThemeToggle variant="glass" size={36} style={{ marginLeft: 8 }} />
         </View>
 
         {/* Train Arrival Card */}

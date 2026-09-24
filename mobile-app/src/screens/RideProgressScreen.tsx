@@ -13,6 +13,8 @@ import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../navigations/AppNavigator";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 type RideProgressScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -38,6 +40,7 @@ interface Props {
 type RideStage = 0 | 1 | 2 | 3 | 4;
 
 export default function RideProgressScreen({ navigation, route }: Props) {
+  const { isDarkMode, colors } = useTheme();
   const driverName = route.params?.driverName || "Kasun Perera";
   const driverInitials = route.params?.driverInitials || "KP";
   const rating = route.params?.rating || 4.8;
@@ -159,8 +162,11 @@ export default function RideProgressScreen({ navigation, route }: Props) {
   });
 
   return (
-    <View style={styles.screen}>
-      <StatusBar style="dark" />
+    <View style={[styles.screen, { backgroundColor: colors.screenBg }]}>
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
+
+      {/* Floating Dark Mode Button in Top Right Corner */}
+      <ThemeToggle floating={true} size={38} />
 
       {/* TOP MAP CONTAINER */}
       <View style={styles.mapContainer}>

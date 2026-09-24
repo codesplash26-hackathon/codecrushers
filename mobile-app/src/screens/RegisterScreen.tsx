@@ -16,6 +16,8 @@ import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
 import authService from "../services/authService";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 type RegisterScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -27,6 +29,7 @@ interface Props {
 }
 
 export default function RegisterScreen({ navigation }: Props) {
+  const { isDarkMode, colors } = useTheme();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -94,13 +97,15 @@ export default function RegisterScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.screenBg }]}
+    >
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.container}
       >
-        {/* Top Header with Back Navigation */}
+        {/* Top Header with Back Navigation and Theme Toggle */}
         <View style={styles.headerBar}>
           <TouchableOpacity
             style={styles.backButton}
@@ -108,8 +113,17 @@ export default function RegisterScreen({ navigation }: Props) {
             activeOpacity={0.7}
           >
             <Text style={styles.backChevron}>‹</Text>
-            <Text style={styles.backText}>Back</Text>
+            <Text
+              style={[
+                styles.backText,
+                isDarkMode && { color: colors.primaryLight },
+              ]}
+            >
+              Back
+            </Text>
           </TouchableOpacity>
+          {/* Dark Mode Change Button Displayed in Top Right Corner */}
+          <ThemeToggle variant="solid" size={38} />
         </View>
 
         <ScrollView
@@ -118,8 +132,22 @@ export default function RegisterScreen({ navigation }: Props) {
           keyboardShouldPersistTaps="handled"
         >
           {/* Titles */}
-          <Text style={styles.title}>Create your account</Text>
-          <Text style={styles.subtitle}>Start planning smarter journeys</Text>
+          <Text
+            style={[
+              styles.title,
+              isDarkMode && { color: colors.textPrimary },
+            ]}
+          >
+            Create your account
+          </Text>
+          <Text
+            style={[
+              styles.subtitle,
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
+            Start planning smarter journeys
+          </Text>
 
           {/* Form */}
           <View style={styles.form}>
@@ -271,6 +299,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   backButton: {
     flexDirection: "row",

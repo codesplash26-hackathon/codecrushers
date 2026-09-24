@@ -16,6 +16,8 @@ import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -27,6 +29,8 @@ interface Props {
 }
 
 export default function ProfileScreen({ navigation }: Props) {
+  const { isDarkMode, toggleTheme, colors } = useTheme();
+
   // Modal states
   const [isPreferencesVisible, setIsPreferencesVisible] = useState(false);
   const [isLanguageVisible, setIsLanguageVisible] = useState(false);
@@ -72,7 +76,7 @@ export default function ProfileScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.screenBg }]}>
       <StatusBar style="light" />
 
       {/* Main Content Area */}
@@ -83,7 +87,11 @@ export default function ProfileScreen({ navigation }: Props) {
       >
         {/* Top Profile Header Banner with Gradient */}
         <LinearGradient
-          colors={["#0B3E9E", "#1763D5", "#1D64EC"]}
+          colors={
+            isDarkMode
+              ? ["#071630", "#0B2554", "#1541A0"]
+              : ["#0B3E9E", "#1763D5", "#1D64EC"]
+          }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.headerGradient}
@@ -92,7 +100,12 @@ export default function ProfileScreen({ navigation }: Props) {
             <View style={styles.profileHeaderContent}>
               {/* Avatar container */}
               <View style={styles.avatarWrapper}>
-                <View style={styles.avatarContainer}>
+                <View
+                  style={[
+                    styles.avatarContainer,
+                    isDarkMode && { backgroundColor: "#1E293B" },
+                  ]}
+                >
                   <Text style={styles.avatarEmoji}>👨‍💼</Text>
                 </View>
                 <View style={styles.avatarBadgeDot} />
@@ -113,34 +126,85 @@ export default function ProfileScreen({ navigation }: Props) {
                   </Text>
                 </View>
               </View>
+
+              {/* Dark Mode Change Button Displayed in Top Right Corner */}
+              <ThemeToggle variant="glass" size={40} />
             </View>
           </SafeAreaView>
         </LinearGradient>
 
         {/* Floating Quick Stats Card */}
-        <View style={styles.statsCard}>
+        <View
+          style={[
+            styles.statsCard,
+            isDarkMode && {
+              backgroundColor: colors.cardBg,
+              borderColor: colors.cardBorder,
+              borderWidth: 1,
+            },
+          ]}
+        >
           <View style={styles.statColumn}>
             <Text style={styles.statNumberBlue}>24</Text>
-            <Text style={styles.statLabel}>Journeys</Text>
+            <Text
+              style={[
+                styles.statLabel,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              Journeys
+            </Text>
           </View>
 
-          <View style={styles.statDivider} />
+          <View
+            style={[
+              styles.statDivider,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           <View style={styles.statColumn}>
             <Text style={styles.statNumberGreen}>Rs.1.2k</Text>
-            <Text style={styles.statLabel}>Saved</Text>
+            <Text
+              style={[
+                styles.statLabel,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              Saved
+            </Text>
           </View>
 
-          <View style={styles.statDivider} />
+          <View
+            style={[
+              styles.statDivider,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           <View style={styles.statColumn}>
             <Text style={styles.statNumberAmber}>4.8★</Text>
-            <Text style={styles.statLabel}>Avg Rating</Text>
+            <Text
+              style={[
+                styles.statLabel,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              Avg Rating
+            </Text>
           </View>
         </View>
 
         {/* Section 1: Travel & Activity */}
-        <View style={styles.menuGroup}>
+        <View
+          style={[
+            styles.menuGroup,
+            isDarkMode && {
+              backgroundColor: colors.cardBg,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+        >
           {/* My Journeys */}
           <TouchableOpacity
             style={styles.menuItem}
@@ -149,12 +213,31 @@ export default function ProfileScreen({ navigation }: Props) {
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>🗺️</Text>
-              <Text style={styles.menuTitle}>My Journeys</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                My Journeys
+              </Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
 
-          <View style={styles.itemSeparator} />
+          <View
+            style={[
+              styles.itemSeparator,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           {/* Favourite Routes */}
           <TouchableOpacity
@@ -166,12 +249,31 @@ export default function ProfileScreen({ navigation }: Props) {
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>💖</Text>
-              <Text style={styles.menuTitle}>Favourite Routes</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Favourite Routes
+              </Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
 
-          <View style={styles.itemSeparator} />
+          <View
+            style={[
+              styles.itemSeparator,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           {/* Travel Preferences */}
           <TouchableOpacity
@@ -181,12 +283,31 @@ export default function ProfileScreen({ navigation }: Props) {
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>⚙️</Text>
-              <Text style={styles.menuTitle}>Travel Preferences</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Travel Preferences
+              </Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
 
-          <View style={styles.itemSeparator} />
+          <View
+            style={[
+              styles.itemSeparator,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           {/* Become a Driver */}
           <TouchableOpacity
@@ -196,14 +317,64 @@ export default function ProfileScreen({ navigation }: Props) {
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>🚖</Text>
-              <Text style={styles.menuTitle}>Become a Driver</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Become a Driver
+              </Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Section 2: Preferences & Security */}
-        <View style={styles.menuGroup}>
+        <View
+          style={[
+            styles.menuGroup,
+            isDarkMode && {
+              backgroundColor: colors.cardBg,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+        >
+          {/* Dark Mode Toggle */}
+          <View style={styles.menuItem}>
+            <View style={styles.menuLeft}>
+              <Text style={styles.menuIcon}>{isDarkMode ? "🌙" : "☀️"}</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Dark Mode
+              </Text>
+            </View>
+            <Switch
+              value={isDarkMode}
+              onValueChange={toggleTheme}
+              trackColor={{ false: "#CBD5E1", true: "#3B82F6" }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+
+          <View
+            style={[
+              styles.itemSeparator,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
+
           {/* Notifications */}
           <TouchableOpacity
             style={styles.menuItem}
@@ -212,12 +383,31 @@ export default function ProfileScreen({ navigation }: Props) {
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>🔔</Text>
-              <Text style={styles.menuTitle}>Notifications</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Notifications
+              </Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
 
-          <View style={styles.itemSeparator} />
+          <View
+            style={[
+              styles.itemSeparator,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           {/* Language */}
           <TouchableOpacity
@@ -227,15 +417,41 @@ export default function ProfileScreen({ navigation }: Props) {
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>🌐</Text>
-              <Text style={styles.menuTitle}>Language</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Language
+              </Text>
             </View>
             <View style={styles.menuRightInfo}>
-              <Text style={styles.menuCurrentSetting}>{selectedLanguage}</Text>
-              <Text style={styles.menuChevron}>›</Text>
+              <Text
+                style={[
+                  styles.menuCurrentSetting,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                {selectedLanguage}
+              </Text>
+              <Text
+                style={[
+                  styles.menuChevron,
+                  isDarkMode && { color: colors.textMuted },
+                ]}
+              >
+                ›
+              </Text>
             </View>
           </TouchableOpacity>
 
-          <View style={styles.itemSeparator} />
+          <View
+            style={[
+              styles.itemSeparator,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           {/* Privacy */}
           <TouchableOpacity
@@ -245,14 +461,36 @@ export default function ProfileScreen({ navigation }: Props) {
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>🔒</Text>
-              <Text style={styles.menuTitle}>Privacy</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Privacy
+              </Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Section 3: Help & Log Out */}
-        <View style={styles.menuGroup}>
+        <View
+          style={[
+            styles.menuGroup,
+            isDarkMode && {
+              backgroundColor: colors.cardBg,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+        >
           {/* Help & Support */}
           <TouchableOpacity
             style={styles.menuItem}
@@ -261,12 +499,31 @@ export default function ProfileScreen({ navigation }: Props) {
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>❓</Text>
-              <Text style={styles.menuTitle}>Help & Support</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Help & Support
+              </Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
 
-          <View style={styles.itemSeparator} />
+          <View
+            style={[
+              styles.itemSeparator,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           {/* About BestRoute */}
           <TouchableOpacity
@@ -276,12 +533,31 @@ export default function ProfileScreen({ navigation }: Props) {
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>ℹ️</Text>
-              <Text style={styles.menuTitle}>About BestRoute</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                About BestRoute
+              </Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
 
-          <View style={styles.itemSeparator} />
+          <View
+            style={[
+              styles.itemSeparator,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           {/* Log Out */}
           <TouchableOpacity
@@ -293,21 +569,48 @@ export default function ProfileScreen({ navigation }: Props) {
               <Text style={styles.menuIcon}>🚪</Text>
               <Text style={[styles.menuTitle, styles.logoutText]}>Log Out</Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* App Version Stamp */}
         <View style={styles.footerStamp}>
-          <Text style={styles.versionText}>BestRoute Mobile v1.0.4</Text>
-          <Text style={styles.copyrightText}>
+          <Text
+            style={[
+              styles.versionText,
+              isDarkMode && { color: colors.textMuted },
+            ]}
+          >
+            BestRoute Mobile v1.0.4
+          </Text>
+          <Text
+            style={[
+              styles.copyrightText,
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
             Multimodal Transit Network of Sri Lanka
           </Text>
         </View>
       </ScrollView>
 
       {/* Bottom Navigation Bar */}
-      <View style={styles.bottomNav}>
+      <View
+        style={[
+          styles.bottomNav,
+          isDarkMode && {
+            backgroundColor: colors.bottomNavBg,
+            borderTopColor: colors.bottomNavBorder,
+          },
+        ]}
+      >
         {/* Home Tab */}
         <TouchableOpacity
           style={styles.navItem}
@@ -315,7 +618,15 @@ export default function ProfileScreen({ navigation }: Props) {
           activeOpacity={0.7}
         >
           <Text style={[styles.navIcon, styles.navIconInactive]}>🏠</Text>
-          <Text style={[styles.navLabel, styles.navLabelInactive]}>Home</Text>
+          <Text
+            style={[
+              styles.navLabel,
+              styles.navLabelInactive,
+              isDarkMode && { color: colors.textMuted },
+            ]}
+          >
+            Home
+          </Text>
         </TouchableOpacity>
 
         {/* Journeys Tab */}
@@ -325,7 +636,15 @@ export default function ProfileScreen({ navigation }: Props) {
           activeOpacity={0.7}
         >
           <Text style={[styles.navIcon, styles.navIconInactive]}>🗺️</Text>
-          <Text style={[styles.navLabel, styles.navLabelInactive]}>Journeys</Text>
+          <Text
+            style={[
+              styles.navLabel,
+              styles.navLabelInactive,
+              isDarkMode && { color: colors.textMuted },
+            ]}
+          >
+            Journeys
+          </Text>
         </TouchableOpacity>
 
         {/* Alerts Tab */}
@@ -340,11 +659,22 @@ export default function ProfileScreen({ navigation }: Props) {
               <Text style={styles.badgeText}>2</Text>
             </View>
           </View>
-          <Text style={[styles.navLabel, styles.navLabelInactive]}>Alerts</Text>
+          <Text
+            style={[
+              styles.navLabel,
+              styles.navLabelInactive,
+              isDarkMode && { color: colors.textMuted },
+            ]}
+          >
+            Alerts
+          </Text>
         </TouchableOpacity>
 
-        {/* Profile Tab (Active) */}
-        <TouchableOpacity style={styles.navItem} activeOpacity={0.8}>
+        {/* Profile Tab */}
+        <TouchableOpacity
+          style={styles.navItem}
+          activeOpacity={0.8}
+        >
           <Text style={[styles.navIcon, styles.navIconActive]}>👤</Text>
           <Text style={[styles.navLabel, styles.navLabelActive]}>Profile</Text>
           <View style={styles.activeTabIndicator} />

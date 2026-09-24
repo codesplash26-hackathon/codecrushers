@@ -14,6 +14,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -42,6 +44,8 @@ interface NearbyStopItem {
 }
 
 export default function HomeScreen({ navigation }: Props) {
+  const { isDarkMode, toggleTheme, colors } = useTheme();
+
   // Main screen states
   const [fromLocation, setFromLocation] = useState("Kandy City");
   const [toLocation, setToLocation] = useState("");
@@ -190,7 +194,7 @@ export default function HomeScreen({ navigation }: Props) {
   );
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colors.screenBg }]}>
       <StatusBar style="light" />
 
       <ScrollView
@@ -200,7 +204,11 @@ export default function HomeScreen({ navigation }: Props) {
       >
         {/* Top Hero Gradient Area */}
         <LinearGradient
-          colors={["#1655E8", "#1E68F8", "#088DE8"]}
+          colors={
+            isDarkMode
+              ? ["#0B1B3D", "#0F2C6E", "#1D4ED8"]
+              : ["#1655E8", "#1E68F8", "#088DE8"]
+          }
           start={{ x: 0, y: 0 }}
           end={{ x: 0.2, y: 1 }}
           style={styles.heroGradient}
@@ -213,18 +221,22 @@ export default function HomeScreen({ navigation }: Props) {
             </View>
 
             <View style={styles.topBarActions}>
+              {/* Dark mode change button in top right corner */}
+              <ThemeToggle variant="glass" size={38} />
               <TouchableOpacity
-                style={styles.themeIconButton}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.themeIcon}>🌙</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.avatarCircle}
+                style={[
+                  styles.avatarCircle,
+                  isDarkMode && { backgroundColor: "#1E293B" },
+                ]}
                 activeOpacity={0.8}
                 onPress={() => setIsProfilePopupVisible(true)}
               >
-                <View style={styles.avatarInner}>
+                <View
+                  style={[
+                    styles.avatarInner,
+                    isDarkMode && { backgroundColor: "#2A374D" },
+                  ]}
+                >
                   <Text style={styles.avatarIcon}>👤</Text>
                 </View>
               </TouchableOpacity>
@@ -232,10 +244,25 @@ export default function HomeScreen({ navigation }: Props) {
           </View>
 
           {/* Search Card Container Floating in Header */}
-          <View style={styles.searchCard}>
+          <View
+            style={[
+              styles.searchCard,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.cardBorder,
+                borderWidth: 1,
+              },
+            ]}
+          >
             {/* FROM Input Box */}
             <TouchableOpacity
-              style={styles.locationInputBox}
+              style={[
+                styles.locationInputBox,
+                isDarkMode && {
+                  backgroundColor: colors.inputBg,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
               activeOpacity={0.9}
               onPress={() => openSearchModal("from")}
             >
@@ -247,6 +274,7 @@ export default function HomeScreen({ navigation }: Props) {
                 <Text
                   style={[
                     styles.locationInputText,
+                    isDarkMode && { color: colors.textPrimary },
                     !fromLocation && styles.placeholderText,
                   ]}
                   numberOfLines={1}
@@ -258,9 +286,20 @@ export default function HomeScreen({ navigation }: Props) {
 
             {/* Connecting Track & Swap Button */}
             <View style={styles.dividerRow}>
-              <View style={styles.verticalLine} />
+              <View
+                style={[
+                  styles.verticalLine,
+                  isDarkMode && { backgroundColor: colors.borderLight },
+                ]}
+              />
               <TouchableOpacity
-                style={styles.swapButton}
+                style={[
+                  styles.swapButton,
+                  isDarkMode && {
+                    backgroundColor: colors.cardSecondaryBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
                 activeOpacity={0.7}
                 onPress={handleSwapLocations}
               >
@@ -270,7 +309,13 @@ export default function HomeScreen({ navigation }: Props) {
 
             {/* TO Input Box */}
             <TouchableOpacity
-              style={styles.locationInputBox}
+              style={[
+                styles.locationInputBox,
+                isDarkMode && {
+                  backgroundColor: colors.inputBg,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
               activeOpacity={0.9}
               onPress={() => openSearchModal("to")}
             >
@@ -282,6 +327,7 @@ export default function HomeScreen({ navigation }: Props) {
                 <Text
                   style={[
                     styles.locationInputText,
+                    isDarkMode && { color: colors.textPrimary },
                     !toLocation && styles.placeholderText,
                   ]}
                   numberOfLines={1}
@@ -620,7 +666,15 @@ export default function HomeScreen({ navigation }: Props) {
       </ScrollView>
 
       {/* Bottom Navigation Bar */}
-      <View style={styles.bottomNav}>
+      <View
+        style={[
+          styles.bottomNav,
+          isDarkMode && {
+            backgroundColor: colors.bottomNavBg,
+            borderTopColor: colors.bottomNavBorder,
+          },
+        ]}
+      >
         {/* Home Tab */}
         <TouchableOpacity
           style={styles.navItem}
@@ -1242,20 +1296,39 @@ export default function HomeScreen({ navigation }: Props) {
           onPress={() => setIsProfilePopupVisible(false)}
         >
           <View
-            style={styles.popupCard}
+            style={[
+              styles.popupCard,
+              isDarkMode && {
+                backgroundColor: colors.modalBg,
+                borderColor: colors.cardBorder,
+                borderWidth: 1,
+              },
+            ]}
             onStartShouldSetResponder={() => true}
           >
             {/* User Info Header */}
             <View style={styles.popupHeaderRow}>
               <View style={styles.popupAvatarWrapper}>
-                <View style={styles.popupAvatarContainer}>
+                <View
+                  style={[
+                    styles.popupAvatarContainer,
+                    isDarkMode && { backgroundColor: "#1E293B" },
+                  ]}
+                >
                   <Text style={styles.popupAvatarEmoji}>👨‍💼</Text>
                 </View>
                 <View style={styles.popupActiveDot} />
               </View>
 
               <View style={styles.popupUserTextCol}>
-                <Text style={styles.popupUserName}>Alex Perera</Text>
+                <Text
+                  style={[
+                    styles.popupUserName,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Alex Perera
+                </Text>
                 <Text style={styles.popupUserEmail}>alex@example.com</Text>
                 <View style={styles.popupBadgeRow}>
                   <Text style={styles.popupBadgeText}>🌟 Verified Traveler</Text>
@@ -1263,34 +1336,116 @@ export default function HomeScreen({ navigation }: Props) {
               </View>
 
               <TouchableOpacity
-                style={styles.popupCloseBtn}
+                style={[
+                  styles.popupCloseBtn,
+                  isDarkMode && { backgroundColor: colors.inputBg },
+                ]}
                 onPress={() => setIsProfilePopupVisible(false)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.popupCloseText}>✕</Text>
+                <Text
+                  style={[
+                    styles.popupCloseText,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  ✕
+                </Text>
               </TouchableOpacity>
             </View>
 
             {/* Stats Row */}
-            <View style={styles.popupStatsBox}>
+            <View
+              style={[
+                styles.popupStatsBox,
+                isDarkMode && {
+                  backgroundColor: colors.inputBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
               <View style={styles.popupStatItem}>
                 <Text style={styles.popupStatNumBlue}>24</Text>
-                <Text style={styles.popupStatLabel}>Journeys</Text>
+                <Text
+                  style={[
+                    styles.popupStatLabel,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  Journeys
+                </Text>
               </View>
-              <View style={styles.popupStatDivider} />
+              <View
+                style={[
+                  styles.popupStatDivider,
+                  isDarkMode && { backgroundColor: colors.borderLight },
+                ]}
+              />
               <View style={styles.popupStatItem}>
                 <Text style={styles.popupStatNumGreen}>Rs.1.2k</Text>
-                <Text style={styles.popupStatLabel}>Saved</Text>
+                <Text
+                  style={[
+                    styles.popupStatLabel,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  Saved
+                </Text>
               </View>
-              <View style={styles.popupStatDivider} />
+              <View
+                style={[
+                  styles.popupStatDivider,
+                  isDarkMode && { backgroundColor: colors.borderLight },
+                ]}
+              />
               <View style={styles.popupStatItem}>
                 <Text style={styles.popupStatNumAmber}>4.8★</Text>
-                <Text style={styles.popupStatLabel}>Rating</Text>
+                <Text
+                  style={[
+                    styles.popupStatLabel,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  Rating
+                </Text>
               </View>
             </View>
 
             {/* Quick Navigation Items */}
             <View style={styles.popupActionsList}>
+              {/* Theme Toggle row */}
+              <TouchableOpacity
+                style={styles.popupActionItem}
+                onPress={toggleTheme}
+                activeOpacity={0.7}
+              >
+                <View style={styles.popupActionLeft}>
+                  <Text style={styles.popupActionIcon}>
+                    {isDarkMode ? "☀️" : "🌙"}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.popupActionLabel,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    {isDarkMode ? "Light Mode" : "Dark Mode"}
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    styles.popupActionChevron,
+                    {
+                      fontSize: 12,
+                      fontWeight: "700",
+                      color: isDarkMode ? "#60A5FA" : "#1D64EC",
+                    },
+                  ]}
+                >
+                  {isDarkMode ? "ACTIVE ☀️" : "SWITCH 🌙"}
+                </Text>
+              </TouchableOpacity>
+
               <TouchableOpacity
                 style={styles.popupActionItem}
                 onPress={() => {
@@ -1301,9 +1456,23 @@ export default function HomeScreen({ navigation }: Props) {
               >
                 <View style={styles.popupActionLeft}>
                   <Text style={styles.popupActionIcon}>👤</Text>
-                  <Text style={styles.popupActionLabel}>View Full Profile</Text>
+                  <Text
+                    style={[
+                      styles.popupActionLabel,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    View Full Profile
+                  </Text>
                 </View>
-                <Text style={styles.popupActionChevron}>›</Text>
+                <Text
+                  style={[
+                    styles.popupActionChevron,
+                    isDarkMode && { color: colors.textMuted },
+                  ]}
+                >
+                  ›
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -1316,9 +1485,23 @@ export default function HomeScreen({ navigation }: Props) {
               >
                 <View style={styles.popupActionLeft}>
                   <Text style={styles.popupActionIcon}>🗺️</Text>
-                  <Text style={styles.popupActionLabel}>My Journeys</Text>
+                  <Text
+                    style={[
+                      styles.popupActionLabel,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    My Journeys
+                  </Text>
                 </View>
-                <Text style={styles.popupActionChevron}>›</Text>
+                <Text
+                  style={[
+                    styles.popupActionChevron,
+                    isDarkMode && { color: colors.textMuted },
+                  ]}
+                >
+                  ›
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -1331,9 +1514,23 @@ export default function HomeScreen({ navigation }: Props) {
               >
                 <View style={styles.popupActionLeft}>
                   <Text style={styles.popupActionIcon}>🚖</Text>
-                  <Text style={styles.popupActionLabel}>Become a Driver</Text>
+                  <Text
+                    style={[
+                      styles.popupActionLabel,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    Become a Driver
+                  </Text>
                 </View>
-                <Text style={styles.popupActionChevron}>›</Text>
+                <Text
+                  style={[
+                    styles.popupActionChevron,
+                    isDarkMode && { color: colors.textMuted },
+                  ]}
+                >
+                  ›
+                </Text>
               </TouchableOpacity>
             </View>
 

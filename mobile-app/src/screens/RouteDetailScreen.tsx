@@ -23,6 +23,8 @@ type RouteDetailScreenRouteProp = RouteProp<
 >;
 
 import RealisticRouteMap from "../components/RealisticRouteMap";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 interface Props {
   navigation: RouteDetailScreenNavigationProp;
@@ -30,6 +32,7 @@ interface Props {
 }
 
 export default function RouteDetailScreen({ navigation, route }: Props) {
+  const { isDarkMode, colors } = useTheme();
   const fromCity = route.params?.from || "Kandy";
   const toCity = route.params?.to || "Colombo Fort";
   const fare = route.params?.fare || "Rs. 320";
@@ -37,8 +40,11 @@ export default function RouteDetailScreen({ navigation, route }: Props) {
   const [isFavorited, setIsFavorited] = useState(false);
 
   return (
-    <View style={styles.screen}>
-      <StatusBar style="dark" />
+    <View style={[styles.screen, { backgroundColor: colors.screenBg }]}>
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
+
+      {/* Floating Dark Mode Button Displayed in Top Right Corner */}
+      <ThemeToggle floating={true} size={38} />
 
       <ScrollView
         style={styles.scrollContainer}

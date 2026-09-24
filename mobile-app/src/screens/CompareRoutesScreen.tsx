@@ -11,6 +11,8 @@ import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../navigations/AppNavigator";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 type CompareRoutesScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -30,6 +32,7 @@ interface Props {
 type RouteOptionKey = "recommended" | "fastest" | "cheapest";
 
 export default function CompareRoutesScreen({ navigation, route }: Props) {
+  const { isDarkMode, colors } = useTheme();
   const fromCity = route.params?.from || "Kandy";
   const toCity = route.params?.to || "Colombo Fort";
 
@@ -72,25 +75,60 @@ export default function CompareRoutesScreen({ navigation, route }: Props) {
   };
 
   return (
-    <View style={styles.screen}>
-      <StatusBar style="dark" />
+    <View style={[styles.screen, { backgroundColor: colors.screenBg }]}>
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
 
       {/* TOP HEADER */}
-      <View style={styles.header}>
+      <View
+        style={[
+          styles.header,
+          isDarkMode && {
+            backgroundColor: colors.headerBg,
+            borderBottomColor: colors.cardBorder,
+          },
+        ]}
+      >
         <TouchableOpacity
-          style={styles.backButton}
+          style={[
+            styles.backButton,
+            isDarkMode && {
+              backgroundColor: colors.cardSecondaryBg,
+            },
+          ]}
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
-          <Text style={styles.backArrow}>‹</Text>
+          <Text
+            style={[
+              styles.backArrow,
+              isDarkMode && { color: colors.primaryLight },
+            ]}
+          >
+            ‹
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.headerTitleCol}>
-          <Text style={styles.headerTitle}>Compare Routes</Text>
-          <Text style={styles.headerSubtitle}>
+          <Text
+            style={[
+              styles.headerTitle,
+              isDarkMode && { color: colors.textPrimary },
+            ]}
+          >
+            Compare Routes
+          </Text>
+          <Text
+            style={[
+              styles.headerSubtitle,
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
             {fromCity} ➔ {toCity}
           </Text>
         </View>
+
+        {/* Dark Mode Change Button Displayed in Top Right Corner */}
+        <ThemeToggle variant="solid" size={38} />
       </View>
 
       <ScrollView

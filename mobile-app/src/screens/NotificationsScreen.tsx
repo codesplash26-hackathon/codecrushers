@@ -13,6 +13,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 type NotificationsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -40,6 +42,7 @@ export interface NotificationItem {
 }
 
 export default function NotificationsScreen({ navigation }: Props) {
+  const { isDarkMode, colors } = useTheme();
   const [notifications, setNotifications] = useState<NotificationItem[]>([
     // TODAY
     {
@@ -257,19 +260,44 @@ export default function NotificationsScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <StatusBar style="dark" />
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.screenBg }]}
+      edges={["top"]}
+    >
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
 
       {/* Screen Header - Safe distance below dynamic island / notch */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Notifications</Text>
-        <TouchableOpacity
-          onPress={handleMarkAllAsRead}
-          activeOpacity={0.7}
-          style={styles.markAllReadBtn}
+      <View
+        style={[
+          styles.header,
+          isDarkMode && { backgroundColor: colors.headerBg },
+        ]}
+      >
+        <Text
+          style={[
+            styles.headerTitle,
+            isDarkMode && { color: colors.textPrimary },
+          ]}
         >
-          <Text style={styles.markAllReadText}>Mark all read</Text>
-        </TouchableOpacity>
+          Notifications
+        </Text>
+        <View style={styles.headerRightActions}>
+          <TouchableOpacity
+            onPress={handleMarkAllAsRead}
+            activeOpacity={0.7}
+            style={[
+              styles.markAllReadBtn,
+              isDarkMode && {
+                backgroundColor: colors.cardSecondaryBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
+          >
+            <Text style={styles.markAllReadText}>Mark all read</Text>
+          </TouchableOpacity>
+          {/* Dark Mode Change Button Displayed in Top Right Corner */}
+          <ThemeToggle variant="solid" size={38} />
+        </View>
       </View>
 
       {/* Notifications List */}
@@ -444,9 +472,16 @@ const styles = StyleSheet.create({
     color: "#0F172A",
     letterSpacing: -0.5,
   },
+  headerRightActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
   markAllReadBtn: {
     paddingVertical: 6,
-    paddingHorizontal: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: "#F1F5F9",
   },
   markAllReadText: {
     fontSize: 14,

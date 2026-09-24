@@ -16,6 +16,8 @@ import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
 import authService from "../services/authService";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 type ForgotPasswordScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -29,6 +31,7 @@ interface Props {
 type Step = "email" | "otp" | "reset" | "success";
 
 export default function ForgotPasswordScreen({ navigation }: Props) {
+  const { isDarkMode, colors } = useTheme();
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [otpCode, setOtpCode] = useState(["", "", "", "", "", ""]);
@@ -172,13 +175,15 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.screenBg }]}
+    >
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.container}
       >
-        {/* Top Header with Back Navigation */}
+        {/* Top Header with Back Navigation and Theme Toggle in Top Right Corner */}
         <View style={styles.headerBar}>
           <TouchableOpacity
             style={styles.backButton}
@@ -186,8 +191,17 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
             activeOpacity={0.7}
           >
             <Text style={styles.backChevron}>‹</Text>
-            <Text style={styles.backText}>Back</Text>
+            <Text
+              style={[
+                styles.backText,
+                isDarkMode && { color: colors.primaryLight },
+              ]}
+            >
+              Back
+            </Text>
           </TouchableOpacity>
+          {/* Dark Mode Change Button Displayed in Top Right Corner */}
+          <ThemeToggle variant="solid" size={38} />
         </View>
 
         <ScrollView
@@ -198,19 +212,45 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
           {/* STEP 1: ENTER EMAIL */}
           {step === "email" && (
             <View>
-              <Text style={styles.title}>Forgot password?</Text>
-              <Text style={styles.subtitle}>
+              <Text
+                style={[
+                  styles.title,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Forgot password?
+              </Text>
+              <Text
+                style={[
+                  styles.subtitle,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
                 Enter your registered email address and we'll send a 6-digit
                 verification code to reset your password.
               </Text>
 
               <View style={styles.form}>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>EMAIL ADDRESS</Text>
+                  <Text
+                    style={[
+                      styles.label,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                  >
+                    EMAIL ADDRESS
+                  </Text>
                   <TextInput
-                    style={styles.input}
+                    style={[
+                      styles.input,
+                      isDarkMode && {
+                        backgroundColor: colors.inputBg,
+                        borderColor: colors.inputBorder,
+                        color: colors.textPrimary,
+                      },
+                    ]}
                     placeholder="your@email.com"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
@@ -413,6 +453,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   backButton: {
     flexDirection: "row",
