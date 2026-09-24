@@ -474,38 +474,73 @@ export default function JourneysScreen({ navigation, route }: Props) {
       </View>
 
       {/* Segmented Tab Pill Control */}
-      <View style={styles.tabContainer}>
+      <View
+        style={[
+          styles.tabContainer,
+          isDarkMode && { backgroundColor: colors.subtleBg },
+        ]}
+      >
         <TouchableOpacity
-          style={[styles.tabButton, activeTab === "upcoming" && styles.tabButtonActive]}
+          style={[
+            styles.tabButton,
+            activeTab === "upcoming" && [
+              styles.tabButtonActive,
+              isDarkMode && { backgroundColor: colors.cardBg },
+            ],
+          ]}
           onPress={() => setActiveTab("upcoming")}
           activeOpacity={0.8}
         >
           <Text
-            style={[styles.tabText, activeTab === "upcoming" && styles.tabTextActive]}
+            style={[
+              styles.tabText,
+              activeTab === "upcoming" && styles.tabTextActive,
+              isDarkMode && activeTab !== "upcoming" && { color: colors.textSecondary },
+            ]}
           >
             Upcoming
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tabButton, activeTab === "completed" && styles.tabButtonActive]}
+          style={[
+            styles.tabButton,
+            activeTab === "completed" && [
+              styles.tabButtonActive,
+              isDarkMode && { backgroundColor: colors.cardBg },
+            ],
+          ]}
           onPress={() => setActiveTab("completed")}
           activeOpacity={0.8}
         >
           <Text
-            style={[styles.tabText, activeTab === "completed" && styles.tabTextActive]}
+            style={[
+              styles.tabText,
+              activeTab === "completed" && styles.tabTextActive,
+              isDarkMode && activeTab !== "completed" && { color: colors.textSecondary },
+            ]}
           >
             Completed
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tabButton, activeTab === "saved" && styles.tabButtonActive]}
+          style={[
+            styles.tabButton,
+            activeTab === "saved" && [
+              styles.tabButtonActive,
+              isDarkMode && { backgroundColor: colors.cardBg },
+            ],
+          ]}
           onPress={() => setActiveTab("saved")}
           activeOpacity={0.8}
         >
           <Text
-            style={[styles.tabText, activeTab === "saved" && styles.tabTextActive]}
+            style={[
+              styles.tabText,
+              activeTab === "saved" && styles.tabTextActive,
+              isDarkMode && activeTab !== "saved" && { color: colors.textSecondary },
+            ]}
           >
             Saved
           </Text>
@@ -514,21 +549,31 @@ export default function JourneysScreen({ navigation, route }: Props) {
 
       {/* Journey Cards Scroll View */}
       <ScrollView
-        style={styles.scrollList}
+        style={[styles.scrollList, isDarkMode && { backgroundColor: colors.screenBg }]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {currentList.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyEmoji}>🗺️</Text>
-            <Text style={styles.emptyTitle}>
+            <Text
+              style={[
+                styles.emptyTitle,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
               {activeTab === "upcoming"
                 ? "No Upcoming Journeys"
                 : activeTab === "completed"
                 ? "No Completed Journeys"
                 : "No Saved Journeys"}
             </Text>
-            <Text style={styles.emptySubtitle}>
+            <Text
+              style={[
+                styles.emptySubtitle,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
               {activeTab === "upcoming"
                 ? "Your booked or scheduled journeys will show up here."
                 : activeTab === "completed"
@@ -545,15 +590,36 @@ export default function JourneysScreen({ navigation, route }: Props) {
           </View>
         ) : (
           currentList.map((journey) => (
-            <View key={journey.id} style={styles.card}>
+            <View
+              key={journey.id}
+              style={[
+                styles.card,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
               {/* Card Header: Route & Status Badge */}
               <View style={styles.cardHeader}>
                 <View style={styles.routeTitleRow}>
-                  <Text style={styles.routeOrigin} numberOfLines={1}>
+                  <Text
+                    style={[
+                      styles.routeOrigin,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                    numberOfLines={1}
+                  >
                     {journey.origin}
                   </Text>
                   <Text style={styles.routeArrow}> → </Text>
-                  <Text style={styles.routeDestination} numberOfLines={1}>
+                  <Text
+                    style={[
+                      styles.routeDestination,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                    numberOfLines={1}
+                  >
                     {journey.destination}
                   </Text>
                 </View>
@@ -585,7 +651,14 @@ export default function JourneysScreen({ navigation, route }: Props) {
               </View>
 
               {/* Subtitle / Timestamp */}
-              <Text style={styles.cardSubtitle}>{journey.subtitle}</Text>
+              <Text
+                style={[
+                  styles.cardSubtitle,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                {journey.subtitle}
+              </Text>
 
               {/* Transit Mode Flow Row */}
               <View style={styles.modesRow}>
@@ -629,15 +702,34 @@ export default function JourneysScreen({ navigation, route }: Props) {
               </View>
 
               {/* Card Footer: Metrics & Action Buttons */}
-              <View style={styles.cardFooter}>
+              <View
+                style={[
+                  styles.cardFooter,
+                  isDarkMode && { borderTopColor: colors.cardBorder },
+                ]}
+              >
                 <View style={styles.metricsGroup}>
                   <View style={styles.metricItem}>
                     <Text style={styles.metricIcon}>⏱</Text>
-                    <Text style={styles.metricValue}>{journey.duration}</Text>
+                    <Text
+                      style={[
+                        styles.metricValue,
+                        isDarkMode && { color: colors.textPrimary },
+                      ]}
+                    >
+                      {journey.duration}
+                    </Text>
                   </View>
                   <View style={[styles.metricItem, styles.metricCostItem]}>
                     <Text style={styles.metricIcon}>💰</Text>
-                    <Text style={styles.metricValue}>{journey.cost}</Text>
+                    <Text
+                      style={[
+                        styles.metricValue,
+                        isDarkMode && { color: colors.textPrimary },
+                      ]}
+                    >
+                      {journey.cost}
+                    </Text>
                   </View>
                 </View>
 
@@ -708,7 +800,15 @@ export default function JourneysScreen({ navigation, route }: Props) {
       </ScrollView>
 
       {/* Bottom Navigation Bar */}
-      <View style={styles.bottomNav}>
+      <View
+        style={[
+          styles.bottomNav,
+          isDarkMode && {
+            backgroundColor: colors.cardBg,
+            borderTopColor: colors.cardBorder,
+          },
+        ]}
+      >
         {/* Home Tab */}
         <TouchableOpacity
           style={styles.navItem}
@@ -716,7 +816,15 @@ export default function JourneysScreen({ navigation, route }: Props) {
           activeOpacity={0.7}
         >
           <Text style={[styles.navIcon, styles.navIconInactive]}>🏠</Text>
-          <Text style={[styles.navLabel, styles.navLabelInactive]}>Home</Text>
+          <Text
+            style={[
+              styles.navLabel,
+              styles.navLabelInactive,
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
+            Home
+          </Text>
         </TouchableOpacity>
 
         {/* Journeys Tab (Active) */}
@@ -738,7 +846,15 @@ export default function JourneysScreen({ navigation, route }: Props) {
               <Text style={styles.badgeText}>2</Text>
             </View>
           </View>
-          <Text style={[styles.navLabel, styles.navLabelInactive]}>Alerts</Text>
+          <Text
+            style={[
+              styles.navLabel,
+              styles.navLabelInactive,
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
+            Alerts
+          </Text>
         </TouchableOpacity>
 
         {/* Profile Tab */}
@@ -748,7 +864,15 @@ export default function JourneysScreen({ navigation, route }: Props) {
           activeOpacity={0.7}
         >
           <Text style={[styles.navIcon, styles.navIconInactive]}>👤</Text>
-          <Text style={[styles.navLabel, styles.navLabelInactive]}>Profile</Text>
+          <Text
+            style={[
+              styles.navLabel,
+              styles.navLabelInactive,
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
+            Profile
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -759,15 +883,46 @@ export default function JourneysScreen({ navigation, route }: Props) {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsDetailModalVisible(false)}
       >
-        <SafeAreaView style={styles.modalSafeArea} edges={["top", "bottom"]}>
-          <View style={styles.modalHeader}>
+        <SafeAreaView
+          style={[
+            styles.modalSafeArea,
+            isDarkMode && { backgroundColor: colors.screenBg },
+          ]}
+          edges={["top", "bottom"]}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              isDarkMode && {
+                backgroundColor: colors.headerBg,
+                borderBottomColor: colors.cardBorder,
+              },
+            ]}
+          >
             <TouchableOpacity
-              style={styles.modalCloseButton}
+              style={[
+                styles.modalCloseButton,
+                isDarkMode && { backgroundColor: colors.subtleBg },
+              ]}
               onPress={() => setIsDetailModalVisible(false)}
             >
-              <Text style={styles.modalCloseText}>✕</Text>
+              <Text
+                style={[
+                  styles.modalCloseText,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                ✕
+              </Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Journey Details</Text>
+            <Text
+              style={[
+                styles.modalTitle,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
+              Journey Details
+            </Text>
             <TouchableOpacity
               style={styles.modalShareButton}
               onPress={() => selectedJourney && handleShareJourney(selectedJourney)}
@@ -778,36 +933,116 @@ export default function JourneysScreen({ navigation, route }: Props) {
 
           {selectedJourney && (
             <ScrollView
-              style={styles.modalScroll}
+              style={[
+                styles.modalScroll,
+                isDarkMode && { backgroundColor: colors.screenBg },
+              ]}
               contentContainerStyle={styles.modalContent}
               showsVerticalScrollIndicator={false}
             >
               {/* Route Summary Box */}
-              <View style={styles.modalSummaryBox}>
+              <View
+                style={[
+                  styles.modalSummaryBox,
+                  isDarkMode && {
+                    backgroundColor: colors.cardBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
                 <View style={styles.modalRouteRow}>
-                  <Text style={styles.modalRouteOrigin}>{selectedJourney.origin}</Text>
+                  <Text
+                    style={[
+                      styles.modalRouteOrigin,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    {selectedJourney.origin}
+                  </Text>
                   <Text style={styles.modalRouteArrow}> → </Text>
-                  <Text style={styles.modalRouteDest}>
+                  <Text
+                    style={[
+                      styles.modalRouteDest,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
                     {selectedJourney.destination}
                   </Text>
                 </View>
-                <Text style={styles.modalSubtitle}>{selectedJourney.subtitle}</Text>
+                <Text
+                  style={[
+                    styles.modalSubtitle,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  {selectedJourney.subtitle}
+                </Text>
 
                 {/* Key stats row */}
                 <View style={styles.modalStatsRow}>
                   <View style={styles.modalStatCol}>
-                    <Text style={styles.modalStatLabel}>Total Duration</Text>
-                    <Text style={styles.modalStatVal}>{selectedJourney.duration}</Text>
+                    <Text
+                      style={[
+                        styles.modalStatLabel,
+                        isDarkMode && { color: colors.textSecondary },
+                      ]}
+                    >
+                      Total Duration
+                    </Text>
+                    <Text
+                      style={[
+                        styles.modalStatVal,
+                        isDarkMode && { color: colors.textPrimary },
+                      ]}
+                    >
+                      {selectedJourney.duration}
+                    </Text>
                   </View>
-                  <View style={styles.modalStatDivider} />
+                  <View
+                    style={[
+                      styles.modalStatDivider,
+                      isDarkMode && { backgroundColor: colors.cardBorder },
+                    ]}
+                  />
                   <View style={styles.modalStatCol}>
-                    <Text style={styles.modalStatLabel}>Total Fare</Text>
-                    <Text style={styles.modalStatVal}>{selectedJourney.cost}</Text>
+                    <Text
+                      style={[
+                        styles.modalStatLabel,
+                        isDarkMode && { color: colors.textSecondary },
+                      ]}
+                    >
+                      Total Fare
+                    </Text>
+                    <Text
+                      style={[
+                        styles.modalStatVal,
+                        isDarkMode && { color: colors.textPrimary },
+                      ]}
+                    >
+                      {selectedJourney.cost}
+                    </Text>
                   </View>
-                  <View style={styles.modalStatDivider} />
+                  <View
+                    style={[
+                      styles.modalStatDivider,
+                      isDarkMode && { backgroundColor: colors.cardBorder },
+                    ]}
+                  />
                   <View style={styles.modalStatCol}>
-                    <Text style={styles.modalStatLabel}>Transfers</Text>
-                    <Text style={styles.modalStatVal}>
+                    <Text
+                      style={[
+                        styles.modalStatLabel,
+                        isDarkMode && { color: colors.textSecondary },
+                      ]}
+                    >
+                      Transfers
+                    </Text>
+                    <Text
+                      style={[
+                        styles.modalStatVal,
+                        isDarkMode && { color: colors.textPrimary },
+                      ]}
+                    >
                       {selectedJourney.details?.transfers ?? 1}
                     </Text>
                   </View>
@@ -815,42 +1050,121 @@ export default function JourneysScreen({ navigation, route }: Props) {
               </View>
 
               {/* CO2 Savings highlight */}
-              <View style={styles.ecoHighlight}>
+              <View
+                style={[
+                  styles.ecoHighlight,
+                  isDarkMode && {
+                    backgroundColor: "rgba(22, 163, 74, 0.15)",
+                    borderColor: "rgba(22, 163, 74, 0.3)",
+                  },
+                ]}
+              >
                 <Text style={styles.ecoIcon}>🌱</Text>
                 <View style={styles.ecoTextWrap}>
-                  <Text style={styles.ecoTitle}>
+                  <Text
+                    style={[
+                      styles.ecoTitle,
+                      isDarkMode && { color: "#4ADE80" },
+                    ]}
+                  >
                     {selectedJourney.details?.co2Saved ?? "2.8 kg"} CO₂ Emissions Saved
                   </Text>
-                  <Text style={styles.ecoSub}>
+                  <Text
+                    style={[
+                      styles.ecoSub,
+                      isDarkMode && { color: "#86EFAC" },
+                    ]}
+                  >
                     By taking multimodal public transit over solo private transport.
                   </Text>
                 </View>
               </View>
 
               {/* Step-by-Step Leg Breakdown */}
-              <Text style={styles.sectionTitle}>Route Breakdown</Text>
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Route Breakdown
+              </Text>
               {selectedJourney.details?.legs.map((leg, index) => (
-                <View key={index} style={styles.legCard}>
+                <View
+                  key={index}
+                  style={[
+                    styles.legCard,
+                    isDarkMode && {
+                      backgroundColor: colors.cardBg,
+                      borderColor: colors.cardBorder,
+                    },
+                  ]}
+                >
                   <View style={styles.legHeader}>
-                    <View style={styles.legIconWrapper}>
+                    <View
+                      style={[
+                        styles.legIconWrapper,
+                        isDarkMode && { backgroundColor: colors.subtleBg },
+                      ]}
+                    >
                       <Text style={styles.legEmoji}>{leg.icon}</Text>
                     </View>
                     <View style={styles.legTitleWrap}>
-                      <Text style={styles.legModeTitle}>{leg.mode}</Text>
-                      <Text style={styles.legLineName}>{leg.lineOrType}</Text>
+                      <Text
+                        style={[
+                          styles.legModeTitle,
+                          isDarkMode && { color: colors.textPrimary },
+                        ]}
+                      >
+                        {leg.mode}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.legLineName,
+                          isDarkMode && { color: colors.textSecondary },
+                        ]}
+                      >
+                        {leg.lineOrType}
+                      </Text>
                     </View>
-                    <Text style={styles.legFare}>{leg.fare}</Text>
+                    <Text
+                      style={[
+                        styles.legFare,
+                        isDarkMode && { color: colors.textPrimary },
+                      ]}
+                    >
+                      {leg.fare}
+                    </Text>
                   </View>
 
                   <View style={styles.legTimeline}>
                     <View style={styles.legStationRow}>
                       <View style={styles.timelineDot} />
-                      <Text style={styles.stationLabel}>{leg.from}</Text>
+                      <Text
+                        style={[
+                          styles.stationLabel,
+                          isDarkMode && { color: colors.textSecondary },
+                        ]}
+                      >
+                        {leg.from}
+                      </Text>
                     </View>
-                    <View style={styles.timelineVerticalLine} />
+                    <View
+                      style={[
+                        styles.timelineVerticalLine,
+                        isDarkMode && { backgroundColor: colors.cardBorder },
+                      ]}
+                    />
                     <View style={styles.legStationRow}>
                       <View style={[styles.timelineDot, styles.timelineDotDest]} />
-                      <Text style={styles.stationLabel}>{leg.to}</Text>
+                      <Text
+                        style={[
+                          styles.stationLabel,
+                          isDarkMode && { color: colors.textSecondary },
+                        ]}
+                      >
+                        {leg.to}
+                      </Text>
                     </View>
                   </View>
                 </View>

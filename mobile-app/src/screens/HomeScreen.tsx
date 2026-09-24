@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
+import authService, { AuthUser } from "../services/authService";
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -61,6 +62,16 @@ export default function HomeScreen({ navigation }: Props) {
     "home" | "journeys" | "alerts" | "profile"
   >("home");
   const [isProfilePopupVisible, setIsProfilePopupVisible] = useState(false);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const user = await authService.getCurrentUser();
+      if (user) {
+        setCurrentUser(user);
+      }
+    })();
+  }, []);
 
   // Search modal state
   const [isSearchVisible, setIsSearchVisible] = useState(false);
@@ -380,6 +391,16 @@ export default function HomeScreen({ navigation }: Props) {
               <TouchableOpacity
                 style={styles.leaveNowButton}
                 activeOpacity={0.8}
+                onPress={() => {
+                  setDepartMode("depart");
+                  setSelectedDate("Today");
+                  const now = new Date();
+                  const hours = now.getHours();
+                  const mins = now.getMinutes();
+                  const ampm = hours >= 12 ? "PM" : "AM";
+                  const formatted = `${hours % 12 || 12}:${mins < 10 ? "0" + mins : mins} ${ampm}`;
+                  setSelectedTime(formatted);
+                }}
               >
                 <Text style={styles.leaveNowIcon}>🕒</Text>
                 <Text style={styles.leaveNowText}>Leave now</Text>
@@ -388,8 +409,11 @@ export default function HomeScreen({ navigation }: Props) {
               <TouchableOpacity
                 style={styles.todayDropdownButton}
                 activeOpacity={0.8}
+                onPress={() => {
+                  setSelectedDate(selectedDate === "Today" ? "Tomorrow" : "Today");
+                }}
               >
-                <Text style={styles.todayDropdownText}>Today · Now ▾</Text>
+                <Text style={styles.todayDropdownText}>{selectedDate} · Now ▾</Text>
               </TouchableOpacity>
             </View>
 
@@ -565,7 +589,12 @@ export default function HomeScreen({ navigation }: Props) {
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionHeading}>Recent Journeys</Text>
-            <TouchableOpacity activeOpacity={0.7}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() =>
+                navigation.navigate("Journeys", { initialTab: "completed" })
+              }
+            >
               <Text style={styles.sectionLink}>See all</Text>
             </TouchableOpacity>
           </View>
@@ -797,38 +826,82 @@ export default function HomeScreen({ navigation }: Props) {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsSearchVisible(false)}
       >
-        <View style={styles.searchModalContainer}>
-          <StatusBar style="dark" />
+        <View
+          style={[
+            styles.searchModalContainer,
+            isDarkMode && { backgroundColor: colors.screenBg },
+          ]}
+        >
+          <StatusBar style={isDarkMode ? "light" : "dark"} />
 
           {/* Modal Header */}
-          <View style={styles.modalHeader}>
+          <View
+            style={[
+              styles.modalHeader,
+              isDarkMode && {
+                backgroundColor: colors.headerBg,
+                borderBottomColor: colors.cardBorder,
+              },
+            ]}
+          >
             <TouchableOpacity
-              style={styles.modalBackButton}
+              style={[
+                styles.modalBackButton,
+                isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+              ]}
               activeOpacity={0.7}
               onPress={() => setIsSearchVisible(false)}
             >
-              <Text style={styles.modalBackIcon}>‹</Text>
+              <Text
+                style={[
+                  styles.modalBackIcon,
+                  isDarkMode && { color: colors.primaryLight },
+                ]}
+              >
+                ‹
+              </Text>
             </TouchableOpacity>
 
             <View style={styles.modalTitleContainer}>
-              <Text style={styles.modalTitle}>
+              <Text
+                style={[
+                  styles.modalTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
                 {searchTarget === "from"
                   ? "Where are you starting?"
                   : "Where are you going?"}
               </Text>
-              <Text style={styles.modalSubtitle}>
+              <Text
+                style={[
+                  styles.modalSubtitle,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
                 Search for a location, station or stop
               </Text>
             </View>
           </View>
 
           {/* Search Input Box */}
-          <View style={styles.modalSearchBox}>
+          <View
+            style={[
+              styles.modalSearchBox,
+              isDarkMode && {
+                backgroundColor: colors.inputBg,
+                borderColor: colors.inputBorder,
+              },
+            ]}
+          >
             <Text style={styles.modalSearchIcon}>🔍</Text>
             <TextInput
-              style={styles.modalSearchInput}
+              style={[
+                styles.modalSearchInput,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
               placeholder="Search location, station or stop"
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoFocus
@@ -984,22 +1057,59 @@ export default function HomeScreen({ navigation }: Props) {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsCustomizeVisible(false)}
       >
-        <View style={styles.customizeModalContainer}>
-          <StatusBar style="dark" />
+        <View
+          style={[
+            styles.customizeModalContainer,
+            isDarkMode && { backgroundColor: colors.screenBg },
+          ]}
+        >
+          <StatusBar style={isDarkMode ? "light" : "dark"} />
 
           {/* Header */}
-          <View style={styles.modalHeader}>
+          <View
+            style={[
+              styles.modalHeader,
+              isDarkMode && {
+                backgroundColor: colors.headerBg,
+                borderBottomColor: colors.cardBorder,
+              },
+            ]}
+          >
             <TouchableOpacity
-              style={styles.modalBackButton}
+              style={[
+                styles.modalBackButton,
+                isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+              ]}
               activeOpacity={0.7}
               onPress={() => setIsCustomizeVisible(false)}
             >
-              <Text style={styles.modalBackIcon}>‹</Text>
+              <Text
+                style={[
+                  styles.modalBackIcon,
+                  isDarkMode && { color: colors.primaryLight },
+                ]}
+              >
+                ‹
+              </Text>
             </TouchableOpacity>
 
             <View style={styles.modalTitleContainer}>
-              <Text style={styles.modalTitle}>Customize your journey</Text>
-              <Text style={styles.modalSubtitle}>Tell us what matters most</Text>
+              <Text
+                style={[
+                  styles.modalTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Customize your journey
+              </Text>
+              <Text
+                style={[
+                  styles.modalSubtitle,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                Tell us what matters most
+              </Text>
             </View>
           </View>
 
@@ -1009,7 +1119,14 @@ export default function HomeScreen({ navigation }: Props) {
             showsVerticalScrollIndicator={false}
           >
             {/* PRIMARY PREFERENCE Section */}
-            <Text style={styles.modalSectionHeading}>PRIMARY PREFERENCE</Text>
+            <Text
+              style={[
+                styles.modalSectionHeading,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              PRIMARY PREFERENCE
+            </Text>
 
             {/* Option 1: Fastest */}
             <TouchableOpacity
@@ -1327,11 +1444,20 @@ export default function HomeScreen({ navigation }: Props) {
                     isDarkMode && { color: colors.textPrimary },
                   ]}
                 >
-                  Alex Perera
+                  {currentUser?.name || "Alex Perera"}
                 </Text>
-                <Text style={styles.popupUserEmail}>alex@example.com</Text>
+                <Text
+                  style={[
+                    styles.popupUserEmail,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  {currentUser?.email || "alex@example.com"}
+                </Text>
                 <View style={styles.popupBadgeRow}>
-                  <Text style={styles.popupBadgeText}>🌟 Verified Traveler</Text>
+                  <Text style={styles.popupBadgeText}>
+                    🌟 {currentUser?.role === "driver" ? "Registered Driver" : "Verified Traveler"}
+                  </Text>
                 </View>
               </View>
 

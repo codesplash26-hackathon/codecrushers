@@ -422,7 +422,15 @@ export default function RideProgressScreen({ navigation, route }: Props) {
 
         {/* DRIVER INFO CARD (Visible in Stages 1 to 4) */}
         {currentStage >= 1 && (
-          <View style={styles.driverCard}>
+          <View
+            style={[
+              styles.driverCard,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
+          >
             {/* Top row: Avatar, Name, Rating, ETA/Arrival Badge */}
             <View style={styles.driverMainRow}>
               <View style={styles.avatarCircle}>
@@ -430,10 +438,24 @@ export default function RideProgressScreen({ navigation, route }: Props) {
               </View>
 
               <View style={styles.driverDetailsCol}>
-                <Text style={styles.driverName}>{driverName}</Text>
+                <Text
+                  style={[
+                    styles.driverName,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  {driverName}
+                </Text>
                 <View style={styles.ratingRow}>
                   <Text style={styles.ratingStars}>★★★★★</Text>
-                  <Text style={styles.ratingNumber}>{rating}</Text>
+                  <Text
+                    style={[
+                      styles.ratingNumber,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                  >
+                    {rating}
+                  </Text>
                 </View>
               </View>
 
@@ -453,17 +475,83 @@ export default function RideProgressScreen({ navigation, route }: Props) {
 
             {/* 3 Column Boxes: Vehicle, Plate, Fare */}
             <View style={styles.specsRow}>
-              <View style={styles.specBox}>
-                <Text style={styles.specLabel}>Vehicle</Text>
-                <Text style={styles.specValue}>{vehicleModel}</Text>
+              <View
+                style={[
+                  styles.specBox,
+                  isDarkMode && {
+                    backgroundColor: colors.subtleBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.specLabel,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  Vehicle
+                </Text>
+                <Text
+                  style={[
+                    styles.specValue,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  {vehicleModel}
+                </Text>
               </View>
-              <View style={styles.specBox}>
-                <Text style={styles.specLabel}>Plate</Text>
-                <Text style={styles.specValue}>{vehiclePlate}</Text>
+              <View
+                style={[
+                  styles.specBox,
+                  isDarkMode && {
+                    backgroundColor: colors.subtleBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.specLabel,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  Plate
+                </Text>
+                <Text
+                  style={[
+                    styles.specValue,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  {vehiclePlate}
+                </Text>
               </View>
-              <View style={styles.specBox}>
-                <Text style={styles.specLabel}>Fare</Text>
-                <Text style={styles.specValue}>Rs. {fare}</Text>
+              <View
+                style={[
+                  styles.specBox,
+                  isDarkMode && {
+                    backgroundColor: colors.subtleBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.specLabel,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  Fare
+                </Text>
+                <Text
+                  style={[
+                    styles.specValue,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Rs. {fare}
+                </Text>
               </View>
             </View>
           </View>
@@ -471,36 +559,141 @@ export default function RideProgressScreen({ navigation, route }: Props) {
 
         {/* TRIP SUMMARY CARD (Visible when stage === 4) */}
         {currentStage === 4 && (
-          <View style={styles.tripSummaryCard}>
-            <Text style={styles.summaryHeading}>TRIP SUMMARY</Text>
+          <View
+            style={[
+              styles.tripSummaryCard,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.summaryHeading,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              TRIP SUMMARY
+            </Text>
 
             <View style={styles.summaryItemRow}>
-              <Text style={styles.summaryLabel}>Duration</Text>
-              <Text style={styles.summaryValue}>18 min</Text>
+              <Text
+                style={[
+                  styles.summaryLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                Duration
+              </Text>
+              <Text
+                style={[
+                  styles.summaryValue,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                18 min
+              </Text>
             </View>
-            <View style={styles.summaryDivider} />
+            <View
+              style={[
+                styles.summaryDivider,
+                isDarkMode && { backgroundColor: colors.cardBorder },
+              ]}
+            />
 
             <View style={styles.summaryItemRow}>
-              <Text style={styles.summaryLabel}>Distance</Text>
-              <Text style={styles.summaryValue}>7.2 km</Text>
+              <Text
+                style={[
+                  styles.summaryLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                Distance
+              </Text>
+              <Text
+                style={[
+                  styles.summaryValue,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                7.2 km
+              </Text>
             </View>
-            <View style={styles.summaryDivider} />
+            <View
+              style={[
+                styles.summaryDivider,
+                isDarkMode && { backgroundColor: colors.cardBorder },
+              ]}
+            />
 
             <View style={styles.summaryItemRow}>
-              <Text style={styles.summaryLabel}>Fare</Text>
-              <Text style={styles.summaryValue}>Rs. {fare}</Text>
+              <Text
+                style={[
+                  styles.summaryLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                Fare
+              </Text>
+              <Text
+                style={[
+                  styles.summaryValue,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Rs. {fare}
+              </Text>
             </View>
-            <View style={styles.summaryDivider} />
+            <View
+              style={[
+                styles.summaryDivider,
+                isDarkMode && { backgroundColor: colors.cardBorder },
+              ]}
+            />
 
             <View style={styles.summaryItemRow}>
-              <Text style={styles.summaryLabel}>Driver</Text>
-              <Text style={styles.summaryValue}>{driverName}</Text>
+              <Text
+                style={[
+                  styles.summaryLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                Driver
+              </Text>
+              <Text
+                style={[
+                  styles.summaryValue,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                {driverName}
+              </Text>
             </View>
-            <View style={styles.summaryDivider} />
+            <View
+              style={[
+                styles.summaryDivider,
+                isDarkMode && { backgroundColor: colors.cardBorder },
+              ]}
+            />
 
             <View style={styles.summaryItemRow}>
-              <Text style={styles.summaryLabel}>Vehicle</Text>
-              <Text style={styles.summaryValue}>{vehicleModel}</Text>
+              <Text
+                style={[
+                  styles.summaryLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                Vehicle
+              </Text>
+              <Text
+                style={[
+                  styles.summaryValue,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                {vehicleModel}
+              </Text>
             </View>
           </View>
         )}
@@ -525,27 +718,66 @@ export default function RideProgressScreen({ navigation, route }: Props) {
         onRequestClose={() => setShowRatingModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.ratingCard}>
+          <View
+            style={[
+              styles.ratingCard,
+              isDarkMode && { backgroundColor: colors.cardBg },
+            ]}
+          >
             {!ratingSubmitted ? (
               <>
                 <View style={styles.ratingModalHeader}>
-                  <Text style={styles.ratingModalTitle}>How was your ride?</Text>
+                  <Text
+                    style={[
+                      styles.ratingModalTitle,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    How was your ride?
+                  </Text>
                   <TouchableOpacity
-                    style={styles.closeBtn}
+                    style={[
+                      styles.closeBtn,
+                      isDarkMode && { backgroundColor: colors.subtleBg },
+                    ]}
                     onPress={() => setShowRatingModal(false)}
                   >
-                    <Text style={styles.closeBtnText}>✕</Text>
+                    <Text
+                      style={[
+                        styles.closeBtnText,
+                        isDarkMode && { color: colors.textPrimary },
+                      ]}
+                    >
+                      ✕
+                    </Text>
                   </TouchableOpacity>
                 </View>
 
                 {/* Driver avatar & info */}
-                <View style={styles.ratingDriverSummary}>
+                <View
+                  style={[
+                    styles.ratingDriverSummary,
+                    isDarkMode && { backgroundColor: colors.subtleBg },
+                  ]}
+                >
                   <View style={styles.avatarCircle}>
                     <Text style={styles.avatarInitials}>{driverInitials}</Text>
                   </View>
                   <View>
-                    <Text style={styles.ratingDriverName}>{driverName}</Text>
-                    <Text style={styles.ratingDriverVehicle}>
+                    <Text
+                      style={[
+                        styles.ratingDriverName,
+                        isDarkMode && { color: colors.textPrimary },
+                      ]}
+                    >
+                      {driverName}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.ratingDriverVehicle,
+                        isDarkMode && { color: colors.textSecondary },
+                      ]}
+                    >
                       {vehicleModel} · {vehiclePlate}
                     </Text>
                   </View>

@@ -204,28 +204,71 @@ export default function LoginScreen({ navigation }: Props) {
 
             {/* OR Divider */}
             <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
+              <View
+                style={[
+                  styles.dividerLine,
+                  isDarkMode && { backgroundColor: colors.cardBorder },
+                ]}
+              />
+              <Text
+                style={[
+                  styles.dividerText,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                or
+              </Text>
+              <View
+                style={[
+                  styles.dividerLine,
+                  isDarkMode && { backgroundColor: colors.cardBorder },
+                ]}
+              />
             </View>
 
             {/* Continue with Google */}
             <TouchableOpacity
-              style={styles.googleButton}
+              style={[
+                styles.googleButton,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
               onPress={handleGoogleLogin}
               activeOpacity={0.85}
             >
-              <View style={styles.googleIconContainer}>
+              <View
+                style={[
+                  styles.googleIconContainer,
+                  isDarkMode && {
+                    backgroundColor: colors.subtleBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
                 {/* Google multi-colored G badge representation */}
                 <Text style={styles.googleLetter}>G</Text>
               </View>
-              <Text style={styles.googleButtonText}>Continue with Google</Text>
+              <Text
+                style={[
+                  styles.googleButtonText,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Continue with Google
+              </Text>
             </TouchableOpacity>
           </View>
 
           {/* Footer Navigation */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>
+            <Text
+              style={[
+                styles.footerText,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
               Don't have an account?{" "}
               <Text
                 style={styles.footerLink}

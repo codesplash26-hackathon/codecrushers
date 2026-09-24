@@ -305,7 +305,12 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
             <TouchableOpacity
               style={[
                 styles.filterPill,
-                filterType === "All" && styles.filterPillActive,
+                filterType === "All"
+                  ? styles.filterPillActive
+                  : isDarkMode && {
+                      backgroundColor: colors.cardBg,
+                      borderColor: colors.cardBorder,
+                    },
               ]}
               onPress={() => setFilterType("All")}
               activeOpacity={0.7}
@@ -313,7 +318,9 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
               <Text
                 style={[
                   styles.filterPillText,
-                  filterType === "All" && styles.filterPillTextActive,
+                  filterType === "All"
+                    ? styles.filterPillTextActive
+                    : isDarkMode && { color: colors.textSecondary },
                 ]}
               >
                 All
@@ -323,7 +330,12 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
             <TouchableOpacity
               style={[
                 styles.filterPill,
-                filterType === "Taxi" && styles.filterPillActive,
+                filterType === "Taxi"
+                  ? styles.filterPillActive
+                  : isDarkMode && {
+                      backgroundColor: colors.cardBg,
+                      borderColor: colors.cardBorder,
+                    },
               ]}
               onPress={() => setFilterType("Taxi")}
               activeOpacity={0.7}
@@ -331,7 +343,9 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
               <Text
                 style={[
                   styles.filterPillText,
-                  filterType === "Taxi" && styles.filterPillTextActive,
+                  filterType === "Taxi"
+                    ? styles.filterPillTextActive
+                    : isDarkMode && { color: colors.textSecondary },
                 ]}
               >
                 Taxi 🚕
@@ -341,7 +355,12 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
             <TouchableOpacity
               style={[
                 styles.filterPill,
-                filterType === "Tuk-tuk" && styles.filterPillActive,
+                filterType === "Tuk-tuk"
+                  ? styles.filterPillActive
+                  : isDarkMode && {
+                      backgroundColor: colors.cardBg,
+                      borderColor: colors.cardBorder,
+                    },
               ]}
               onPress={() => setFilterType("Tuk-tuk")}
               activeOpacity={0.7}
@@ -349,7 +368,9 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
               <Text
                 style={[
                   styles.filterPillText,
-                  filterType === "Tuk-tuk" && styles.filterPillTextActive,
+                  filterType === "Tuk-tuk"
+                    ? styles.filterPillTextActive
+                    : isDarkMode && { color: colors.textSecondary },
                 ]}
               >
                 Tuk-tuk 🛺
@@ -357,21 +378,45 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.sortButton}
+              style={[
+                styles.sortButton,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
               onPress={() => setSortNearest(!sortNearest)}
               activeOpacity={0.7}
             >
               <Text style={styles.sortIcon}>▲</Text>
-              <Text style={styles.sortLabel}>
+              <Text
+                style={[
+                  styles.sortLabel,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
                 {sortNearest ? "Nearest" : "Lowest Fare"}
               </Text>
             </TouchableOpacity>
           </View>
 
           {/* Notice Banner */}
-          <View style={styles.noticeBanner}>
+          <View
+            style={[
+              styles.noticeBanner,
+              isDarkMode && {
+                backgroundColor: "rgba(37, 99, 235, 0.15)",
+                borderColor: "rgba(37, 99, 235, 0.3)",
+              },
+            ]}
+          >
             <Text style={styles.noticeIcon}>⏱</Text>
-            <Text style={styles.noticeText}>
+            <Text
+              style={[
+                styles.noticeText,
+                isDarkMode && { color: "#93C5FD" },
+              ]}
+            >
               Showing vehicles expected around {arrivalTime} arrival — not all are
               available right now
             </Text>
@@ -381,7 +426,16 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
           {displayedVehicles.map((vehicle) => {
             const isTaxi = vehicle.type === "Taxi";
             return (
-              <View key={vehicle.id} style={styles.vehicleCard}>
+              <View
+                key={vehicle.id}
+                style={[
+                  styles.vehicleCard,
+                  isDarkMode && {
+                    backgroundColor: colors.cardBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
                 {/* Main Card Top Info */}
                 <View style={styles.vehicleMainRow}>
                   {/* Avatar */}
@@ -392,7 +446,14 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
                   {/* Driver & Car Info */}
                   <View style={styles.driverInfoCol}>
                     <View style={styles.nameBadgeRow}>
-                      <Text style={styles.driverName}>{vehicle.name}</Text>
+                      <Text
+                        style={[
+                          styles.driverName,
+                          isDarkMode && { color: colors.textPrimary },
+                        ]}
+                      >
+                        {vehicle.name}
+                      </Text>
                       <View
                         style={[
                           styles.typeBadge,
@@ -415,11 +476,23 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
                     {/* Star Rating */}
                     <View style={styles.ratingRow}>
                       <Text style={styles.starSymbols}>★★★★★</Text>
-                      <Text style={styles.ratingScore}>{vehicle.rating}</Text>
+                      <Text
+                        style={[
+                          styles.ratingScore,
+                          isDarkMode && { color: colors.textSecondary },
+                        ]}
+                      >
+                        {vehicle.rating}
+                      </Text>
                     </View>
 
                     {/* Model & Plate */}
-                    <Text style={styles.vehicleModelPlate}>
+                    <Text
+                      style={[
+                        styles.vehicleModelPlate,
+                        isDarkMode && { color: colors.textSecondary },
+                      ]}
+                    >
                       {vehicle.model} · {vehicle.plate}
                     </Text>
                   </View>
@@ -427,17 +500,41 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
                   {/* Right Column: Time & Fare & Status */}
                   <View style={styles.fareTimeCol}>
                     <Text style={styles.etaText}>{vehicle.etaMinutes} min</Text>
-                    <Text style={styles.fareText}>Rs. {vehicle.fare}</Text>
+                    <Text
+                      style={[
+                        styles.fareText,
+                        isDarkMode && { color: colors.textPrimary },
+                      ]}
+                    >
+                      Rs. {vehicle.fare}
+                    </Text>
                     <View style={styles.statusRow}>
                       <View style={styles.statusDot} />
-                      <Text style={styles.statusLabel}>{vehicle.status}</Text>
+                      <Text
+                        style={[
+                          styles.statusLabel,
+                          isDarkMode && { color: colors.textSecondary },
+                        ]}
+                      >
+                        {vehicle.status}
+                      </Text>
                     </View>
                   </View>
                 </View>
 
                 {/* Bottom Row: Distance / Trips & Select Button */}
-                <View style={styles.cardBottomRow}>
-                  <Text style={styles.distanceTripText}>
+                <View
+                  style={[
+                    styles.cardBottomRow,
+                    isDarkMode && { borderTopColor: colors.cardBorder },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.distanceTripText,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                  >
                     {vehicle.distanceKm} km away · {vehicle.trips} trips
                   </Text>
                   <TouchableOpacity
@@ -521,50 +618,107 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
         onRequestClose={handleCloseModal}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
+          <View
+            style={[
+              styles.modalCard,
+              isDarkMode && { backgroundColor: colors.cardBg },
+            ]}
+          >
             {!bookingConfirmed ? (
               <>
                 {/* Modal Header */}
                 <View style={styles.modalHeader}>
                   <View>
-                    <Text style={styles.modalHeading}>Confirm Pre-Booking</Text>
-                    <Text style={styles.modalSubheading}>
+                    <Text
+                      style={[
+                        styles.modalHeading,
+                        isDarkMode && { color: colors.textPrimary },
+                      ]}
+                    >
+                      Confirm Pre-Booking
+                    </Text>
+                    <Text
+                      style={[
+                        styles.modalSubheading,
+                        isDarkMode && { color: colors.textSecondary },
+                      ]}
+                    >
                       Pickup reserved at {stationName}
                     </Text>
                   </View>
                   <TouchableOpacity
-                    style={styles.modalCloseButton}
+                    style={[
+                      styles.modalCloseButton,
+                      isDarkMode && { backgroundColor: colors.subtleBg },
+                    ]}
                     onPress={handleCloseModal}
                   >
-                    <Text style={styles.modalCloseText}>✕</Text>
+                    <Text
+                      style={[
+                        styles.modalCloseText,
+                        isDarkMode && { color: colors.textPrimary },
+                      ]}
+                    >
+                      ✕
+                    </Text>
                   </TouchableOpacity>
                 </View>
 
                 {/* Selected Driver Summary */}
                 {selectedVehicle && (
-                  <View style={styles.modalDriverSummary}>
+                  <View
+                    style={[
+                      styles.modalDriverSummary,
+                      isDarkMode && { backgroundColor: colors.subtleBg },
+                    ]}
+                  >
                     <View style={styles.avatarCircle}>
                       <Text style={styles.avatarInitials}>
                         {selectedVehicle.initials}
                       </Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.modalDriverName}>
+                      <Text
+                        style={[
+                          styles.modalDriverName,
+                          isDarkMode && { color: colors.textPrimary },
+                        ]}
+                      >
                         {selectedVehicle.name}
                       </Text>
-                      <Text style={styles.modalVehicleDetail}>
+                      <Text
+                        style={[
+                          styles.modalVehicleDetail,
+                          isDarkMode && { color: colors.textSecondary },
+                        ]}
+                      >
                         {selectedVehicle.typeIcon} {selectedVehicle.model} ·{" "}
                         {selectedVehicle.plate}
                       </Text>
-                      <Text style={styles.modalRatingText}>
+                      <Text
+                        style={[
+                          styles.modalRatingText,
+                          isDarkMode && { color: colors.textSecondary },
+                        ]}
+                      >
                         ★ {selectedVehicle.rating} ({selectedVehicle.trips} trips)
                       </Text>
                     </View>
                     <View style={{ alignItems: "flex-end" }}>
-                      <Text style={styles.modalFareAmount}>
+                      <Text
+                        style={[
+                          styles.modalFareAmount,
+                          isDarkMode && { color: colors.textPrimary },
+                        ]}
+                      >
                         Rs. {selectedVehicle.fare}
                       </Text>
-                      <Text style={styles.modalEta}>
+                      <Text
+                        style={[
+                          styles.modalEta,
+                          isDarkMode && { color: colors.textSecondary },
+                        ]}
+                      >
                         ~{selectedVehicle.etaMinutes} min away
                       </Text>
                     </View>
@@ -572,39 +726,94 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
                 )}
 
                 {/* Scheduled Pickup Details */}
-                <View style={styles.bookingDetailsBox}>
+                <View
+                  style={[
+                    styles.bookingDetailsBox,
+                    isDarkMode && {
+                      backgroundColor: colors.subtleBg,
+                      borderColor: colors.cardBorder,
+                    },
+                  ]}
+                >
                   <View style={styles.bookingDetailRow}>
-                    <Text style={styles.detailLabel}>📍 Pickup Point:</Text>
-                    <Text style={styles.detailValue}>
+                    <Text
+                      style={[
+                        styles.detailLabel,
+                        isDarkMode && { color: colors.textSecondary },
+                      ]}
+                    >
+                      📍 Pickup Point:
+                    </Text>
+                    <Text
+                      style={[
+                        styles.detailValue,
+                        isDarkMode && { color: colors.textPrimary },
+                      ]}
+                    >
                       {stationName} Exit 2 (Taxi Stand)
                     </Text>
                   </View>
                   <View style={styles.bookingDetailRow}>
-                    <Text style={styles.detailLabel}>⏱ Meeting Time:</Text>
-                    <Text style={styles.detailValue}>{arrivalTime}</Text>
+                    <Text
+                      style={[
+                        styles.detailLabel,
+                        isDarkMode && { color: colors.textSecondary },
+                      ]}
+                    >
+                      ⏱ Meeting Time:
+                    </Text>
+                    <Text
+                      style={[
+                        styles.detailValue,
+                        isDarkMode && { color: colors.textPrimary },
+                      ]}
+                    >
+                      {arrivalTime}
+                    </Text>
                   </View>
                   <View style={styles.bookingDetailRow}>
-                    <Text style={styles.detailLabel}>⚡ Status:</Text>
+                    <Text
+                      style={[
+                        styles.detailLabel,
+                        isDarkMode && { color: colors.textSecondary },
+                      ]}
+                    >
+                      ⚡ Status:
+                    </Text>
                     <Text style={styles.detailValueGreen}>Guaranteed Ride</Text>
                   </View>
                 </View>
 
                 {/* Payment Selection */}
-                <Text style={styles.paymentSectionTitle}>Select Payment Method</Text>
+                <Text
+                  style={[
+                    styles.paymentSectionTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Select Payment Method
+                </Text>
                 <View style={styles.paymentRow}>
                   {(["Cash", "Card", "Wallet"] as const).map((method) => (
                     <TouchableOpacity
                       key={method}
                       style={[
                         styles.paymentChip,
-                        paymentMethod === method && styles.paymentChipActive,
+                        paymentMethod === method
+                          ? styles.paymentChipActive
+                          : isDarkMode && {
+                              backgroundColor: colors.subtleBg,
+                              borderColor: colors.cardBorder,
+                            },
                       ]}
                       onPress={() => setPaymentMethod(method)}
                     >
                       <Text
                         style={[
                           styles.paymentChipText,
-                          paymentMethod === method && styles.paymentChipTextActive,
+                          paymentMethod === method
+                            ? styles.paymentChipTextActive
+                            : isDarkMode && { color: colors.textSecondary },
                         ]}
                       >
                         {method === "Cash"

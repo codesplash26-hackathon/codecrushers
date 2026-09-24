@@ -98,22 +98,54 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
           </View>
 
           {/* Heading & Notice */}
-          <Text style={styles.pendingTitle}>Application Pending</Text>
-          <Text style={styles.pendingSubtitle}>
+          <Text
+            style={[
+              styles.pendingTitle,
+              isDarkMode && { color: "#FBBF24" },
+            ]}
+          >
+            Application Pending
+          </Text>
+          <Text
+            style={[
+              styles.pendingSubtitle,
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
             Your driver application is waiting for admin review.{"\n"}
             This usually takes 1–2 business days.
           </Text>
 
           {/* Application Progress Card */}
-          <View style={styles.progressCard}>
-            <Text style={styles.progressCardHeading}>APPLICATION PROGRESS</Text>
+          <View
+            style={[
+              styles.progressCard,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.progressCardHeading,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              APPLICATION PROGRESS
+            </Text>
 
             {/* Step 1: Application submitted */}
             <View style={styles.progressItemRow}>
               <View style={styles.greenCheckCircle}>
                 <Text style={styles.greenCheckText}>✓</Text>
               </View>
-              <Text style={styles.progressItemTextActive}>
+              <Text
+                style={[
+                  styles.progressItemTextActive,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
                 Application submitted
               </Text>
             </View>
@@ -123,27 +155,64 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
               <View style={styles.greenCheckCircle}>
                 <Text style={styles.greenCheckText}>✓</Text>
               </View>
-              <Text style={styles.progressItemTextActive}>Document review</Text>
+              <Text
+                style={[
+                  styles.progressItemTextActive,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Document review
+              </Text>
             </View>
 
             {/* Step 3: Background check */}
             <View style={styles.progressItemRow}>
-              <View style={styles.grayEmptyCircle} />
-              <Text style={styles.progressItemTextInactive}>
+              <View
+                style={[
+                  styles.grayEmptyCircle,
+                  isDarkMode && { borderColor: colors.borderLight },
+                ]}
+              />
+              <Text
+                style={[
+                  styles.progressItemTextInactive,
+                  isDarkMode && { color: colors.textMuted },
+                ]}
+              >
                 Background check
               </Text>
             </View>
 
             {/* Step 4: Admin approval */}
             <View style={styles.progressItemRow}>
-              <View style={styles.grayEmptyCircle} />
-              <Text style={styles.progressItemTextInactive}>Admin approval</Text>
+              <View
+                style={[
+                  styles.grayEmptyCircle,
+                  isDarkMode && { borderColor: colors.borderLight },
+                ]}
+              />
+              <Text
+                style={[
+                  styles.progressItemTextInactive,
+                  isDarkMode && { color: colors.textMuted },
+                ]}
+              >
+                Admin approval
+              </Text>
             </View>
           </View>
         </ScrollView>
 
         {/* Bottom Back Button */}
-        <View style={styles.statusBottomBar}>
+        <View
+          style={[
+            styles.statusBottomBar,
+            isDarkMode && {
+              backgroundColor: colors.headerBg,
+              borderTopColor: colors.cardBorder,
+            },
+          ]}
+        >
           <TouchableOpacity
             style={styles.backPassengerBtn}
             onPress={() => navigation.goBack()}
@@ -211,67 +280,140 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
         {currentStep === 1 ? (
           /* STEP 1: PERSONAL INFORMATION */
           <View>
-            <Text style={styles.sectionHeading}>PERSONAL INFORMATION</Text>
+            <Text
+              style={[
+                styles.sectionHeading,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              PERSONAL INFORMATION
+            </Text>
 
             {/* Full Name */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>FULL NAME</Text>
+              <Text
+                style={[
+                  styles.inputLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                FULL NAME
+              </Text>
               <TextInput
-                style={styles.textInput}
+                style={[
+                  styles.textInput,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 value={fullName}
                 onChangeText={setFullName}
                 placeholder="Kasun Perera"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
               />
             </View>
 
             {/* Phone Number */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>PHONE NUMBER</Text>
+              <Text
+                style={[
+                  styles.inputLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                PHONE NUMBER
+              </Text>
               <TextInput
-                style={styles.textInput}
+                style={[
+                  styles.textInput,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 value={phone}
                 onChangeText={setPhone}
                 placeholder="+94 77 123 4567"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 keyboardType="phone-pad"
               />
             </View>
 
             {/* NIC / National ID */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>NIC / NATIONAL ID</Text>
+              <Text
+                style={[
+                  styles.inputLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                NIC / NATIONAL ID
+              </Text>
               <TextInput
-                style={styles.textInput}
+                style={[
+                  styles.textInput,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 value={nic}
                 onChangeText={setNic}
                 placeholder="982345678V"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 autoCapitalize="characters"
               />
             </View>
 
             {/* Driving License Number */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>DRIVING LICENSE NUMBER</Text>
+              <Text
+                style={[
+                  styles.inputLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                DRIVING LICENSE NUMBER
+              </Text>
               <TextInput
-                style={styles.textInput}
+                style={[
+                  styles.textInput,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 value={licenseNumber}
                 onChangeText={setLicenseNumber}
                 placeholder="B 1234567"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 autoCapitalize="characters"
               />
             </View>
 
             {/* Documents Section */}
-            <Text style={[styles.sectionHeading, { marginTop: 14 }]}>
+            <Text
+              style={[
+                styles.sectionHeading,
+                { marginTop: 14 },
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
               DOCUMENTS
             </Text>
 
             <TouchableOpacity
               style={[
                 styles.uploadButton,
+                isDarkMode && !licenseUploaded && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
                 licenseUploaded && styles.uploadButtonSuccess,
               ]}
               onPress={() => setLicenseUploaded(!licenseUploaded)}
@@ -283,6 +425,7 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
               <Text
                 style={[
                   styles.uploadText,
+                  isDarkMode && !licenseUploaded && { color: colors.textPrimary },
                   licenseUploaded && styles.uploadTextSuccess,
                 ]}
               >
@@ -295,6 +438,10 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
             <TouchableOpacity
               style={[
                 styles.uploadButton,
+                isDarkMode && !photoUploaded && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
                 photoUploaded && styles.uploadButtonSuccess,
               ]}
               onPress={() => setPhotoUploaded(!photoUploaded)}
@@ -306,6 +453,7 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
               <Text
                 style={[
                   styles.uploadText,
+                  isDarkMode && !photoUploaded && { color: colors.textPrimary },
                   photoUploaded && styles.uploadTextSuccess,
                 ]}
               >
@@ -327,72 +475,150 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
         ) : (
           /* STEP 2: VEHICLE INFORMATION */
           <View>
-            <Text style={styles.sectionHeading}>VEHICLE INFORMATION</Text>
+            <Text
+              style={[
+                styles.sectionHeading,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              VEHICLE INFORMATION
+            </Text>
 
             {/* Vehicle Type Selection */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>VEHICLE TYPE</Text>
+              <Text
+                style={[
+                  styles.inputLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                VEHICLE TYPE
+              </Text>
               <View style={styles.vehicleTypeRow}>
                 {/* Taxi Option */}
                 <TouchableOpacity
                   style={[
                     styles.vehicleTypeOption,
+                    isDarkMode && {
+                      backgroundColor: colors.cardBg,
+                      borderColor: colors.cardBorder,
+                    },
                     vehicleType === "Taxi" && styles.vehicleTypeOptionActive,
                   ]}
                   onPress={() => setVehicleType("Taxi")}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.vehicleTypeOptionText}>🚕 Taxi</Text>
+                  <Text
+                    style={[
+                      styles.vehicleTypeOptionText,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    🚕 Taxi
+                  </Text>
                 </TouchableOpacity>
 
                 {/* Tuk-tuk Option */}
                 <TouchableOpacity
                   style={[
                     styles.vehicleTypeOption,
+                    isDarkMode && {
+                      backgroundColor: colors.cardBg,
+                      borderColor: colors.cardBorder,
+                    },
                     vehicleType === "Tuk-tuk" && styles.vehicleTypeOptionActive,
                   ]}
                   onPress={() => setVehicleType("Tuk-tuk")}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.vehicleTypeOptionText}>🛺 Tuk-tuk</Text>
+                  <Text
+                    style={[
+                      styles.vehicleTypeOptionText,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    🛺 Tuk-tuk
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Vehicle Registration */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>VEHICLE REGISTRATION</Text>
+              <Text
+                style={[
+                  styles.inputLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                VEHICLE REGISTRATION
+              </Text>
               <TextInput
-                style={styles.textInput}
+                style={[
+                  styles.textInput,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 value={registration}
                 onChangeText={setRegistration}
                 placeholder="WP CAB-1234"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 autoCapitalize="characters"
               />
             </View>
 
             {/* Vehicle Model */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>VEHICLE MODEL</Text>
+              <Text
+                style={[
+                  styles.inputLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                VEHICLE MODEL
+              </Text>
               <TextInput
-                style={styles.textInput}
+                style={[
+                  styles.textInput,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 value={model}
                 onChangeText={setModel}
                 placeholder="Toyota Prius"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
               />
             </View>
 
             {/* Vehicle Color */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>VEHICLE COLOR</Text>
+              <Text
+                style={[
+                  styles.inputLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                VEHICLE COLOR
+              </Text>
               <TextInput
-                style={styles.textInput}
+                style={[
+                  styles.textInput,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 value={color}
                 onChangeText={setColor}
                 placeholder="Silver"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
               />
             </View>
 
@@ -400,6 +626,10 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
             <TouchableOpacity
               style={[
                 styles.uploadButton,
+                isDarkMode && !vehicleDocsUploaded && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
                 vehicleDocsUploaded && styles.uploadButtonSuccess,
                 { marginTop: 10, marginBottom: 24 },
               ]}
@@ -412,6 +642,7 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
               <Text
                 style={[
                   styles.uploadText,
+                  isDarkMode && !vehicleDocsUploaded && { color: colors.textPrimary },
                   vehicleDocsUploaded && styles.uploadTextSuccess,
                 ]}
               >
@@ -424,11 +655,24 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
             {/* Bottom Actions Row: Back & Submit Application */}
             <View style={styles.step2ActionsRow}>
               <TouchableOpacity
-                style={styles.step2BackBtn}
+                style={[
+                  styles.step2BackBtn,
+                  isDarkMode && {
+                    backgroundColor: colors.cardBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
                 onPress={() => setCurrentStep(1)}
                 activeOpacity={0.75}
               >
-                <Text style={styles.step2BackBtnText}>Back</Text>
+                <Text
+                  style={[
+                    styles.step2BackBtnText,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Back
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity

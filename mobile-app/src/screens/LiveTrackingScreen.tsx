@@ -120,13 +120,28 @@ export default function LiveTrackingScreen({ navigation }: Props) {
           </View>
 
           {/* Floating Horizontal Mode Progress Card */}
-          <View style={styles.floatingProgressCard}>
+          <View
+            style={[
+              styles.floatingProgressCard,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
+          >
             {/* Step 1: Bus 654 (Completed) */}
             <View style={styles.progressStepCol}>
               <View style={styles.stepCircleCompleted}>
                 <Text style={styles.stepCheckmark}>✓</Text>
               </View>
-              <Text style={styles.stepLabelCompleted}>Bus 654</Text>
+              <Text
+                style={[
+                  styles.stepLabelCompleted,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                Bus 654
+              </Text>
             </View>
 
             {/* Connector Line 1 */}
@@ -148,7 +163,14 @@ export default function LiveTrackingScreen({ navigation }: Props) {
               <View style={styles.stepCirclePending}>
                 <View style={styles.pendingInnerDot} />
               </View>
-              <Text style={styles.stepLabelPending}>Tuk-tuk</Text>
+              <Text
+                style={[
+                  styles.stepLabelPending,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                Tuk-tuk
+              </Text>
             </View>
 
             {/* Connector Line 3 */}
@@ -159,7 +181,14 @@ export default function LiveTrackingScreen({ navigation }: Props) {
               <View style={styles.stepCirclePending}>
                 <Text style={styles.pinIconSmall}>📍</Text>
               </View>
-              <Text style={styles.stepLabelPending}>Fort</Text>
+              <Text
+                style={[
+                  styles.stepLabelPending,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                Fort
+              </Text>
             </View>
           </View>
         </View>
@@ -167,22 +196,61 @@ export default function LiveTrackingScreen({ navigation }: Props) {
         {/* Content Section Below Map */}
         <View style={styles.mainContent}>
           {/* SECTION 1: CURRENTLY ON */}
-          <Text style={styles.sectionHeading}>CURRENTLY ON</Text>
+          <Text
+            style={[
+              styles.sectionHeading,
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
+            CURRENTLY ON
+          </Text>
 
-          <View style={styles.currentlyOnCard}>
+          <View
+            style={[
+              styles.currentlyOnCard,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
+          >
             <View style={styles.transportIconBox}>
               <Text style={styles.transportEmoji}>🚆</Text>
             </View>
 
             <View style={styles.currentlyOnTextContainer}>
-              <Text style={styles.serviceNameText}>Intercity Express</Text>
-              <Text style={styles.serviceRouteText}>
+              <Text
+                style={[
+                  styles.serviceNameText,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Intercity Express
+              </Text>
+              <Text
+                style={[
+                  styles.serviceRouteText,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
                 Fort ➔ Colombo Fort Station
               </Text>
 
               <View style={styles.arrivalStatusRow}>
-                <Text style={styles.arrivesInLabel}>Arrives in</Text>
-                <Text style={styles.arrivesInValue}>
+                <Text
+                  style={[
+                    styles.arrivesInLabel,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  Arrives in
+                </Text>
+                <Text
+                  style={[
+                    styles.arrivesInValue,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
                   {isDelayed ? "40 min" : "32 min"}
                 </Text>
 
@@ -206,31 +274,72 @@ export default function LiveTrackingScreen({ navigation }: Props) {
           </View>
 
           {/* SECTION 2: TRANSFER AT COLOMBO FORT */}
-          <Text style={[styles.sectionHeading, { marginTop: 18 }]}>
+          <Text
+            style={[
+              styles.sectionHeading,
+              { marginTop: 18 },
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
             TRANSFER AT COLOMBO FORT
           </Text>
 
-          <View style={styles.transferCard}>
+          <View
+            style={[
+              styles.transferCard,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
+          >
             <View style={styles.transferHeaderRow}>
               <View style={styles.transferTitleWrapper}>
-                <Text style={styles.transferStepTitle}>
+                <Text
+                  style={[
+                    styles.transferStepTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
                   🚶 Walk to Platform 4
                 </Text>
-                <Text style={styles.transferStepSubtitle}>
+                <Text
+                  style={[
+                    styles.transferStepSubtitle,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
                   ~3 min walk · IC Night Mail
                 </Text>
               </View>
 
               <View style={styles.bufferColumn}>
-                <Text style={styles.bufferTimeText}>
+                <Text
+                  style={[
+                    styles.bufferTimeText,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
                   {isDelayed ? "3:45" : "7:55"}
                 </Text>
-                <Text style={styles.bufferLabelText}>buffer</Text>
+                <Text
+                  style={[
+                    styles.bufferLabelText,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  buffer
+                </Text>
               </View>
             </View>
 
             {/* Transfer Buffer Progress Bar */}
-            <View style={styles.transferBarTrack}>
+            <View
+              style={[
+                styles.transferBarTrack,
+                isDarkMode && { backgroundColor: colors.subtleBg },
+              ]}
+            >
               <View
                 style={[
                   styles.transferBarFill,
@@ -241,41 +350,102 @@ export default function LiveTrackingScreen({ navigation }: Props) {
           </View>
 
           {/* SECTION 3: AFTER TRANSFER */}
-          <Text style={[styles.sectionHeading, { marginTop: 18 }]}>
+          <Text
+            style={[
+              styles.sectionHeading,
+              { marginTop: 18 },
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
             AFTER TRANSFER
           </Text>
 
-          <View style={styles.afterTransferCard}>
+          <View
+            style={[
+              styles.afterTransferCard,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
+          >
             <View style={styles.tukIconCircle}>
               <Text style={styles.tukEmoji}>🛺</Text>
             </View>
 
             <View style={styles.afterTransferTextCol}>
-              <Text style={styles.afterTransferTitle}>
+              <Text
+                style={[
+                  styles.afterTransferTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
                 Tuk-tuk to Destination
               </Text>
-              <Text style={styles.afterTransferSubtitle}>
+              <Text
+                style={[
+                  styles.afterTransferSubtitle,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
                 ~10 min · Rs. 40
               </Text>
             </View>
 
-            <Text style={styles.afterTransferTimeText}>
+            <Text
+              style={[
+                styles.afterTransferTimeText,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
               {isDelayed ? "10:13 AM" : "10:05 AM"}
             </Text>
           </View>
 
           {/* SECTION 4: ESTIMATED ARRIVAL & DURATION */}
-          <View style={styles.summaryCard}>
+          <View
+            style={[
+              styles.summaryCard,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
+          >
             <View>
-              <Text style={styles.summaryLabel}>Estimated arrival</Text>
-              <Text style={styles.summaryTimeBig}>
+              <Text
+                style={[
+                  styles.summaryLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                Estimated arrival
+              </Text>
+              <Text
+                style={[
+                  styles.summaryTimeBig,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
                 {isDelayed ? "10:13 AM" : "10:05 AM"}
               </Text>
             </View>
 
             <View style={styles.summaryRightCol}>
-              <Text style={styles.summaryLabel}>Journey time</Text>
-              <Text style={styles.summaryDurationBig}>
+              <Text
+                style={[
+                  styles.summaryLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                Journey time
+              </Text>
+              <Text
+                style={[
+                  styles.summaryDurationBig,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
                 {isDelayed ? "1h 43m" : "1h 35m"}
               </Text>
             </View>
@@ -285,11 +455,24 @@ export default function LiveTrackingScreen({ navigation }: Props) {
           <View style={styles.dualButtonsRow}>
             {/* Full Journey Button */}
             <TouchableOpacity
-              style={styles.fullJourneyButton}
+              style={[
+                styles.fullJourneyButton,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
               activeOpacity={0.8}
               onPress={() => navigation.goBack()}
             >
-              <Text style={styles.fullJourneyButtonText}>Full Journey</Text>
+              <Text
+                style={[
+                  styles.fullJourneyButtonText,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Full Journey
+              </Text>
             </TouchableOpacity>
 
             {/* Report Problem Button */}

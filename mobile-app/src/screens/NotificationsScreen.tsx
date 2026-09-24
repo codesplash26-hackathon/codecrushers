@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
+import api from "../services/api";
 
 type NotificationsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -120,15 +121,55 @@ export default function NotificationsScreen({ navigation }: Props) {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const handleMarkAllAsRead = () => {
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.getNotifications();
+        if (res.success && Array.isArray(res.data?.notifications) && res.data.notifications.length > 0) {
+          const apiNotifs: NotificationItem[] = res.data.notifications.map((n: any, idx: number) => ({
+            id: n._id || `api-notif-${idx}`,
+            type: n.type || "info",
+            title: n.title || "Transit Update",
+            message: n.message || "",
+            time: "Just now",
+            section: "TODAY" as const,
+            read: !!n.read,
+          }));
+          setNotifications((prev) => {
+            // Merge unique
+            const existingIds = new Set(apiNotifs.map((an) => an.id));
+            const filteredPrev = prev.filter((p) => !existingIds.has(p.id));
+            return [...apiNotifs, ...filteredPrev];
+          });
+        }
+      } catch {
+        // Fallback to local default notifications
+      }
+    })();
+  }, []);
+
+  const handleMarkAllAsRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await api.markAllNotificationsRead();
+    } catch {
+      // ignore
+    }
   };
 
-  const handleItemPress = (item: NotificationItem) => {
+  const handleItemPress = async (item: NotificationItem) => {
     // Mark as read
     setNotifications((prev) =>
       prev.map((n) => (n.id === item.id ? { ...n, read: true } : n))
     );
+
+    try {
+      if (item.id && !item.id.startsWith("notif-")) {
+        await api.markNotificationRead(item.id);
+      }
+    } catch {
+      // ignore
+    }
 
     if (item.type === "disruption") {
       setSelectedDisruption(item);
@@ -211,13 +252,27 @@ export default function NotificationsScreen({ navigation }: Props) {
     if (list.length === 0) return null;
     return (
       <View style={styles.sectionWrap} key={title}>
-        <Text style={styles.sectionHeading}>{title}</Text>
+        <Text
+          style={[
+            styles.sectionHeading,
+            isDarkMode && { color: colors.textSecondary },
+          ]}
+        >
+          {title}
+        </Text>
         {list.map((item) => {
           const config = getIconConfig(item.type);
           return (
             <TouchableOpacity
               key={item.id}
-              style={[styles.card, !item.read && styles.cardUnread]}
+              style={[
+                styles.card,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: item.read ? colors.cardBorder : "#3B82F6",
+                },
+                !item.read && !isDarkMode && styles.cardUnread,
+              ]}
               onPress={() => handleItemPress(item)}
               activeOpacity={0.7}
             >
@@ -226,8 +281,8 @@ export default function NotificationsScreen({ navigation }: Props) {
                 style={[
                   styles.iconBox,
                   {
-                    backgroundColor: config.bgColor,
-                    borderColor: config.borderColor,
+                    backgroundColor: isDarkMode ? "#1E293B" : config.bgColor,
+                    borderColor: isDarkMode ? colors.cardBorder : config.borderColor,
                   },
                 ]}
               >
@@ -243,9 +298,22 @@ export default function NotificationsScreen({ navigation }: Props) {
                   >
                     {item.title}
                   </Text>
-                  <Text style={styles.cardTimestamp}>{item.time}</Text>
+                  <Text
+                    style={[
+                      styles.cardTimestamp,
+                      isDarkMode && { color: colors.textMuted },
+                    ]}
+                  >
+                    {item.time}
+                  </Text>
                 </View>
-                <Text style={styles.cardMessage} numberOfLines={2}>
+                <Text
+                  style={[
+                    styles.cardMessage,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                  numberOfLines={2}
+                >
                   {item.message}
                 </Text>
               </View>

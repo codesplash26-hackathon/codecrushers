@@ -142,6 +142,10 @@ export default function CompareRoutesScreen({ navigation, route }: Props) {
           <TouchableOpacity
             style={[
               styles.routeCard,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.cardBorder,
+              },
               selectedRoute === "recommended" && styles.routeCardSelected,
             ]}
             onPress={() => setSelectedRoute("recommended")}
@@ -167,6 +171,10 @@ export default function CompareRoutesScreen({ navigation, route }: Props) {
           <TouchableOpacity
             style={[
               styles.routeCard,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.cardBorder,
+              },
               selectedRoute === "fastest" && styles.routeCardSelected,
             ]}
             onPress={() => setSelectedRoute("fastest")}
@@ -192,6 +200,10 @@ export default function CompareRoutesScreen({ navigation, route }: Props) {
           <TouchableOpacity
             style={[
               styles.routeCard,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.cardBorder,
+              },
               selectedRoute === "cheapest" && styles.routeCardSelected,
             ]}
             onPress={() => setSelectedRoute("cheapest")}
@@ -215,32 +227,82 @@ export default function CompareRoutesScreen({ navigation, route }: Props) {
         </View>
 
         {/* COMPARISON METRICS TABLE */}
-        <View style={styles.tableCard}>
+        <View
+          style={[
+            styles.tableCard,
+            isDarkMode && {
+              backgroundColor: colors.cardBg,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+        >
           {/* Row 1: TOTAL TIME */}
           <View style={styles.tableSection}>
-            <Text style={styles.metricLabel}>⏱ TOTAL TIME</Text>
+            <Text
+              style={[
+                styles.metricLabel,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              ⏱ TOTAL TIME
+            </Text>
             <View style={styles.metricValuesRow}>
               <View style={styles.metricCol}>
-                <Text style={styles.metricValueBold}>1h 35m</Text>
+                <Text
+                  style={[
+                    styles.metricValueBold,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  1h 35m
+                </Text>
               </View>
               <View style={styles.metricCol}>
                 <Text style={styles.metricValueCyan}>1h 20m✓</Text>
               </View>
               <View style={styles.metricCol}>
-                <Text style={styles.metricValueRegular}>2h 05m</Text>
+                <Text
+                  style={[
+                    styles.metricValueRegular,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  2h 05m
+                </Text>
               </View>
             </View>
           </View>
 
           {/* Row 2: TOTAL COST */}
           <View style={styles.tableSection}>
-            <Text style={styles.metricLabel}>💰 TOTAL COST</Text>
+            <Text
+              style={[
+                styles.metricLabel,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              💰 TOTAL COST
+            </Text>
             <View style={styles.metricValuesRow}>
               <View style={styles.metricCol}>
-                <Text style={styles.metricValueBold}>Rs. 320</Text>
+                <Text
+                  style={[
+                    styles.metricValueBold,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Rs. 320
+                </Text>
               </View>
               <View style={styles.metricCol}>
-                <Text style={styles.metricValueRegular}>Rs. 450</Text>
+                <Text
+                  style={[
+                    styles.metricValueRegular,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  Rs. 450
+                </Text>
               </View>
               <View style={styles.metricCol}>
                 <Text style={styles.metricValueGreen}>Rs. 220✓</Text>
@@ -250,23 +312,51 @@ export default function CompareRoutesScreen({ navigation, route }: Props) {
 
           {/* Row 3: WAITING */}
           <View style={styles.tableSection}>
-            <Text style={styles.metricLabel}>⏳ WAITING</Text>
+            <Text
+              style={[
+                styles.metricLabel,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              ⏳ WAITING
+            </Text>
             <View style={styles.metricValuesRow}>
               <View style={styles.metricCol}>
                 <Text style={styles.metricValueBlue}>5 min✓</Text>
               </View>
               <View style={styles.metricCol}>
-                <Text style={styles.metricValueRegular}>3 min</Text>
+                <Text
+                  style={[
+                    styles.metricValueRegular,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  3 min
+                </Text>
               </View>
               <View style={styles.metricCol}>
-                <Text style={styles.metricValueRegular}>15 min</Text>
+                <Text
+                  style={[
+                    styles.metricValueRegular,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  15 min
+                </Text>
               </View>
             </View>
           </View>
 
           {/* Row 4: TRANSFERS */}
           <View style={styles.tableSection}>
-            <Text style={styles.metricLabel}>🔄 TRANSFERS</Text>
+            <Text
+              style={[
+                styles.metricLabel,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              🔄 TRANSFERS
+            </Text>
             <View style={styles.metricValuesRow}>
               <View style={styles.metricCol}>
                 <Text style={styles.metricValueBlue}>2✓</Text>
@@ -275,30 +365,65 @@ export default function CompareRoutesScreen({ navigation, route }: Props) {
                 <Text style={styles.metricValueCyan}>2✓</Text>
               </View>
               <View style={styles.metricCol}>
-                <Text style={styles.metricValueRegular}>3</Text>
+                <Text
+                  style={[
+                    styles.metricValueRegular,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  3
+                </Text>
               </View>
             </View>
           </View>
 
           {/* Row 5: WALKING */}
           <View style={styles.tableSection}>
-            <Text style={styles.metricLabel}>🚶 WALKING</Text>
+            <Text
+              style={[
+                styles.metricLabel,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              🚶 WALKING
+            </Text>
             <View style={styles.metricValuesRow}>
               <View style={styles.metricCol}>
                 <Text style={styles.metricValueBlue}>8 min✓</Text>
               </View>
               <View style={styles.metricCol}>
-                <Text style={styles.metricValueRegular}>12 min</Text>
+                <Text
+                  style={[
+                    styles.metricValueRegular,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  12 min
+                </Text>
               </View>
               <View style={styles.metricCol}>
-                <Text style={styles.metricValueRegular}>10 min</Text>
+                <Text
+                  style={[
+                    styles.metricValueRegular,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  10 min
+                </Text>
               </View>
             </View>
           </View>
 
           {/* Row 6: RELIABILITY */}
           <View style={styles.tableSection}>
-            <Text style={styles.metricLabel}>🛡️ RELIABILITY</Text>
+            <Text
+              style={[
+                styles.metricLabel,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              🛡️ RELIABILITY
+            </Text>
             <View style={styles.metricValuesRow}>
               <View style={styles.metricCol}>
                 <View style={styles.progressTrack}>
@@ -323,7 +448,14 @@ export default function CompareRoutesScreen({ navigation, route }: Props) {
 
           {/* Row 7: RISK */}
           <View style={[styles.tableSection, { borderBottomWidth: 0, paddingBottom: 6 }]}>
-            <Text style={styles.metricLabel}>▲ RISK</Text>
+            <Text
+              style={[
+                styles.metricLabel,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              ▲ RISK
+            </Text>
             <View style={styles.metricValuesRow}>
               <View style={styles.metricCol}>
                 <View style={styles.riskPillGreen}>
@@ -345,10 +477,30 @@ export default function CompareRoutesScreen({ navigation, route }: Props) {
         </View>
 
         {/* BESTROUTE RECOMMENDATION CALLOUT */}
-        <View style={styles.recommendationCard}>
-          <Text style={styles.recTitle}>💡 BestRoute Recommendation</Text>
-          <Text style={styles.recBody}>
-            The <Text style={styles.recBold}>Recommended route</Text> offers the
+        <View
+          style={[
+            styles.recommendationCard,
+            isDarkMode && {
+              backgroundColor: colors.cardSecondaryBg,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.recTitle,
+              isDarkMode && { color: "#FBBF24" },
+            ]}
+          >
+            💡 BestRoute Recommendation
+          </Text>
+          <Text
+            style={[
+              styles.recBody,
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
+            The <Text style={[styles.recBold, isDarkMode && { color: colors.textPrimary }]}>Recommended route</Text> offers the
             best balance of cost, reliability, and journey time with low
             connection risk.
           </Text>
@@ -356,7 +508,15 @@ export default function CompareRoutesScreen({ navigation, route }: Props) {
       </ScrollView>
 
       {/* FIXED BOTTOM ACTION BAR */}
-      <View style={styles.bottomBar}>
+      <View
+        style={[
+          styles.bottomBar,
+          isDarkMode && {
+            backgroundColor: colors.headerBg,
+            borderTopColor: colors.cardBorder,
+          },
+        ]}
+      >
         <TouchableOpacity
           style={styles.selectButton}
           onPress={handleSelectRoute}

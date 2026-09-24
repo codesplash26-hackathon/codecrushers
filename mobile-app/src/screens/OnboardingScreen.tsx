@@ -15,6 +15,8 @@ import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
 import { COLORS } from "../constants/theme";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -59,6 +61,7 @@ const SLIDES: SlideData[] = [
 ];
 
 export default function OnboardingScreen({ navigation }: Props) {
+  const { isDarkMode, colors } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
 
@@ -88,17 +91,28 @@ export default function OnboardingScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <StatusBar style="dark" />
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.screenBg }]}
+      edges={["top", "bottom"]}
+    >
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
 
-      {/* Top Header with Skip Button */}
+      {/* Top Header with Skip Button & ThemeToggle */}
       <View style={styles.headerBar}>
+        <ThemeToggle variant="subtle" size={36} />
         <TouchableOpacity
           onPress={handleFinish}
           activeOpacity={0.7}
           style={styles.skipButton}
         >
-          <Text style={styles.skipText}>Skip</Text>
+          <Text
+            style={[
+              styles.skipText,
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
+            Skip
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -123,8 +137,22 @@ export default function OnboardingScreen({ navigation }: Props) {
 
             {/* Bottom Content Area */}
             <View style={styles.contentArea}>
-              <Text style={styles.title}>{slide.title}</Text>
-              <Text style={styles.subtitle}>{slide.subtitle}</Text>
+              <Text
+                style={[
+                  styles.title,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                {slide.title}
+              </Text>
+              <Text
+                style={[
+                  styles.subtitle,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                {slide.subtitle}
+              </Text>
             </View>
           </View>
         ))}

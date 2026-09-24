@@ -290,14 +290,33 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
           {/* STEP 2: ENTER OTP */}
           {step === "otp" && (
             <View>
-              <Text style={styles.title}>Enter verification code</Text>
-              <Text style={styles.subtitle}>
+              <Text
+                style={[
+                  styles.title,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Enter verification code
+              </Text>
+              <Text
+                style={[
+                  styles.subtitle,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
                 We've sent a 6-digit verification code to{"\n"}
                 <Text style={styles.highlightText}>{email}</Text>
               </Text>
 
               <View style={styles.form}>
-                <Text style={styles.label}>6-DIGIT CODE</Text>
+                <Text
+                  style={[
+                    styles.label,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  6-DIGIT CODE
+                </Text>
                 {/* 6 Individual Code Digit Cells */}
                 <View style={styles.otpContainer}>
                   {otpCode.map((digit, index) => (
@@ -308,6 +327,11 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
                       }}
                       style={[
                         styles.otpBox,
+                        isDarkMode && {
+                          backgroundColor: colors.inputBg,
+                          borderColor: colors.inputBorder,
+                          color: colors.textPrimary,
+                        },
                         digit.length > 0 && styles.otpBoxFilled,
                       ]}
                       value={digit}
@@ -323,7 +347,12 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
                 {/* Resend Code Section */}
                 <View style={styles.resendRow}>
                   {timerSeconds > 0 ? (
-                    <Text style={styles.resendTimerText}>
+                    <Text
+                      style={[
+                        styles.resendTimerText,
+                        isDarkMode && { color: colors.textSecondary },
+                      ]}
+                    >
                       Resend code in{" "}
                       <Text style={styles.boldTimerText}>
                         0:{timerSeconds < 10 ? `0${timerSeconds}` : timerSeconds}
@@ -360,19 +389,45 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
           {/* STEP 3: CREATE NEW PASSWORD */}
           {step === "reset" && (
             <View>
-              <Text style={styles.title}>Create new password</Text>
-              <Text style={styles.subtitle}>
+              <Text
+                style={[
+                  styles.title,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Create new password
+              </Text>
+              <Text
+                style={[
+                  styles.subtitle,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
                 Your new password must be at least 6 characters and different
                 from previously used passwords.
               </Text>
 
               <View style={styles.form}>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>NEW PASSWORD</Text>
+                  <Text
+                    style={[
+                      styles.label,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                  >
+                    NEW PASSWORD
+                  </Text>
                   <TextInput
-                    style={styles.input}
+                    style={[
+                      styles.input,
+                      isDarkMode && {
+                        backgroundColor: colors.inputBg,
+                        borderColor: colors.inputBorder,
+                        color: colors.textPrimary,
+                      },
+                    ]}
                     placeholder="••••••••"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                     value={newPassword}
                     onChangeText={setNewPassword}
                     secureTextEntry
@@ -381,11 +436,25 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>CONFIRM PASSWORD</Text>
+                  <Text
+                    style={[
+                      styles.label,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                  >
+                    CONFIRM PASSWORD
+                  </Text>
                   <TextInput
-                    style={styles.input}
+                    style={[
+                      styles.input,
+                      isDarkMode && {
+                        backgroundColor: colors.inputBg,
+                        borderColor: colors.inputBorder,
+                        color: colors.textPrimary,
+                      },
+                    ]}
                     placeholder="••••••••"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     secureTextEntry
@@ -418,10 +487,20 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
                 <Text style={styles.successCheck}>✓</Text>
               </View>
 
-              <Text style={styles.successTitle}>
+              <Text
+                style={[
+                  styles.successTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
                 Password Reset Complete!
               </Text>
-              <Text style={styles.successSubtitle}>
+              <Text
+                style={[
+                  styles.successSubtitle,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
                 Your password has been changed successfully. You can now log in
                 with your new credentials.
               </Text>

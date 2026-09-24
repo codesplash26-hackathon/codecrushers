@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
+import authService, { AuthUser } from "../services/authService";
+import api from "../services/api";
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -62,17 +64,51 @@ export default function ProfileScreen({ navigation }: Props) {
   const [pushAlerts, setPushAlerts] = useState(true);
 
   const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const cached = await authService.getCurrentUser();
+      if (cached) {
+        setCurrentUser(cached);
+      }
+      try {
+        const res = await api.getProfile();
+        if (res.success && res.data?.user) {
+          setCurrentUser(res.data.user);
+        }
+      } catch {
+        // Backend offline / using cached
+      }
+    })();
+  }, []);
 
   const handleLogout = () => {
     setIsLogoutModalVisible(true);
   };
 
-  const confirmLogout = () => {
+  const confirmLogout = async () => {
     setIsLogoutModalVisible(false);
+    await authService.logout();
     navigation.reset({
       index: 0,
       routes: [{ name: "Login" }],
     });
+  };
+
+  const handleSavePreferences = async () => {
+    setIsPreferencesVisible(false);
+    let prefKey = "fastest";
+    if (defaultPref === "Cheapest") prefKey = "cheapest";
+    else if (defaultPref === "Reliable") prefKey = "most_reliable";
+    else if (defaultPref === "Less Walk") prefKey = "minimum_walking";
+
+    try {
+      await api.updatePreference(prefKey);
+      Alert.alert("Preferences Saved", "Your journey preferences have been saved to your account.");
+    } catch {
+      Alert.alert("Preferences Saved", "Preferences updated locally.");
+    }
   };
 
   return (
@@ -114,15 +150,15 @@ export default function ProfileScreen({ navigation }: Props) {
               {/* User Info */}
               <View style={styles.userInfo}>
                 <Text style={styles.userName} numberOfLines={1}>
-                  Alex Perera
+                  {currentUser?.name || "Alex Perera"}
                 </Text>
                 <Text style={styles.userEmail} numberOfLines={1}>
-                  alex@example.com
+                  {currentUser?.email || "alex@example.com"}
                 </Text>
                 <View style={styles.memberTagRow}>
                   <View style={styles.activeGreenDot} />
                   <Text style={styles.memberTagText}>
-                    24 journeys · Member since 2024
+                    {currentUser?.role === "driver" ? "Registered Driver · 2024" : "24 journeys · Member since 2024"}
                   </Text>
                 </View>
               </View>
@@ -1007,7 +1043,7 @@ export default function ProfileScreen({ navigation }: Props) {
           <View style={styles.tpBottomBar}>
             <TouchableOpacity
               style={styles.tpSaveButton}
-              onPress={() => setIsPreferencesVisible(false)}
+              onPress={handleSavePreferences}
               activeOpacity={0.8}
             >
               <Text style={styles.tpSaveButtonText}>Save Preferences</Text>

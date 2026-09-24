@@ -153,11 +153,25 @@ export default function RegisterScreen({ navigation }: Props) {
           <View style={styles.form}>
             {/* FULL NAME */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>FULL NAME</Text>
+              <Text
+                style={[
+                  styles.label,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                FULL NAME
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 placeholder="Alex Fernando"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 value={fullName}
                 onChangeText={setFullName}
                 autoCapitalize="words"
@@ -166,11 +180,25 @@ export default function RegisterScreen({ navigation }: Props) {
 
             {/* EMAIL */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>EMAIL</Text>
+              <Text
+                style={[
+                  styles.label,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                EMAIL
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 placeholder="your@email.com"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -181,11 +209,25 @@ export default function RegisterScreen({ navigation }: Props) {
 
             {/* PASSWORD */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>PASSWORD</Text>
+              <Text
+                style={[
+                  styles.label,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                PASSWORD
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 placeholder="••••••••"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -195,11 +237,25 @@ export default function RegisterScreen({ navigation }: Props) {
 
             {/* CONFIRM PASSWORD */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>CONFIRM PASSWORD</Text>
+              <Text
+                style={[
+                  styles.label,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                CONFIRM PASSWORD
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 placeholder="••••••••"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
