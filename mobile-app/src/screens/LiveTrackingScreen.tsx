@@ -80,7 +80,15 @@ export default function LiveTrackingScreen({ navigation }: Props) {
           />
 
           {/* Top Left: Live Tracking Floating Card */}
-          <View style={styles.liveTrackingCard}>
+          <View
+            style={[
+              styles.liveTrackingCard,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
+          >
             <View style={styles.liveStatusTitleRow}>
               <View
                 style={[
@@ -88,9 +96,21 @@ export default function LiveTrackingScreen({ navigation }: Props) {
                   isDelayed && styles.liveAmberDot,
                 ]}
               />
-              <Text style={styles.liveTitleText}>Live Tracking</Text>
+              <Text
+                style={[
+                  styles.liveTitleText,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Live Tracking
+              </Text>
             </View>
-            <Text style={styles.liveSubtitleText}>
+            <Text
+              style={[
+                styles.liveSubtitleText,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
               {isDelayed ? "Delayed by +8 min" : "Your Journey is On Time"}
             </Text>
           </View>

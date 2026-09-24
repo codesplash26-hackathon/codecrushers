@@ -16,9 +16,9 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: "light",
-  isDarkMode: false,
-  colors: LIGHT_COLORS,
+  theme: "dark",
+  isDarkMode: true,
+  colors: DARK_COLORS,
   toggleTheme: () => {},
   setTheme: () => {},
 });
@@ -27,7 +27,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const systemColorScheme = useColorScheme();
-  const [theme, setThemeState] = useState<ThemeType>("light");
+  const [theme, setThemeState] = useState<ThemeType>("dark");
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load saved theme on mount
@@ -37,12 +37,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
         const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
         if (savedTheme === "dark" || savedTheme === "light") {
           setThemeState(savedTheme);
-        } else if (systemColorScheme === "dark") {
+        } else {
           setThemeState("dark");
         }
       } catch (e) {
         // Fallback silently if storage read fails
         console.warn("Error loading theme preference:", e);
+        setThemeState("dark");
       } finally {
         setIsLoaded(true);
       }

@@ -106,8 +106,8 @@ export const DARK_COLORS: typeof LIGHT_COLORS = {
   bgLightMint: '#0A1C16',
   bgLightPeach: '#20150F',
   textDark: '#F8FAFC',
-  textSecondary: '#94A3B8',
-  textMuted: '#64748B',
+  textSecondary: '#CBD5E1',
+  textMuted: '#94A3B8',
   borderLight: '#222F46',
 
   // Extended Semantic Design Tokens

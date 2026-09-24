@@ -272,12 +272,21 @@ export default function RegisterScreen({ navigation }: Props) {
               <View
                 style={[
                   styles.checkbox,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.cardBorder,
+                  },
                   agreedToTerms && styles.checkboxSelected,
                 ]}
               >
                 {agreedToTerms && <Text style={styles.checkmark}>✓</Text>}
               </View>
-              <Text style={styles.termsText}>
+              <Text
+                style={[
+                  styles.termsText,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
                 I agree to the{" "}
                 <Text
                   style={styles.linkText}
@@ -327,7 +336,12 @@ export default function RegisterScreen({ navigation }: Props) {
 
           {/* Footer Navigation */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>
+            <Text
+              style={[
+                styles.footerText,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
               Already have an account?{" "}
               <Text
                 style={styles.footerLink}

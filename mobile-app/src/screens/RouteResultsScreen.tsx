@@ -602,6 +602,10 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
                 key={item.id}
                 style={[
                   styles.resultsFilterPill,
+                  isDarkMode && {
+                    backgroundColor: colors.cardSecondaryBg,
+                    borderColor: colors.cardBorder,
+                  },
                   isSelected && styles.resultsFilterPillActive,
                 ]}
                 onPress={() => setActiveFilter(item.id)}
@@ -610,6 +614,7 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
                 <Text
                   style={[
                     styles.resultsFilterPillText,
+                    isDarkMode && { color: colors.textPrimary },
                     isSelected && styles.resultsFilterPillTextActive,
                   ]}
                 >
@@ -794,7 +799,13 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
           </View>
 
           <TouchableOpacity
-            style={styles.viewRouteButtonSecondary}
+            style={[
+              styles.viewRouteButtonSecondary,
+              isDarkMode && {
+                backgroundColor: colors.cardSecondaryBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
             activeOpacity={0.85}
             onPress={() =>
               navigation.navigate("RouteDetail", {
@@ -808,7 +819,14 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
               })
             }
           >
-            <Text style={styles.viewRouteButtonTextSecondary}>View Route</Text>
+            <Text
+              style={[
+                styles.viewRouteButtonTextSecondary,
+                isDarkMode && { color: colors.primaryLight },
+              ]}
+            >
+              View Route
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -887,7 +905,13 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
           </View>
 
           <TouchableOpacity
-            style={styles.viewRouteButtonSecondary}
+            style={[
+              styles.viewRouteButtonSecondary,
+              isDarkMode && {
+                backgroundColor: colors.cardSecondaryBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
             activeOpacity={0.85}
             onPress={() =>
               navigation.navigate("RouteDetail", {
@@ -901,7 +925,14 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
               })
             }
           >
-            <Text style={styles.viewRouteButtonTextSecondary}>View Route</Text>
+            <Text
+              style={[
+                styles.viewRouteButtonTextSecondary,
+                isDarkMode && { color: colors.primaryLight },
+              ]}
+            >
+              View Route
+            </Text>
           </TouchableOpacity>
         </View>
 

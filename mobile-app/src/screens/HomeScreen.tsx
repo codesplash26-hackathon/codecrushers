@@ -282,12 +282,22 @@ export default function HomeScreen({ navigation }: Props) {
                 <View style={styles.bluePinInner} />
               </View>
               <View style={styles.locationTextWrapper}>
-                <Text style={styles.fieldLabel}>FROM</Text>
+                <Text
+                  style={[
+                    styles.fieldLabel,
+                    isDarkMode && { color: colors.primaryLight },
+                  ]}
+                >
+                  FROM
+                </Text>
                 <Text
                   style={[
                     styles.locationInputText,
                     isDarkMode && { color: colors.textPrimary },
-                    !fromLocation && styles.placeholderText,
+                    !fromLocation && [
+                      styles.placeholderText,
+                      isDarkMode && { color: colors.textMuted },
+                    ],
                   ]}
                   numberOfLines={1}
                 >
@@ -315,7 +325,14 @@ export default function HomeScreen({ navigation }: Props) {
                 activeOpacity={0.7}
                 onPress={handleSwapLocations}
               >
-                <Text style={styles.swapIcon}>⇅</Text>
+                <Text
+                  style={[
+                    styles.swapIcon,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  ⇅
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -335,12 +352,22 @@ export default function HomeScreen({ navigation }: Props) {
                 <Text style={styles.pinSymbol}>📍</Text>
               </View>
               <View style={styles.locationTextWrapper}>
-                <Text style={styles.fieldLabel}>TO</Text>
+                <Text
+                  style={[
+                    styles.fieldLabel,
+                    isDarkMode && { color: colors.primaryLight },
+                  ]}
+                >
+                  TO
+                </Text>
                 <Text
                   style={[
                     styles.locationInputText,
                     isDarkMode && { color: colors.textPrimary },
-                    !toLocation && styles.placeholderText,
+                    !toLocation && [
+                      styles.placeholderText,
+                      isDarkMode && { color: colors.textMuted },
+                    ],
                   ]}
                   numberOfLines={1}
                 >
@@ -350,7 +377,12 @@ export default function HomeScreen({ navigation }: Props) {
             </TouchableOpacity>
 
             {/* Depart At / Arrive By Segmented Toggle */}
-            <View style={styles.segmentedContainer}>
+            <View
+              style={[
+                styles.segmentedContainer,
+                isDarkMode && { backgroundColor: colors.subtleBg },
+              ]}
+            >
               <TouchableOpacity
                 style={[
                   styles.segmentButton,
@@ -362,6 +394,7 @@ export default function HomeScreen({ navigation }: Props) {
                 <Text
                   style={[
                     styles.segmentText,
+                    isDarkMode && { color: colors.textSecondary },
                     departMode === "depart" && styles.segmentTextActive,
                   ]}
                 >
@@ -379,6 +412,7 @@ export default function HomeScreen({ navigation }: Props) {
                 <Text
                   style={[
                     styles.segmentText,
+                    isDarkMode && { color: colors.textSecondary },
                     departMode === "arrive" && styles.segmentTextActive,
                   ]}
                 >
@@ -1012,11 +1046,24 @@ export default function HomeScreen({ navigation }: Props) {
             showsVerticalScrollIndicator={false}
           >
             {/* Quick Access Section */}
-            <Text style={styles.modalSectionHeading}>QUICK ACCESS</Text>
+            <Text
+              style={[
+                styles.modalSectionHeading,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              QUICK ACCESS
+            </Text>
             {filteredQuickAccess.map((item) => (
               <TouchableOpacity
                 key={item.id}
-                style={styles.quickAccessCard}
+                style={[
+                  styles.quickAccessCard,
+                  isDarkMode && {
+                    backgroundColor: colors.cardBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
                 activeOpacity={0.75}
                 onPress={() => handleSelectLocation(item.title)}
               >
@@ -1024,10 +1071,10 @@ export default function HomeScreen({ navigation }: Props) {
                 <View
                   style={[
                     styles.quickAccessIconBox,
-                    item.type === "current" && styles.iconBoxCurrent,
-                    item.type === "train" && styles.iconBoxTrain,
-                    item.type === "bus" && styles.iconBoxBus,
-                    item.type === "location" && styles.iconBoxLocation,
+                    item.type === "current" && (isDarkMode ? { backgroundColor: colors.subtleBg } : styles.iconBoxCurrent),
+                    item.type === "train" && (isDarkMode ? { backgroundColor: "rgba(34, 197, 94, 0.2)" } : styles.iconBoxTrain),
+                    item.type === "bus" && (isDarkMode ? { backgroundColor: "rgba(234, 88, 12, 0.2)" } : styles.iconBoxBus),
+                    item.type === "location" && (isDarkMode ? { backgroundColor: colors.subtleBg } : styles.iconBoxLocation),
                   ]}
                 >
                   {item.type === "current" && (
@@ -1046,10 +1093,22 @@ export default function HomeScreen({ navigation }: Props) {
 
                 {/* Texts */}
                 <View style={styles.quickAccessTextContainer}>
-                  <Text style={styles.quickAccessTitle} numberOfLines={1}>
+                  <Text
+                    style={[
+                      styles.quickAccessTitle,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                    numberOfLines={1}
+                  >
                     {item.title}
                   </Text>
-                  <Text style={styles.quickAccessSubtitle} numberOfLines={1}>
+                  <Text
+                    style={[
+                      styles.quickAccessSubtitle,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                    numberOfLines={1}
+                  >
                     {item.subtitle}
                   </Text>
                 </View>
@@ -1078,16 +1137,33 @@ export default function HomeScreen({ navigation }: Props) {
             ))}
 
             {/* Nearby Stops Section */}
-            <Text style={[styles.modalSectionHeading, { marginTop: 22 }]}>
+            <Text
+              style={[
+                styles.modalSectionHeading,
+                { marginTop: 22 },
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
               NEARBY STOPS
             </Text>
-            <View style={styles.nearbyCardContainer}>
+            <View
+              style={[
+                styles.nearbyCardContainer,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
               {filteredNearby.map((stop, index) => (
                 <TouchableOpacity
                   key={stop.id}
                   style={[
                     styles.nearbyRow,
-                    index !== filteredNearby.length - 1 && styles.nearbyDivider,
+                    index !== filteredNearby.length - 1 && [
+                      styles.nearbyDivider,
+                      isDarkMode && { borderBottomColor: colors.cardBorder },
+                    ],
                   ]}
                   activeOpacity={0.75}
                   onPress={() => handleSelectLocation(stop.title)}
@@ -1103,10 +1179,24 @@ export default function HomeScreen({ navigation }: Props) {
                   />
 
                   {/* Stop Name */}
-                  <Text style={styles.nearbyTitle}>{stop.title}</Text>
+                  <Text
+                    style={[
+                      styles.nearbyTitle,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    {stop.title}
+                  </Text>
 
                   {/* Distance */}
-                  <Text style={styles.nearbyDistance}>{stop.distance}</Text>
+                  <Text
+                    style={[
+                      styles.nearbyDistance,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                  >
+                    {stop.distance}
+                  </Text>
 
                   {/* Badge */}
                   <View
@@ -1217,7 +1307,17 @@ export default function HomeScreen({ navigation }: Props) {
             <TouchableOpacity
               style={[
                 styles.preferenceCard,
-                primaryPreference === "fastest" && styles.preferenceCardActive,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+                primaryPreference === "fastest" && [
+                  styles.preferenceCardActive,
+                  isDarkMode && {
+                    borderColor: colors.primary,
+                    backgroundColor: colors.cardSecondaryBg,
+                  },
+                ],
               ]}
               activeOpacity={0.8}
               onPress={() => setPrimaryPreference("fastest")}
@@ -1226,14 +1326,27 @@ export default function HomeScreen({ navigation }: Props) {
                 <Text style={styles.prefIconSymbol}>⚡</Text>
               </View>
               <View style={styles.prefTextContainer}>
-                <Text style={styles.prefTitle}>Fastest</Text>
-                <Text style={styles.prefSubtitle}>
+                <Text
+                  style={[
+                    styles.prefTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Fastest
+                </Text>
+                <Text
+                  style={[
+                    styles.prefSubtitle,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
                   Minimize total travel time
                 </Text>
               </View>
               <View
                 style={[
                   styles.radioButton,
+                  isDarkMode && { borderColor: colors.cardBorder },
                   primaryPreference === "fastest" && styles.radioButtonActive,
                 ]}
               >
@@ -1247,23 +1360,55 @@ export default function HomeScreen({ navigation }: Props) {
             <TouchableOpacity
               style={[
                 styles.preferenceCard,
-                primaryPreference === "cheapest" && styles.preferenceCardActive,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+                primaryPreference === "cheapest" && [
+                  styles.preferenceCardActive,
+                  isDarkMode && {
+                    borderColor: colors.primary,
+                    backgroundColor: colors.cardSecondaryBg,
+                  },
+                ],
               ]}
               activeOpacity={0.8}
               onPress={() => setPrimaryPreference("cheapest")}
             >
-              <View style={[styles.prefIconBox, styles.prefIconCheapest]}>
+              <View
+                style={[
+                  styles.prefIconBox,
+                  styles.prefIconCheapest,
+                  isDarkMode && {
+                    backgroundColor: colors.cardSecondaryBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
                 <Text style={styles.prefIconSymbol}>💰</Text>
               </View>
               <View style={styles.prefTextContainer}>
-                <Text style={styles.prefTitle}>Cheapest</Text>
-                <Text style={styles.prefSubtitle}>
+                <Text
+                  style={[
+                    styles.prefTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Cheapest
+                </Text>
+                <Text
+                  style={[
+                    styles.prefSubtitle,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
                   Minimize total journey cost
                 </Text>
               </View>
               <View
                 style={[
                   styles.radioButton,
+                  isDarkMode && { borderColor: colors.cardBorder },
                   primaryPreference === "cheapest" && styles.radioButtonActive,
                 ]}
               >
@@ -1277,23 +1422,55 @@ export default function HomeScreen({ navigation }: Props) {
             <TouchableOpacity
               style={[
                 styles.preferenceCard,
-                primaryPreference === "walking" && styles.preferenceCardActive,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+                primaryPreference === "walking" && [
+                  styles.preferenceCardActive,
+                  isDarkMode && {
+                    borderColor: colors.primary,
+                    backgroundColor: colors.cardSecondaryBg,
+                  },
+                ],
               ]}
               activeOpacity={0.8}
               onPress={() => setPrimaryPreference("walking")}
             >
-              <View style={[styles.prefIconBox, styles.prefIconWalking]}>
+              <View
+                style={[
+                  styles.prefIconBox,
+                  styles.prefIconWalking,
+                  isDarkMode && {
+                    backgroundColor: colors.cardSecondaryBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
                 <Text style={styles.prefIconSymbol}>🚶</Text>
               </View>
               <View style={styles.prefTextContainer}>
-                <Text style={styles.prefTitle}>Less Walking</Text>
-                <Text style={styles.prefSubtitle}>
+                <Text
+                  style={[
+                    styles.prefTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Less Walking
+                </Text>
+                <Text
+                  style={[
+                    styles.prefSubtitle,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
                   Minimize walking distance
                 </Text>
               </View>
               <View
                 style={[
                   styles.radioButton,
+                  isDarkMode && { borderColor: colors.cardBorder },
                   primaryPreference === "walking" && styles.radioButtonActive,
                 ]}
               >
@@ -1307,24 +1484,55 @@ export default function HomeScreen({ navigation }: Props) {
             <TouchableOpacity
               style={[
                 styles.preferenceCard,
-                primaryPreference === "transfers" &&
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+                primaryPreference === "transfers" && [
                   styles.preferenceCardActive,
+                  isDarkMode && {
+                    borderColor: colors.primary,
+                    backgroundColor: colors.cardSecondaryBg,
+                  },
+                ],
               ]}
               activeOpacity={0.8}
               onPress={() => setPrimaryPreference("transfers")}
             >
-              <View style={[styles.prefIconBox, styles.prefIconTransfers]}>
+              <View
+                style={[
+                  styles.prefIconBox,
+                  styles.prefIconTransfers,
+                  isDarkMode && {
+                    backgroundColor: colors.cardSecondaryBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
                 <Text style={styles.prefIconSymbol}>🔄</Text>
               </View>
               <View style={styles.prefTextContainer}>
-                <Text style={styles.prefTitle}>Fewer Transfers</Text>
-                <Text style={styles.prefSubtitle}>
+                <Text
+                  style={[
+                    styles.prefTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Fewer Transfers
+                </Text>
+                <Text
+                  style={[
+                    styles.prefSubtitle,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
                   Reduce transportation changes
                 </Text>
               </View>
               <View
                 style={[
                   styles.radioButton,
+                  isDarkMode && { borderColor: colors.cardBorder },
                   primaryPreference === "transfers" && styles.radioButtonActive,
                 ]}
               >
@@ -1338,23 +1546,55 @@ export default function HomeScreen({ navigation }: Props) {
             <TouchableOpacity
               style={[
                 styles.preferenceCard,
-                primaryPreference === "reliable" && styles.preferenceCardActive,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+                primaryPreference === "reliable" && [
+                  styles.preferenceCardActive,
+                  isDarkMode && {
+                    borderColor: colors.primary,
+                    backgroundColor: colors.cardSecondaryBg,
+                  },
+                ],
               ]}
               activeOpacity={0.8}
               onPress={() => setPrimaryPreference("reliable")}
             >
-              <View style={[styles.prefIconBox, styles.prefIconReliable]}>
+              <View
+                style={[
+                  styles.prefIconBox,
+                  styles.prefIconReliable,
+                  isDarkMode && {
+                    backgroundColor: colors.cardSecondaryBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
                 <Text style={styles.prefIconSymbol}>🛡️</Text>
               </View>
               <View style={styles.prefTextContainer}>
-                <Text style={styles.prefTitle}>Most Reliable</Text>
-                <Text style={styles.prefSubtitle}>
+                <Text
+                  style={[
+                    styles.prefTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Most Reliable
+                </Text>
+                <Text
+                  style={[
+                    styles.prefSubtitle,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
                   Prioritize reliable connections
                 </Text>
               </View>
               <View
                 style={[
                   styles.radioButton,
+                  isDarkMode && { borderColor: colors.cardBorder },
                   primaryPreference === "reliable" && styles.radioButtonActive,
                 ]}
               >
@@ -1365,38 +1605,98 @@ export default function HomeScreen({ navigation }: Props) {
             </TouchableOpacity>
 
             {/* ADVANCED OPTIONS Section */}
-            <Text style={[styles.modalSectionHeading, { marginTop: 22 }]}>
+            <Text
+              style={[
+                styles.modalSectionHeading,
+                { marginTop: 22 },
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
               ADVANCED OPTIONS
             </Text>
 
-            <View style={styles.advancedOptionsCard}>
+            <View
+              style={[
+                styles.advancedOptionsCard,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
               {/* Avoid Walking Row */}
               <View style={styles.advancedRow}>
                 <View style={styles.advancedTextWrapper}>
-                  <Text style={styles.advancedRowTitle}>Avoid walking</Text>
-                  <Text style={styles.advancedRowSubtitle}>
+                  <Text
+                    style={[
+                      styles.advancedRowTitle,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    Avoid walking
+                  </Text>
+                  <Text
+                    style={[
+                      styles.advancedRowSubtitle,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                  >
                     Prefer transport over walking
                   </Text>
                 </View>
                 <Switch
                   value={avoidWalking}
                   onValueChange={setAvoidWalking}
-                  trackColor={{ false: "#E2E8F0", true: "#93C5FD" }}
-                  thumbColor={avoidWalking ? "#2563EB" : "#FFFFFF"}
+                  trackColor={{
+                    false: isDarkMode ? "#334155" : "#E2E8F0",
+                    true: "#3B82F6",
+                  }}
+                  thumbColor={
+                    avoidWalking
+                      ? "#60A5FA"
+                      : isDarkMode
+                      ? "#94A3B8"
+                      : "#FFFFFF"
+                  }
+                  ios_backgroundColor={isDarkMode ? "#334155" : "#E2E8F0"}
                 />
               </View>
 
-              <View style={styles.advancedDivider} />
+              <View
+                style={[
+                  styles.advancedDivider,
+                  isDarkMode && { backgroundColor: colors.cardBorder },
+                ]}
+              />
 
               {/* Maximum Transfers Row */}
               <View style={styles.transfersHeaderRow}>
                 <View style={styles.advancedTextWrapper}>
-                  <Text style={styles.advancedRowTitle}>Maximum transfers</Text>
-                  <Text style={styles.advancedRowSubtitle}>
+                  <Text
+                    style={[
+                      styles.advancedRowTitle,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    Maximum transfers
+                  </Text>
+                  <Text
+                    style={[
+                      styles.advancedRowSubtitle,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                  >
                     Route connection changes
                   </Text>
                 </View>
-                <Text style={styles.transfersCurrentValue}>{maxTransfers}</Text>
+                <Text
+                  style={[
+                    styles.transfersCurrentValue,
+                    isDarkMode && { color: colors.primaryLight },
+                  ]}
+                >
+                  {maxTransfers}
+                </Text>
               </View>
 
               {/* Transfers Segment Buttons */}
@@ -1408,7 +1708,17 @@ export default function HomeScreen({ navigation }: Props) {
                       key={count}
                       style={[
                         styles.transferOptionButton,
-                        isSelected && styles.transferOptionButtonActive,
+                        isDarkMode && {
+                          backgroundColor: colors.cardSecondaryBg,
+                          borderColor: colors.cardBorder,
+                        },
+                        isSelected && [
+                          styles.transferOptionButtonActive,
+                          isDarkMode && {
+                            backgroundColor: colors.primary,
+                            borderColor: colors.primary,
+                          },
+                        ],
                       ]}
                       onPress={() => setMaxTransfers(count)}
                       activeOpacity={0.8}
@@ -1416,6 +1726,7 @@ export default function HomeScreen({ navigation }: Props) {
                       <Text
                         style={[
                           styles.transferOptionText,
+                          isDarkMode && { color: colors.textPrimary },
                           isSelected && styles.transferOptionTextActive,
                         ]}
                       >
@@ -1426,14 +1737,29 @@ export default function HomeScreen({ navigation }: Props) {
                 })}
               </View>
 
-              <View style={styles.advancedDivider} />
+              <View
+                style={[
+                  styles.advancedDivider,
+                  isDarkMode && { backgroundColor: colors.cardBorder },
+                ]}
+              />
 
               {/* Max Walking Distance Row */}
               <View style={styles.distanceHeaderRow}>
-                <Text style={styles.advancedRowTitle}>
+                <Text
+                  style={[
+                    styles.advancedRowTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
                   Max walking distance
                 </Text>
-                <Text style={styles.distanceValueText}>
+                <Text
+                  style={[
+                    styles.distanceValueText,
+                    isDarkMode && { color: colors.primaryLight },
+                  ]}
+                >
                   {maxWalkingDistance} min
                 </Text>
               </View>
@@ -1447,7 +1773,17 @@ export default function HomeScreen({ navigation }: Props) {
                       key={mins}
                       style={[
                         styles.distanceStepPill,
-                        isSelected && styles.distanceStepPillActive,
+                        isDarkMode && {
+                          backgroundColor: colors.cardSecondaryBg,
+                          borderColor: colors.cardBorder,
+                        },
+                        isSelected && [
+                          styles.distanceStepPillActive,
+                          isDarkMode && {
+                            backgroundColor: "rgba(59, 130, 246, 0.2)",
+                            borderColor: colors.primary,
+                          },
+                        ],
                       ]}
                       onPress={() => setMaxWalkingDistance(mins)}
                       activeOpacity={0.8}
@@ -1455,7 +1791,11 @@ export default function HomeScreen({ navigation }: Props) {
                       <Text
                         style={[
                           styles.distanceStepText,
-                          isSelected && styles.distanceStepTextActive,
+                          isDarkMode && { color: colors.textSecondary },
+                          isSelected && [
+                            styles.distanceStepTextActive,
+                            isDarkMode && { color: colors.primaryLight },
+                          ],
                         ]}
                       >
                         {mins}m
@@ -1466,14 +1806,36 @@ export default function HomeScreen({ navigation }: Props) {
               </View>
 
               <View style={styles.distanceMinMaxRow}>
-                <Text style={styles.minMaxLabel}>5 min</Text>
-                <Text style={styles.minMaxLabel}>30 min</Text>
+                <Text
+                  style={[
+                    styles.minMaxLabel,
+                    isDarkMode && { color: colors.textMuted },
+                  ]}
+                >
+                  5 min
+                </Text>
+                <Text
+                  style={[
+                    styles.minMaxLabel,
+                    isDarkMode && { color: colors.textMuted },
+                  ]}
+                >
+                  30 min
+                </Text>
               </View>
             </View>
           </ScrollView>
 
           {/* Bottom Show Routes Button */}
-          <View style={styles.customizeBottomBar}>
+          <View
+            style={[
+              styles.customizeBottomBar,
+              isDarkMode && {
+                backgroundColor: colors.headerBg,
+                borderTopColor: colors.cardBorder,
+              },
+            ]}
+          >
             <TouchableOpacity
               style={styles.showRoutesButton}
               activeOpacity={0.85}
