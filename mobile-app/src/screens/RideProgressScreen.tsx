@@ -489,6 +489,7 @@ export default function RideProgressScreen({ navigation, route }: Props) {
                     styles.specLabel,
                     isDarkMode && { color: colors.textSecondary },
                   ]}
+                  numberOfLines={1}
                 >
                   Vehicle
                 </Text>
@@ -497,6 +498,8 @@ export default function RideProgressScreen({ navigation, route }: Props) {
                     styles.specValue,
                     isDarkMode && { color: colors.textPrimary },
                   ]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
                 >
                   {vehicleModel}
                 </Text>
@@ -515,6 +518,7 @@ export default function RideProgressScreen({ navigation, route }: Props) {
                     styles.specLabel,
                     isDarkMode && { color: colors.textSecondary },
                   ]}
+                  numberOfLines={1}
                 >
                   Plate
                 </Text>
@@ -523,6 +527,8 @@ export default function RideProgressScreen({ navigation, route }: Props) {
                     styles.specValue,
                     isDarkMode && { color: colors.textPrimary },
                   ]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
                 >
                   {vehiclePlate}
                 </Text>
@@ -541,6 +547,7 @@ export default function RideProgressScreen({ navigation, route }: Props) {
                     styles.specLabel,
                     isDarkMode && { color: colors.textSecondary },
                   ]}
+                  numberOfLines={1}
                 >
                   Fare
                 </Text>
@@ -549,6 +556,8 @@ export default function RideProgressScreen({ navigation, route }: Props) {
                     styles.specValue,
                     isDarkMode && { color: colors.textPrimary },
                   ]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
                 >
                   Rs. {fare}
                 </Text>
@@ -1065,7 +1074,7 @@ const styles = StyleSheet.create({
   simControlsOverlay: {
     position: "absolute",
     top: Platform.OS === "ios" ? 48 : 36,
-    right: 12,
+    right: 64,
     flexDirection: "row",
     gap: 4,
     zIndex: 20,
@@ -1265,17 +1274,21 @@ const styles = StyleSheet.create({
   specBox: {
     flex: 1,
     alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 2,
   },
   specLabel: {
     fontSize: 10.5,
     color: "#94A3B8",
     marginBottom: 3,
     fontWeight: "600",
+    textAlign: "center",
   },
   specValue: {
     fontSize: 12,
     fontWeight: "700",
     color: "#1E293B",
+    textAlign: "center",
   },
 
   /* TRIP SUMMARY CARD */
@@ -1319,6 +1332,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
+    justifyContent: "center",
     ...Platform.select({
       web: { boxShadow: "0 4px 12px rgba(217, 119, 6, 0.3)" },
       default: { elevation: 3 },
@@ -1328,6 +1342,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "700",
+    textAlign: "center",
   },
 
   /* RATING MODAL STYLES */

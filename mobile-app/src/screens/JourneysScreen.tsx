@@ -1205,6 +1205,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#64748B",
+    textAlign: "center",
   },
   tabTextActive: {
     color: "#2563EB",
@@ -1256,18 +1257,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
     color: "#0F172A",
-    maxWidth: "45%",
+    flexShrink: 1,
   },
   routeArrow: {
     fontSize: 15,
     fontWeight: "700",
     color: "#64748B",
+    marginHorizontal: 2,
   },
   routeDestination: {
     fontSize: 16,
     fontWeight: "800",
     color: "#0F172A",
-    maxWidth: "45%",
+    flexShrink: 1,
   },
   // Status Badge
   statusBadge: {
@@ -1365,6 +1367,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 8,
     paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: "#F1F5F9",
@@ -1404,6 +1408,7 @@ const styles = StyleSheet.create({
     color: "#2563EB",
     fontSize: 13,
     fontWeight: "700",
+    textAlign: "center",
   },
   detailsButton: {
     backgroundColor: "#F1F5F9",
@@ -1416,6 +1421,7 @@ const styles = StyleSheet.create({
     color: "#334155",
     fontSize: 13,
     fontWeight: "700",
+    textAlign: "center",
   },
   trackLiveButton: {
     flexDirection: "row",
@@ -1436,6 +1442,7 @@ const styles = StyleSheet.create({
     color: "#059669",
     fontSize: 13,
     fontWeight: "700",
+    textAlign: "center",
   },
   removeSavedButton: {
     backgroundColor: "#FEE2E2",
@@ -1448,6 +1455,7 @@ const styles = StyleSheet.create({
     color: "#DC2626",
     fontSize: 13,
     fontWeight: "700",
+    textAlign: "center",
   },
   // Empty State
   emptyContainer: {
@@ -1483,6 +1491,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "700",
+    textAlign: "center",
   },
   // Bottom Navigation Bar
   bottomNav: {

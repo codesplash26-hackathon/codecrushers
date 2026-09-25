@@ -231,8 +231,8 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
           </TouchableOpacity>
 
           <View style={styles.titleColumn}>
-            <Text style={styles.subtitleText}>Last-mile vehicles</Text>
-            <Text style={styles.titleText}>Available Vehicles</Text>
+            <Text style={styles.subtitleText} numberOfLines={1}>Last-mile vehicles</Text>
+            <Text style={styles.titleText} numberOfLines={1} adjustsFontSizeToFit>Available Vehicles</Text>
           </View>
 
           {/* List | Map Toggle Switch */}
@@ -332,7 +332,11 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
           showsVerticalScrollIndicator={false}
         >
           {/* Filters Row */}
-          <View style={styles.filterRow}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterRow}
+          >
             <TouchableOpacity
               style={[
                 styles.filterPill,
@@ -429,7 +433,7 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
                 {sortNearest ? "Nearest" : "Lowest Fare"}
               </Text>
             </TouchableOpacity>
-          </View>
+          </ScrollView>
 
           {/* Notice Banner */}
           <View
@@ -482,6 +486,8 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
                           styles.driverName,
                           isDarkMode && { color: colors.textPrimary },
                         ]}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
                       >
                         {vehicle.name}
                       </Text>
@@ -945,6 +951,7 @@ const styles = StyleSheet.create({
   titleColumn: {
     flex: 1,
     marginLeft: 12,
+    marginRight: 8,
   },
   subtitleText: {
     fontSize: 11.5,
@@ -1095,6 +1102,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     color: "#334155",
+    textAlign: "center",
   },
   filterPillTextActive: {
     color: "#FFFFFF",
@@ -1120,6 +1128,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     color: "#334155",
+    textAlign: "center",
   },
 
   /* NOTICE BANNER */
@@ -1308,6 +1317,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 12.5,
     fontWeight: "700",
+    textAlign: "center",
   },
 
   /* MAP VIEW STYLES */
@@ -1587,6 +1597,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     color: "#475569",
+    textAlign: "center",
   },
   paymentChipTextActive: {
     color: "#1D64EC",
@@ -1606,6 +1617,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "700",
+    textAlign: "center",
   },
 
   /* SUCCESS CONFIRMATION MODAL STATE */
@@ -1680,5 +1692,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "700",
+    textAlign: "center",
   },
 });

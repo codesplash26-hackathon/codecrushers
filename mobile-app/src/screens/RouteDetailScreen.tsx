@@ -98,12 +98,13 @@ export default function RouteDetailScreen({ navigation, route }: Props) {
         >
           {/* Title & Fare Row */}
           <View style={styles.summaryTitleRow}>
-            <View>
+            <View style={{ flex: 1, marginRight: 8 }}>
               <Text
                 style={[
                   styles.summaryTitle,
                   isDarkMode && { color: colors.textPrimary },
                 ]}
+                numberOfLines={1}
               >
                 Your Journey
               </Text>
@@ -112,18 +113,21 @@ export default function RouteDetailScreen({ navigation, route }: Props) {
                   styles.summarySubtitle,
                   isDarkMode && { color: colors.textSecondary },
                 ]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
               >
                 {fromCity} ➔ {toCity}
               </Text>
             </View>
 
             <View style={styles.priceColumn}>
-              <Text style={styles.priceAmount}>{fare}</Text>
+              <Text style={styles.priceAmount} numberOfLines={1}>{fare}</Text>
               <Text
                 style={[
                   styles.priceLabel,
                   isDarkMode && { color: colors.textSecondary },
                 ]}
+                numberOfLines={1}
               >
                 Estimated total
               </Text>
@@ -1005,26 +1009,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
     color: "#1D64EC",
+    textAlign: "center",
   },
   statValueCyan: {
     fontSize: 12,
     fontWeight: "800",
     color: "#0891B2",
+    textAlign: "center",
   },
   statValuePurple: {
     fontSize: 12,
     fontWeight: "800",
     color: "#7C3AED",
+    textAlign: "center",
   },
   statValueGreen: {
     fontSize: 12,
     fontWeight: "800",
     color: "#16A34A",
+    textAlign: "center",
   },
   statLabel: {
     fontSize: 10,
     color: "#64748B",
     marginTop: 2,
+    textAlign: "center",
   },
   connectionRiskBanner: {
     flexDirection: "row",
@@ -1168,6 +1177,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   cardFooterInfo: {
+    flex: 1,
+    marginRight: 6,
     fontSize: 11,
     color: "#64748B",
   },
@@ -1314,6 +1325,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 13,
     fontWeight: "700",
+    textAlign: "center",
   },
 
   /* Fixed Bottom Action Bar */
@@ -1373,5 +1385,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
+    textAlign: "center",
   },
 });
