@@ -3,6 +3,8 @@ import { fetchApi } from './api';
 export const adminService = {
   // Health & Stats
   getHealth: () => fetchApi('/health'),
+  getDashboardStats: () => fetchApi('/admin/dashboard-stats'),
+  getJourneys: () => fetchApi('/journeys'),
 
   // Stops & Stations
   getStops: () => fetchApi('/stops'),
@@ -37,6 +39,12 @@ export const adminService = {
 
   // Users
   getUsers: () => fetchApi('/users'),
+  createUser: (data) => fetchApi('/users', { method: 'POST', body: JSON.stringify(data) }),
+  deleteUser: (id) => fetchApi(`/users/${id}`, { method: 'DELETE' }),
+  updateUserRole: (id, role) => fetchApi(`/users/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
+
+  // Notifications
+  getNotifications: () => fetchApi('/notifications'),
 };
 
 export default adminService;

@@ -73,10 +73,15 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       </div>
 
       <div className="sidebar-footer">
-        <div className="user-pill">
+        <div
+          className="user-pill"
+          onClick={() => setActiveTab('security')}
+          style={{ cursor: 'pointer' }}
+          title="Open Admin Profile"
+        >
           <div className="avatar-blue">AD</div>
           <div className="user-info">
-            <div className="user-name">{user?.name || 'Admin User'}</div>
+            <div className="user-name">{user?.name || 'BestRoute Admin'}</div>
             <div className="user-role">{user?.email || 'admin@bestroute.lk'}</div>
           </div>
         </div>

@@ -57,7 +57,115 @@ const updatePreference = async (req, res) => {
   }
 };
 
+const getAllUsers = async (req, res, next) => {
+  try {
+    const users = await User.find().select("-password").sort({ createdAt: -1 });
+    return res.status(200).json({
+      success: true,
+      count: users.length,
+      users,
+    });
+  } catch (error) {
+    if (next) return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch users",
+      error: error.message,
+    });
+  }
+};
+
+const createUser = async (req, res, next) => {
+  try {
+    const { name, email, password, role, preferences } = req.body;
+    if (!name || !email) {
+      return res.status(400).json({ success: false, message: "Name and email are required" });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: "User with this email already exists" });
+    }
+
+    const newUser = await User.create({
+      name,
+      email,
+      password: password || "password123",
+      role: role || "passenger",
+      preferences: preferences || "fastest",
+    });
+
+    const userObj = newUser.toObject();
+    delete userObj.password;
+
+    return res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      user: userObj,
+    });
+  } catch (error) {
+    if (next) return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create user",
+      error: error.message,
+    });
+  }
+};
+
+const deleteUser = async (req, res, next) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "User removed successfully",
+    });
+  } catch (error) {
+    if (next) return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete user",
+      error: error.message,
+    });
+  }
+};
+
+const updateUserRole = async (req, res, next) => {
+  try {
+    const { role } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { role },
+      { new: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User role updated successfully",
+      user,
+    });
+  } catch (error) {
+    if (next) return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update user role",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getProfile,
   updatePreference,
+  getAllUsers,
+  createUser,
+  deleteUser,
+  updateUserRole,
 };
