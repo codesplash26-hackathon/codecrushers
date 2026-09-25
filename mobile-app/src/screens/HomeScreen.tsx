@@ -19,6 +19,7 @@ import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
 import BottomNavigationBar from "../components/BottomNavigationBar";
 import authService, { AuthUser } from "../services/authService";
+import api from "../services/api";
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -65,12 +66,21 @@ export default function HomeScreen({ navigation }: Props) {
   >("home");
   const [isProfilePopupVisible, setIsProfilePopupVisible] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [liveDisruptionsCount, setLiveDisruptionsCount] = useState<number>(1);
 
   useEffect(() => {
     (async () => {
       const user = await authService.getCurrentUser();
       if (user) {
         setCurrentUser(user);
+      }
+      try {
+        const disruptionsRes = await api.getActiveDisruptions();
+        if (disruptionsRes.success && Array.isArray(disruptionsRes.data?.disruptions)) {
+          setLiveDisruptionsCount(disruptionsRes.data.disruptions.length);
+        }
+      } catch {
+        // Fallback to default
       }
     })();
   }, []);
