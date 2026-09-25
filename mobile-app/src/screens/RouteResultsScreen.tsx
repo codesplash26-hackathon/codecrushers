@@ -719,6 +719,8 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
               styles.headerMainTitle,
               isDarkMode && { color: colors.textPrimary },
             ]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
             Routes to {toCity}
           </Text>
@@ -727,6 +729,8 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
               styles.headerSubtitle,
               isDarkMode && { color: colors.textSecondary },
             ]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
             Today · Departing 8:30 AM · {sortedRoutes.length} routes found
           </Text>
@@ -804,6 +808,8 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
                     isDarkMode && { color: colors.textPrimary },
                     isSelected && styles.resultsFilterPillTextActive,
                   ]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
                 >
                   {item.label}
                 </Text>
@@ -830,7 +836,7 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
             >
               {/* Card Top Row: Badge & Risk */}
               <View style={styles.cardHeaderRow}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
+                <View style={styles.cardHeaderBadges}>
                   <View
                     style={[
                       styles.bestMatchBadge,
@@ -850,11 +856,11 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
                     >
                       <Text style={styles.topChoicePillText}>
                         {activeFilter === "cheapest"
-                          ? "💰 LOWEST FARE"
+                          ? "💰 LOWEST"
                           : activeFilter === "fastest"
-                          ? "⚡ FASTEST TRIP"
+                          ? "⚡ FASTEST"
                           : activeFilter === "reliable"
-                          ? "🛡️ MOST RELIABLE"
+                          ? "🛡️ #1 CHOICE"
                           : "★ TOP PICK"}
                       </Text>
                     </View>
@@ -884,12 +890,14 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
 
               {/* Time & Price Row */}
               <View style={styles.timePriceRow}>
-                <View>
+                <View style={styles.timeContainer}>
                   <Text
                     style={[
                       styles.timeRangeText,
                       isDarkMode && { color: colors.textPrimary },
                     ]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
                   >
                     {routeItem.departureTime}{" "}
                     <Text style={styles.arrowLight}>➔</Text> {routeItem.arrivalTime}
@@ -950,8 +958,20 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
 
               {/* Reliability Bar */}
               <View style={styles.reliabilityRow}>
-                <Text style={styles.reliabilityLabel}>Reliability</Text>
-                <View style={styles.reliabilityTrack}>
+                <Text
+                  style={[
+                    styles.reliabilityLabel,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  Reliability
+                </Text>
+                <View
+                  style={[
+                    styles.reliabilityTrack,
+                    isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+                  ]}
+                >
                   <View
                     style={[
                       styles.reliabilityFill,
@@ -1255,12 +1275,14 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14.5,
     fontWeight: "800",
+    textAlign: "center",
   },
   optFloatingSubtitle: {
     color: "#38BDF8",
     fontSize: 11.5,
     fontWeight: "700",
     marginTop: 2,
+    textAlign: "center",
   },
   optCyanBullet: {
     color: "#00E5FF",
@@ -1375,6 +1397,7 @@ const styles = StyleSheet.create({
   stepTextBase: {
     fontSize: 13.5,
     fontWeight: "500",
+    flex: 1,
   },
   stepTextSuccess: {
     fontWeight: "700",
@@ -1395,11 +1418,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: "#64748B",
+    textAlign: "center",
   },
   footerSubText: {
     fontSize: 11,
     color: "#94A3B8",
     marginTop: 3,
+    textAlign: "center",
   },
   replayButton: {
     width: 36,
@@ -1447,6 +1472,8 @@ const styles = StyleSheet.create({
   },
   headerTitles: {
     flex: 1,
+    marginRight: 8,
+    justifyContent: "center",
   },
   headerMainTitle: {
     fontSize: 17,
@@ -1481,17 +1508,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E2E8F0",
     borderRadius: 12,
-    paddingVertical: 8,
+    paddingVertical: 9,
+    paddingHorizontal: 2,
     alignItems: "center",
+    justifyContent: "center",
   },
   resultsFilterPillActive: {
     backgroundColor: "#1D64EC",
     borderColor: "#1D64EC",
   },
   resultsFilterPillText: {
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 11.5,
+    fontWeight: "700",
     color: "#334155",
+    textAlign: "center",
   },
   resultsFilterPillTextActive: {
     color: "#FFFFFF",
@@ -1522,6 +1552,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 10,
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  cardHeaderBadges: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 6,
+    flex: 1,
   },
   bestMatchBadge: {
     backgroundColor: "#1D64EC",
@@ -1550,7 +1589,8 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     fontWeight: "800",
     color: "#1D64EC",
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
+    textAlign: "center",
   },
   routeCardTopChoice: {
     borderColor: "#1D64EC",
@@ -1560,6 +1600,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 10,
     fontWeight: "800",
+    textAlign: "center",
   },
   riskIndicator: {
     flexDirection: "row",
@@ -1593,8 +1634,12 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 12,
   },
+  timeContainer: {
+    flex: 1,
+    marginRight: 8,
+  },
   timeRangeText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "800",
     color: "#0F172A",
   },
@@ -1613,36 +1658,45 @@ const styles = StyleSheet.create({
   priceText: {
     fontSize: 18,
     fontWeight: "800",
+    textAlign: "right",
   },
   priceTextBlue: {
     fontSize: 18,
     fontWeight: "800",
     color: "#1D64EC",
+    textAlign: "right",
   },
   priceTextTeal: {
     fontSize: 18,
     fontWeight: "800",
     color: "#0284C7",
+    textAlign: "right",
   },
   priceTextGreen: {
     fontSize: 18,
     fontWeight: "800",
     color: "#10B981",
+    textAlign: "right",
   },
   priceSubtext: {
     fontSize: 10,
     color: "#94A3B8",
+    textAlign: "right",
   },
   transitModeFlowRow: {
     flexDirection: "row",
     alignItems: "center",
+    flexWrap: "wrap",
     gap: 6,
+    rowGap: 6,
     marginBottom: 12,
   },
   modePill: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
   },
   modePillBus: {
     backgroundColor: "#EFF6FF",
@@ -1660,21 +1714,25 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     color: "#2563EB",
+    textAlign: "center",
   },
   modePillTextTrain: {
     fontSize: 11,
     fontWeight: "700",
     color: "#16A34A",
+    textAlign: "center",
   },
   modePillTextTuk: {
     fontSize: 11,
     fontWeight: "700",
     color: "#DB2777",
+    textAlign: "center",
   },
   modePillTextTaxi: {
     fontSize: 11,
     fontWeight: "700",
     color: "#D97706",
+    textAlign: "center",
   },
   modeFlowArrow: {
     fontSize: 11,
@@ -1683,6 +1741,8 @@ const styles = StyleSheet.create({
   metricsRow: {
     flexDirection: "row",
     alignItems: "center",
+    flexWrap: "wrap",
+    rowGap: 4,
     marginBottom: 10,
   },
   metricText: {
@@ -1726,11 +1786,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 11,
     alignItems: "center",
+    justifyContent: "center",
   },
   viewRouteButtonTextPrimary: {
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "700",
+    textAlign: "center",
   },
   viewRouteButtonSecondary: {
     backgroundColor: "#EFF6FF",
@@ -1739,11 +1801,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 11,
     alignItems: "center",
+    justifyContent: "center",
   },
   viewRouteButtonTextSecondary: {
     color: "#1D64EC",
     fontSize: 14,
     fontWeight: "700",
+    textAlign: "center",
   },
   compareAllButton: {
     backgroundColor: "#EFF6FF",
@@ -1752,11 +1816,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 13,
     alignItems: "center",
+    justifyContent: "center",
     marginTop: 6,
   },
   compareAllButtonText: {
     color: "#1D64EC",
     fontSize: 14,
     fontWeight: "700",
+    textAlign: "center",
   },
 });

@@ -114,6 +114,8 @@ export default function CompareRoutesScreen({ navigation, route }: Props) {
               styles.headerTitle,
               isDarkMode && { color: colors.textPrimary },
             ]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
             Compare Routes
           </Text>
@@ -122,6 +124,8 @@ export default function CompareRoutesScreen({ navigation, route }: Props) {
               styles.headerSubtitle,
               isDarkMode && { color: colors.textSecondary },
             ]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {fromCity} ➔ {toCity}
           </Text>
@@ -151,7 +155,13 @@ export default function CompareRoutesScreen({ navigation, route }: Props) {
             onPress={() => setSelectedRoute("recommended")}
             activeOpacity={0.8}
           >
-            <Text style={styles.cardHeaderRecommended}>Recommended</Text>
+            <Text
+              style={styles.cardHeaderRecommended}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              Recommended
+            </Text>
             <View style={styles.cardLegsCol}>
               <View style={styles.legBadgeBlue}>
                 <Text style={styles.legBadgeBlueText}>🚌 Bus</Text>
@@ -180,7 +190,13 @@ export default function CompareRoutesScreen({ navigation, route }: Props) {
             onPress={() => setSelectedRoute("fastest")}
             activeOpacity={0.8}
           >
-            <Text style={styles.cardHeaderFastest}>Fastest</Text>
+            <Text
+              style={styles.cardHeaderFastest}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              Fastest
+            </Text>
             <View style={styles.cardLegsCol}>
               <View style={styles.legBadgeBlue}>
                 <Text style={styles.legBadgeBlueText}>🚌 Bus</Text>
@@ -209,7 +225,13 @@ export default function CompareRoutesScreen({ navigation, route }: Props) {
             onPress={() => setSelectedRoute("cheapest")}
             activeOpacity={0.8}
           >
-            <Text style={styles.cardHeaderCheapest}>Cheapest</Text>
+            <Text
+              style={styles.cardHeaderCheapest}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              Cheapest
+            </Text>
             <View style={styles.cardLegsCol}>
               <View style={styles.legBadgeBlue}>
                 <Text style={styles.legBadgeBlueText}>🚌 Bus</Text>
@@ -236,6 +258,18 @@ export default function CompareRoutesScreen({ navigation, route }: Props) {
             },
           ]}
         >
+          {/* Table Column Headers */}
+          <View style={styles.tableHeaderRow}>
+            <View style={styles.metricCol}>
+              <Text style={styles.tableColHeaderBlue}>RECOMMENDED</Text>
+            </View>
+            <View style={styles.metricCol}>
+              <Text style={styles.tableColHeaderCyan}>FASTEST</Text>
+            </View>
+            <View style={styles.metricCol}>
+              <Text style={styles.tableColHeaderGreen}>CHEAPEST</Text>
+            </View>
+          </View>
           {/* Row 1: TOTAL TIME */}
           <View style={styles.tableSection}>
             <Text
@@ -567,7 +601,10 @@ const styles = StyleSheet.create({
     color: "#1D4ED8",
   },
   headerTitleCol: {
+    flex: 1,
     marginLeft: 12,
+    marginRight: 8,
+    justifyContent: "center",
   },
   headerTitle: {
     fontSize: 18,
@@ -602,8 +639,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    padding: 10,
+    padding: 8,
     alignItems: "center",
+    justifyContent: "flex-start",
     ...Platform.select({
       web: { boxShadow: "0 2px 6px rgba(0,0,0,0.04)" },
       default: { elevation: 1 },
@@ -615,22 +653,25 @@ const styles = StyleSheet.create({
     backgroundColor: "#EFF6FF",
   },
   cardHeaderRecommended: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: "800",
     color: "#1D4ED8",
     marginBottom: 8,
+    textAlign: "center",
   },
   cardHeaderFastest: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: "800",
     color: "#0284C7",
     marginBottom: 8,
+    textAlign: "center",
   },
   cardHeaderCheapest: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: "800",
     color: "#16A34A",
     marginBottom: 8,
+    textAlign: "center",
   },
   cardLegsCol: {
     width: "100%",
@@ -641,61 +682,65 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#DBEAFE",
-    paddingHorizontal: 7,
+    paddingHorizontal: 5,
     paddingVertical: 3,
     borderRadius: 6,
     width: "100%",
     justifyContent: "space-between",
   },
   legBadgeBlueText: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontWeight: "700",
     color: "#1E40AF",
+    textAlign: "center",
   },
   legBadgeGreen: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#DCFCE7",
-    paddingHorizontal: 7,
+    paddingHorizontal: 5,
     paddingVertical: 3,
     borderRadius: 6,
     width: "100%",
     justifyContent: "space-between",
   },
   legBadgeGreenText: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontWeight: "700",
     color: "#166534",
+    textAlign: "center",
   },
   legBadgePink: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FCE7F3",
-    paddingHorizontal: 7,
+    paddingHorizontal: 5,
     paddingVertical: 3,
     borderRadius: 6,
     width: "100%",
     justifyContent: "center",
   },
   legBadgePinkText: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontWeight: "700",
     color: "#9D174D",
+    textAlign: "center",
   },
   legBadgeYellow: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FEF3C7",
-    paddingHorizontal: 7,
+    paddingHorizontal: 5,
     paddingVertical: 3,
     borderRadius: 6,
     width: "100%",
     justifyContent: "center",
   },
   legBadgeYellowText: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontWeight: "700",
     color: "#92400E",
+    textAlign: "center",
   },
   legArrow: {
     fontSize: 9,
@@ -713,6 +758,35 @@ const styles = StyleSheet.create({
       web: { boxShadow: "0 2px 8px rgba(0,0,0,0.04)" },
       default: { elevation: 2 },
     }),
+  },
+  tableHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingBottom: 10,
+    borderBottomWidth: 1.5,
+    borderBottomColor: "#E2E8F0",
+    marginBottom: 4,
+  },
+  tableColHeaderBlue: {
+    fontSize: 9.5,
+    fontWeight: "800",
+    color: "#1D4ED8",
+    letterSpacing: 0.5,
+    textAlign: "center",
+  },
+  tableColHeaderCyan: {
+    fontSize: 9.5,
+    fontWeight: "800",
+    color: "#0284C7",
+    letterSpacing: 0.5,
+    textAlign: "center",
+  },
+  tableColHeaderGreen: {
+    fontSize: 9.5,
+    fontWeight: "800",
+    color: "#16A34A",
+    letterSpacing: 0.5,
+    textAlign: "center",
   },
   tableSection: {
     paddingVertical: 10,
@@ -736,34 +810,40 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   metricValueBold: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: "800",
     color: "#0F172A",
+    textAlign: "center",
   },
   metricValueRegular: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: "700",
     color: "#334155",
+    textAlign: "center",
   },
   metricValueCyan: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: "800",
     color: "#0284C7",
+    textAlign: "center",
   },
   metricValueGreen: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: "800",
     color: "#16A34A",
+    textAlign: "center",
   },
   metricValueBlue: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: "800",
     color: "#1D64EC",
+    textAlign: "center",
   },
 
   /* Reliability Bars */
   progressTrack: {
-    width: 60,
+    width: 50,
+    maxWidth: "80%",
     height: 4,
     borderRadius: 2,
     backgroundColor: "#F1F5F9",
@@ -789,25 +869,28 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   reliabilityTextBlue: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: "800",
     color: "#1D64EC",
+    textAlign: "center",
   },
   reliabilityTextCyan: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: "800",
     color: "#0284C7",
+    textAlign: "center",
   },
   reliabilityTextGreen: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: "800",
     color: "#16A34A",
+    textAlign: "center",
   },
 
   /* Risk Pills */
   riskPillGreen: {
     backgroundColor: "#DCFCE7",
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 10,
   },
@@ -815,6 +898,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     color: "#16A34A",
+    textAlign: "center",
   },
   riskPillAmber: {
     backgroundColor: "#FEF3C7",
@@ -826,6 +910,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     color: "#D97706",
+    textAlign: "center",
   },
 
   /* RECOMMENDATION CARD */
@@ -871,6 +956,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
+    justifyContent: "center",
     ...Platform.select({
       web: { boxShadow: "0 4px 14px rgba(29, 100, 236, 0.35)" },
       default: {
@@ -886,5 +972,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
+    textAlign: "center",
   },
 });

@@ -231,6 +231,7 @@ const styles = StyleSheet.create({
   navLabel: {
     fontSize: 11,
     fontWeight: "600",
+    textAlign: "center",
   },
   navLabelActive: {
     color: "#1D64EC",
