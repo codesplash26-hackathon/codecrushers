@@ -26,6 +26,29 @@ const routeSchema = new mongoose.Schema(
       },
     ],
 
+    type: {
+      type: String,
+      default: "bus",
+    },
+
+    baseFare: {
+      type: Number,
+      default: 150,
+    },
+
+    estimatedDurationMinutes: {
+      type: Number,
+      default: 120,
+    },
+
+    departure: {
+      type: String,
+    },
+
+    arrival: {
+      type: String,
+    },
+
     active: {
       type: Boolean,
       default: true,

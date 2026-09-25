@@ -10,8 +10,19 @@ const stopSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["bus_stop", "railway_station", "terminal", "other"],
+      enum: [
+        "bus_stop",
+        "railway_station",
+        "terminal",
+        "both",
+        "bus",
+        "train",
+        "bus terminal",
+        "train station",
+        "other",
+      ],
       required: true,
+      lowercase: true,
     },
 
     location: {
@@ -24,6 +35,20 @@ const stopSchema = new mongoose.Schema(
         type: Number,
         required: true,
       },
+    },
+
+    coordinates: {
+      type: [Number], // [lng, lat]
+    },
+
+    routesCount: {
+      type: Number,
+      default: 0,
+    },
+
+    status: {
+      type: String,
+      default: "Active",
     },
 
     address: {

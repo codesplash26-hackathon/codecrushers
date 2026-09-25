@@ -1,28 +1,82 @@
+const mongoose = require("mongoose");
 const Route = require("../models/Route");
+const TransportService = require("../models/TransportService");
 
 // Create a route
 const createRoute = async (req, res) => {
   try {
-    const { service, routeNumber, name, stops, active } = req.body;
-
-    if (!service || !name) {
-      return res.status(400).json({
-        message: "Service and route name are required",
-      });
-    }
-
-    const route = await Route.create({
+    const {
       service,
       routeNumber,
       name,
       stops,
       active,
+      type,
+      mode,
+      baseFare,
+      fare,
+      estimatedDurationMinutes,
+      departure,
+      arrival,
+    } = req.body;
+
+    const routeTitle = name || req.body.routeName;
+    if (!routeTitle) {
+      return res.status(400).json({
+        message: "Route name is required",
+      });
+    }
+
+    const routeType = (type || mode || "bus").toLowerCase();
+
+    // Link or auto-assign a TransportService
+    let serviceId = service;
+    if (!serviceId || !mongoose.Types.ObjectId.isValid(serviceId)) {
+      let matchedService = await TransportService.findOne({
+        type: routeType.includes("train") ? "train" : "bus",
+      });
+      if (!matchedService) {
+        matchedService = await TransportService.findOne();
+      }
+      if (!matchedService) {
+        matchedService = await TransportService.create({
+          name: routeType.includes("train") ? "Sri Lanka Railways" : "SLTB Main Service",
+          type: routeType.includes("train") ? "train" : "bus",
+          operator: "National Transport",
+          status: "active",
+        });
+      }
+      serviceId = matchedService._id;
+    }
+
+    // Process stops if provided as array of IDs
+    const validStops = Array.isArray(stops)
+      ? stops.filter((s) => mongoose.Types.ObjectId.isValid(s))
+      : [];
+
+    const numFare = Number(baseFare || (typeof fare === 'string' ? fare.replace(/[^0-9.]/g, '') : fare)) || 150;
+
+    const newRoute = await Route.create({
+      service: serviceId,
+      routeNumber: routeNumber || `R-${Math.floor(100 + Math.random() * 900)}`,
+      name: routeTitle,
+      stops: validStops,
+      active: active !== undefined ? active : true,
+      type: routeType.includes("train") ? "train" : "bus",
+      baseFare: numFare,
+      estimatedDurationMinutes: Number(estimatedDurationMinutes) || 120,
+      departure: departure || "6:00 AM",
+      arrival: arrival || "8:30 AM",
     });
+
+    const populatedRoute = await Route.findById(newRoute._id)
+      .populate("service")
+      .populate("stops");
 
     res.status(201).json({
       success: true,
       message: "Route created successfully",
-      route,
+      route: populatedRoute,
     });
   } catch (error) {
     res.status(500).json({
