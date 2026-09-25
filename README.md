@@ -151,7 +151,7 @@ The administrative dashboard supports:
 
 | Component                      | Technology                         | Purpose / Justification                                                    |
 | ------------------------------ | ---------------------------------- | -------------------------------------------------------------------------- |
-| Mobile Application             | React Native + Expo                | Cross-platform mobile development                                          |
+| Mobile Application             | React Native + Expo+ Typescript    | Cross-platform mobile development                                          |
 | Administrative Web Application | React + Vite                       | Interactive web-based dashboard                                            |
 | Backend                        | Node.js + Express.js               | REST API and application services                                          |
 | Database                       | MongoDB + Mongoose                 | Flexible storage for users, transportation data, journeys, and disruptions |
@@ -162,7 +162,8 @@ The administrative dashboard supports:
 | UI/UX Design                   | Figma                              | Interface design and prototyping                                           |
 | Version Control                | Git + GitHub                       | Collaborative development and version management                           |
 
-The technology choices follow the stack specified in the original proposal, including React Native, React, Node.js, Express.js, MongoDB, mapping services, JWT, Git/GitHub, Figma, and Postman.
+The implementation follows the core technology stack specified in the original proposal, including React Native, React, Node.js, Express.js, MongoDB, mapping services, JWT, Git/GitHub, Figma, and Postman. During development, TypeScript was introduced for frontend implementation, particularly within the React Native mobile application, to provide static type checking and improve code maintainability. This addition does not replace the core technologies declared in the original proposal but supports their implementation.
+
 
 ---
 
@@ -467,7 +468,11 @@ Location information is intended to be collected and processed only when require
 
 ### Technology & Technical Approach Changes
 
-The original proposal specified the primary technologies and technical approach that would be used during development. The project is being implemented using the declared core technologies, including React Native, React, Node.js, Express.js, MongoDB, JWT, and multi-criteria route optimization.
+The original proposal specified the primary technologies and technical approach for the project. The core technologies remain unchanged, including React Native, React, Node.js, Express.js, MongoDB, JWT, and multi-criteria route optimization.
+
+During development, TypeScript was introduced for frontend implementation, particularly in the React Native mobile application. TypeScript was adopted to provide static type checking, improve code reliability, reduce type-related errors, and support maintainable development as the application grows.
+
+This change is an implementation-level addition to the existing React/React Native stack and does not change the overall system architecture or the core technologies declared in the original proposal.
 
 
 ---
