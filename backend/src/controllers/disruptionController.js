@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Disruption = require("../models/Disruption");
 const { processDisruptionTrigger } = require("../services/reroutingService");
 
@@ -19,12 +20,18 @@ const createDisruption = async (req, res, next) => {
       expectedEndTime,
       severity,
       affectedStops,
+      status,
+      service,
+      location,
+      mode,
     } = req.body;
 
-    if (!title) {
+    const disruptionTitle = title || service || (mode ? `${mode} Incident` : "Service Disruption");
+
+    if (!disruptionTitle) {
       return res.status(400).json({
         success: false,
-        message: "Title is required",
+        message: "Title or service name is required",
       });
     }
 
@@ -48,18 +55,25 @@ const createDisruption = async (req, res, next) => {
       return "HIGH";
     };
 
+    const validService = affectedService && mongoose.Types.ObjectId.isValid(affectedService) ? affectedService : undefined;
+    const validRoute = affectedRoute && mongoose.Types.ObjectId.isValid(affectedRoute) ? affectedRoute : undefined;
+    const validStops = Array.isArray(affectedStops) ? affectedStops.filter(s => mongoose.Types.ObjectId.isValid(s)) : [];
+
+    const disruptionStatus = (status === "On Time" || status === "RESOLVED") ? "RESOLVED" : "ACTIVE";
+
     const disruption = await Disruption.create({
-      affectedService,
-      affectedRoute,
-      affectedTrip,
-      disruptionType: mapType(disruptionType),
-      title,
-      description,
-      delayMinutes: delayMinutes || 0,
+      affectedService: validService,
+      affectedRoute: validRoute,
+      affectedTrip: affectedTrip || (mode ? `${mode} trip` : undefined),
+      disruptionType: mapType(disruptionType || status),
+      title: disruptionTitle,
+      description: description || location || "Disruption reported",
+      delayMinutes: Number(delayMinutes) || 0,
       startTime: startTime || new Date(),
       expectedEndTime,
+      status: disruptionStatus,
       severity: mapSeverity(severity),
-      affectedStops: affectedStops || [],
+      affectedStops: validStops,
       createdBy: req.user ? req.user._id : null,
     });
 

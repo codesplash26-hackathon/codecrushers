@@ -45,48 +45,35 @@ const SchedulesManagement = () => {
   const [scheduleStopsList, setScheduleStopsList] = useState([]);
   const [newStopInput, setNewStopInput] = useState('');
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await adminService.getSchedules();
-        if (res.success && Array.isArray(res.schedules) && res.schedules.length > 0) {
-          const apiData = res.schedules.map((s, idx) => ({
-            id: s._id || `SCH-00${idx + 1}`,
-            route: s.route?.name || 'Kandy ➔ Colombo Fort',
-            service: s.service?.name || 'Express Service',
-            departure: s.departureTime || '6:00 AM',
-            arrival: s.arrivalTime || '8:30 AM',
-            days: s.operatingDays?.join(', ') || 'Mon-Sun',
-            stops: '12',
-            fare: `Rs. ${s.fare || 150}`,
-            status: s.isActive === false ? 'Inactive' : 'Active',
-          }));
-          setSchedulesData(apiData);
-        }
-      } catch {
-        // Fallback
+  const fetchSchedules = async () => {
+    try {
+      const res = await adminService.getSchedules();
+      if (res.success && Array.isArray(res.schedules) && res.schedules.length > 0) {
+        const apiData = res.schedules.map((s, idx) => ({
+          id: s._id || `SCH-00${idx + 1}`,
+          route: s.route?.name || 'Kandy ➔ Colombo Fort',
+          service: s.service?.name || (s.service ? String(s.service) : 'Express Transit'),
+          departure: s.departureTime || '6:00 AM',
+          arrival: s.arrivalTime || '8:30 AM',
+          days: s.days || s.operatingDays?.join(', ') || 'Mon-Sun',
+          stops: s.stopsCount ? String(s.stopsCount) : '10',
+          fare: `Rs. ${s.fare || 150}`,
+          status: s.isActive === false || s.status === 'Inactive' ? 'Inactive' : 'Active',
+        }));
+        setSchedulesData(apiData);
       }
-    })();
+    } catch (err) {
+      console.error('Failed to fetch schedules:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchSchedules();
   }, []);
 
   const handleAddSchedule = async (e) => {
     e.preventDefault();
     if (!routeName || !serviceName) return;
-
-    const newId = `SCH-00${schedulesData.length + 1}`;
-    const newSchedule = {
-      id: newId,
-      route: routeName,
-      service: serviceName,
-      departure,
-      arrival,
-      days,
-      stops: stopsCount || '10',
-      fare: `Rs. ${fare || 150}`,
-      status,
-    };
-
-    setSchedulesData([newSchedule, ...schedulesData]);
 
     try {
       await adminService.createSchedule({
@@ -94,24 +81,27 @@ const SchedulesManagement = () => {
         service: serviceName,
         departureTime: departure,
         arrivalTime: arrival,
-        operatingDays: days.split('-'),
-        fare: Number(fare),
+        days: days,
+        operatingDays: days.includes('-') ? days.split('-') : [days],
+        stopsCount: Number(stopsCount) || 10,
+        fare: Number(fare) || 150,
+        status: status,
         isActive: status === 'Active',
       });
-      addToast(`New schedule ${newId} (${routeName}) created!`, 'success');
-    } catch {
-      addToast(`New schedule ${newId} (${routeName}) created locally`, 'success');
+      addToast(`New schedule "${routeName}" saved to database!`, 'success');
+      setIsModalOpen(false);
+      setRouteName('');
+      setServiceName('');
+      setDeparture('6:30 AM');
+      setArrival('8:45 AM');
+      setDays('Mon-Sun');
+      setStopsCount('10');
+      setFare('150');
+      setStatus('Active');
+      await fetchSchedules();
+    } catch (err) {
+      addToast(`Failed to create schedule: ${err.message}`, 'error');
     }
-
-    setIsModalOpen(false);
-    setRouteName('');
-    setServiceName('');
-    setDeparture('6:30 AM');
-    setArrival('8:45 AM');
-    setDays('Mon-Sun');
-    setStopsCount('10');
-    setFare('150');
-    setStatus('Active');
   };
 
   // Open Edit Modal
@@ -128,27 +118,29 @@ const SchedulesManagement = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveEdit = (e) => {
+  const handleSaveEdit = async (e) => {
     e.preventDefault();
-    setSchedulesData(prev => prev.map(s => {
-      if (s.id === editingScheduleId) {
-        return {
-          ...s,
+    try {
+      if (editingScheduleId && !editingScheduleId.startsWith('SCH-')) {
+        await adminService.updateSchedule(editingScheduleId, {
           route: editRouteName,
           service: editServiceName,
-          departure: editDeparture,
-          arrival: editArrival,
+          departureTime: editDeparture,
+          arrivalTime: editArrival,
           days: editDays,
-          stops: editStopsCount,
-          fare: `Rs. ${editFare}`,
+          operatingDays: editDays.includes('-') ? editDays.split('-') : [editDays],
+          stopsCount: Number(editStopsCount) || 10,
+          fare: Number(editFare) || 150,
           status: editStatus,
-        };
+          isActive: editStatus === 'Active',
+        });
       }
-      return s;
-    }));
-
-    addToast(`Schedule ${editingScheduleId} updated successfully!`, 'success');
-    setIsEditModalOpen(false);
+      addToast(`Schedule updated successfully!`, 'success');
+      setIsEditModalOpen(false);
+      await fetchSchedules();
+    } catch (err) {
+      addToast(`Failed to update schedule: ${err.message}`, 'error');
+    }
   };
 
   // Open Stops Modal for Schedule

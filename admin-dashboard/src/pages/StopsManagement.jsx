@@ -41,67 +41,69 @@ const StopsManagement = () => {
   const [stopRoutesList, setStopRoutesList] = useState([]);
   const [newRouteInput, setNewRouteInput] = useState('');
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await adminService.getStops();
-        if (res.success && Array.isArray(res.stops) && res.stops.length > 0) {
-          const apiStops = res.stops.map((s, idx) => ({
+  const fetchStops = async () => {
+    try {
+      const res = await adminService.getStops();
+      if (res.success && Array.isArray(res.stops) && res.stops.length > 0) {
+        const apiStops = res.stops.map((s, idx) => {
+          const typeStr = (s.type || '').toLowerCase();
+          let displayType = 'Bus Terminal';
+          if (typeStr.includes('rail') || typeStr.includes('train')) displayType = 'Train Station';
+          else if (typeStr.includes('terminal') || typeStr.includes('both')) displayType = 'Bus + Train';
+
+          let latVal = s.location?.latitude || (s.coordinates && s.coordinates[1]) || 7.2905;
+          let lngVal = s.location?.longitude || (s.coordinates && s.coordinates[0]) || 80.6337;
+
+          return {
             id: s._id || `STP-${idx + 1}`,
             name: s.name || 'Station',
-            type: s.type === 'train' ? 'Train Station' : s.type === 'both' ? 'Bus + Train' : 'Bus Terminal',
-            routes: '8',
-            latlng: s.location?.coordinates ? `${s.location.coordinates[1]}, ${s.location.coordinates[0]}` : '7.2905, 80.6337',
-            status: 'Active',
-          }));
-          setStopsData(apiStops);
-        }
-      } catch {
-        // Fallback
+            type: displayType,
+            routes: s.routesCount ? String(s.routesCount) : '8',
+            latlng: `${latVal}, ${lngVal}`,
+            status: s.status || 'Active',
+          };
+        });
+        setStopsData(apiStops);
       }
-    })();
+    } catch (err) {
+      console.error('Failed to fetch stops:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchStops();
   }, []);
 
   const handleAddStop = async (e) => {
     e.preventDefault();
     if (!name) return;
 
-    const newId = `STP-00${stopsData.length + 1}`;
-    const formattedLatLng = lat && lng ? `${lat}, ${lng}` : '7.2905, 80.6337';
-
-    const newStop = {
-      id: newId,
-      name,
-      type,
-      routes: routes || '0',
-      latlng: formattedLatLng,
-      status,
-    };
-
-    setStopsData([newStop, ...stopsData]);
-
     try {
-      const stopType = type === 'Train Station' ? 'train' : type === 'Bus + Train' ? 'both' : 'bus';
+      const stopType = type === 'Train Station' ? 'railway_station' : type === 'Bus + Train' ? 'terminal' : 'bus_stop';
       await adminService.createStop({
         name,
         type: stopType,
         location: {
-          type: 'Point',
-          coordinates: [Number(lng) || 80.6337, Number(lat) || 7.2905],
+          latitude: Number(lat) || 7.2905,
+          longitude: Number(lng) || 80.6337,
         },
+        lat: Number(lat) || 7.2905,
+        lng: Number(lng) || 80.6337,
+        routes: Number(routes) || 8,
+        status,
       });
-      addToast(`New stop "${name}" added successfully!`, 'success');
-    } catch {
-      addToast(`New stop "${name}" added locally`, 'success');
+      addToast(`New stop "${name}" saved to database!`, 'success');
+      setIsModalOpen(false);
+      setName('');
+      setType('Bus Terminal');
+      setRoutes('8');
+      setLat('7.2905');
+      setLng('80.6337');
+      setStatus('Active');
+      await fetchStops();
+    } catch (err) {
+      addToast(`Failed to create stop: ${err.message}`, 'error');
     }
-
-    setIsModalOpen(false);
-    setName('');
-    setType('Bus Terminal');
-    setRoutes('8');
-    setLat('7.2905');
-    setLng('80.6337');
-    setStatus('Active');
   };
 
   // Open Edit Modal
@@ -117,26 +119,28 @@ const StopsManagement = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveEdit = (e) => {
+  const handleSaveEdit = async (e) => {
     e.preventDefault();
-    const formattedLatLng = editLat && editLng ? `${editLat}, ${editLng}` : '7.2905, 80.6337';
-
-    setStopsData(prev => prev.map(s => {
-      if (s.id === editingStopId) {
-        return {
-          ...s,
+    try {
+      const stopType = editType === 'Train Station' ? 'railway_station' : editType === 'Bus + Train' ? 'terminal' : 'bus_stop';
+      if (editingStopId && !editingStopId.startsWith('STP-')) {
+        await adminService.updateStop(editingStopId, {
           name: editName,
-          type: editType,
-          routes: editRoutes,
-          latlng: formattedLatLng,
+          type: stopType,
+          location: {
+            latitude: Number(editLat) || 7.2905,
+            longitude: Number(editLng) || 80.6337,
+          },
+          routes: Number(editRoutes) || 8,
           status: editStatus,
-        };
+        });
       }
-      return s;
-    }));
-
-    addToast(`Stop "${editName}" updated successfully!`, 'success');
-    setIsEditModalOpen(false);
+      addToast(`Stop "${editName}" updated successfully!`, 'success');
+      setIsEditModalOpen(false);
+      await fetchStops();
+    } catch (err) {
+      addToast(`Failed to update stop: ${err.message}`, 'error');
+    }
   };
 
   // Open Routes Modal for Stop

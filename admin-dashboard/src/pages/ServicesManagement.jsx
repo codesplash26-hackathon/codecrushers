@@ -42,28 +42,37 @@ const ServicesManagement = () => {
   const [serviceRoutesList, setServiceRoutesList] = useState([]);
   const [newRouteInput, setNewRouteInput] = useState('');
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await adminService.getServices();
-        if (res.success && Array.isArray(res.services) && res.services.length > 0) {
-          const apiList = res.services.map((s, idx) => ({
+  const fetchServices = async () => {
+    try {
+      const res = await adminService.getServices();
+      if (res.success && Array.isArray(res.services) && res.services.length > 0) {
+        const apiList = res.services.map((s, idx) => {
+          const typeStr = (s.type || '').toLowerCase();
+          const isTrain = typeStr === 'train';
+          const isTuk = typeStr.includes('tuk') || typeStr.includes('three');
+          const isTaxi = typeStr.includes('taxi');
+
+          return {
             id: s._id || `S00${idx + 1}`,
-            icon: s.type === 'train' ? '🚆' : s.type === 'tuk' ? '𛲡' : s.type === 'taxi' ? '🚖' : '🚍',
+            icon: isTrain ? '🚆' : isTuk ? '𛲡' : isTaxi ? '🚖' : '🚍',
             name: s.name || s.driverName || 'Transport Service',
-            mode: s.type === 'train' ? 'Train' : s.type === 'tuk' ? 'Tuk-tuk' : s.type === 'taxi' ? 'Taxi' : 'Bus',
-            modeColor: s.type === 'train' ? '#16A34A' : s.type === 'tuk' ? '#DC2626' : s.type === 'taxi' ? '#D97706' : '#2563EB',
+            mode: isTrain ? 'Train' : isTuk ? 'Tuk-tuk' : isTaxi ? 'Taxi' : 'Bus',
+            modeColor: isTrain ? '#16A34A' : isTuk ? '#DC2626' : isTaxi ? '#D97706' : '#2563EB',
             operator: s.operator || 'Official Operator',
-            routes: s.routes ? String(s.routes) : '12',
-            vehicles: s.vehicles ? String(s.vehicles) : '24',
-            status: s.status === 'inactive' ? 'Inactive' : 'Active',
-          }));
-          setServicesData(apiList);
-        }
-      } catch {
-        // Fallback
+            routes: s.routes ? String(s.routes) : '-',
+            vehicles: s.vehicles ? String(s.vehicles) : '10',
+            status: (s.status === 'inactive' || s.status === 'Inactive') ? 'Inactive' : 'Active',
+          };
+        });
+        setServicesData(apiList);
       }
-    })();
+    } catch (err) {
+      console.error('Failed to fetch services:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchServices();
   }, []);
 
   const getModeDetails = (modeType) => {
@@ -84,45 +93,29 @@ const ServicesManagement = () => {
     e.preventDefault();
     if (!name || !operator) return;
 
-    const { icon, modeColor } = getModeDetails(mode);
-    const newId = `S00${servicesData.length + 1}`;
-    const formattedRoutes = mode === 'Taxi' || mode === 'Tuk-tuk' ? '-' : (routes || '0');
-    
-    const newService = {
-      id: newId,
-      icon,
-      name,
-      mode,
-      modeColor,
-      operator,
-      routes: formattedRoutes,
-      vehicles: vehicles || '0',
-      status,
-    };
-
-    setServicesData([newService, ...servicesData]);
+    const formattedRoutes = mode === 'Taxi' || mode === 'Tuk-tuk' ? 0 : Number(routes || 0);
 
     try {
       await adminService.createService({
         name,
         type: mode.toLowerCase(),
         operator,
-        routes: formattedRoutes === '-' ? 0 : Number(routes),
-        vehicles: Number(vehicles),
+        routes: formattedRoutes,
+        vehicles: Number(vehicles || 10),
         status: status.toLowerCase(),
       });
-      addToast(`New service "${name}" created successfully!`, 'success');
-    } catch {
-      addToast(`New service "${name}" created locally`, 'success');
+      addToast(`New service "${name}" saved to database!`, 'success');
+      setIsModalOpen(false);
+      setName('');
+      setOperator('');
+      setRoutes('5');
+      setVehicles('10');
+      setMode('Bus');
+      setStatus('Active');
+      await fetchServices();
+    } catch (err) {
+      addToast(`Failed to create service: ${err.message}`, 'error');
     }
-
-    setIsModalOpen(false);
-    setName('');
-    setOperator('');
-    setRoutes('5');
-    setVehicles('10');
-    setMode('Bus');
-    setStatus('Active');
   };
 
   // Open Edit Modal
@@ -137,30 +130,25 @@ const ServicesManagement = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveEdit = (e) => {
+  const handleSaveEdit = async (e) => {
     e.preventDefault();
-    const { icon, modeColor } = getModeDetails(editMode);
-    const formattedRoutes = editMode === 'Taxi' || editMode === 'Tuk-tuk' ? '-' : (editRoutes || '0');
-
-    setServicesData(prev => prev.map(s => {
-      if (s.id === editingServiceId) {
-        return {
-          ...s,
-          icon,
+    try {
+      if (editingServiceId && !editingServiceId.startsWith('S00')) {
+        await adminService.updateService(editingServiceId, {
           name: editName,
-          mode: editMode,
-          modeColor,
+          type: editMode.toLowerCase(),
           operator: editOperator,
-          routes: formattedRoutes,
-          vehicles: editVehicles,
-          status: editStatus,
-        };
+          routes: editRoutes === '-' ? 0 : Number(editRoutes),
+          vehicles: Number(editVehicles),
+          status: editStatus.toLowerCase(),
+        });
       }
-      return s;
-    }));
-
-    addToast(`Service "${editName}" updated successfully!`, 'success');
-    setIsEditModalOpen(false);
+      addToast(`Service "${editName}" updated successfully!`, 'success');
+      setIsEditModalOpen(false);
+      await fetchServices();
+    } catch (err) {
+      addToast(`Failed to update service: ${err.message}`, 'error');
+    }
   };
 
   // Open Routes Manager Modal

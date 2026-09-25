@@ -41,6 +41,37 @@ const scheduleSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+
+    service: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "TransportService",
+    },
+
+    operatingDays: [
+      {
+        type: String,
+      },
+    ],
+
+    days: {
+      type: String,
+      default: "Mon-Sun",
+    },
+
+    stopsCount: {
+      type: Number,
+      default: 10,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    status: {
+      type: String,
+      default: "Active",
+    },
   },
   {
     timestamps: true,
