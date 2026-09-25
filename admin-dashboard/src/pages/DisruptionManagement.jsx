@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import Modal from '../components/Modal';
 import { useToast } from '../context/ToastContext';
+import adminService from '../services/adminService';
 
 const DisruptionManagement = () => {
   const { addToast } = useToast();
@@ -23,7 +24,29 @@ const DisruptionManagement = () => {
   const [status, setStatus] = useState('Delayed');
   const [impact, setImpact] = useState('High');
 
-  const handleAddDisruption = (e) => {
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await adminService.getDisruptions();
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          const apiData = res.data.map((d, idx) => ({
+            id: d._id || `api-dis-${idx}`,
+            service: d.title || d.affectedService?.name || 'Service Disruption',
+            mode: d.affectedService?.type === 'train' ? 'Train' : 'Bus',
+            location: d.description || 'Active Section',
+            status: d.status === 'RESOLVED' ? 'On Time' : d.disruptionType || 'Delayed',
+            impact: d.severity || 'High',
+            updated: 'Just now',
+          }));
+          setDisruptionsData(apiData);
+        }
+      } catch {
+        // Fallback to default
+      }
+    })();
+  }, []);
+
+  const handleAddDisruption = async (e) => {
     e.preventDefault();
     if (!service || !location) return;
 
@@ -38,14 +61,33 @@ const DisruptionManagement = () => {
     };
 
     setDisruptionsData([newEntry, ...disruptionsData]);
-    addToast(`Disruption broadcasted for ${service}!`, 'success');
+
+    try {
+      await adminService.createDisruption({
+        title: service,
+        description: location,
+        disruptionType: status,
+        severity: impact,
+      });
+      addToast(`Disruption broadcasted for ${service}!`, 'success');
+    } catch {
+      addToast(`Disruption created locally for ${service}`, 'success');
+    }
+
     setIsModalOpen(false);
     setService('');
     setLocation('');
   };
 
-  const handleResolve = (id, serviceName) => {
+  const handleResolve = async (id, serviceName) => {
     setDisruptionsData(disruptionsData.map(d => d.id === id ? { ...d, status: 'On Time', impact: 'None', updated: 'Just now' } : d));
+    try {
+      if (id && !id.startsWith('1') && !id.startsWith('2')) {
+        await adminService.resolveDisruption(id);
+      }
+    } catch {
+      // ignore
+    }
     addToast(`Disruption resolved for ${serviceName}`, 'success');
   };
 
