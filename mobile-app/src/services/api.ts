@@ -24,11 +24,13 @@ export const STORAGE_KEYS = {
  */
 const getAutoDetectedHost = (): string => {
   try {
-    const hostUri = Constants.expoConfig?.hostUri;
+    const hostUri = Constants.expoConfig?.hostUri || (Constants as any).manifest2?.extra?.expoGo?.packagerOpts?.host;
     if (hostUri) {
-      const ip = hostUri.split(":")[0];
-      if (ip && ip !== "localhost" && ip !== "127.0.0.1") {
-        return `http://${ip}:5000/api`;
+      const rawHost = hostUri.split(":")[0];
+      // Only use as IP if it's a valid IPv4 address (e.g. 192.168.1.100) and not a tunnel hostname or localhost
+      const isIPv4 = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(rawHost);
+      if (isIPv4 && rawHost !== "127.0.0.1") {
+        return `http://${rawHost}:5000/api`;
       }
     }
   } catch {
