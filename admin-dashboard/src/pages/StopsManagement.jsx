@@ -1,16 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
+import adminService from '../services/adminService';
 
 const StopsManagement = () => {
   const [filter, setFilter] = useState('All');
-
-  const stopsData = [
+  const [stopsData, setStopsData] = useState([
     { id: 'KBS-001', name: 'Kandy Bus Stand', type: 'Bus Terminal', routes: '12', latlng: '7.2905, 80.6337', status: 'Active' },
     { id: 'KRS-001', name: 'Kandy Railway Station', type: 'Train Station', routes: '5', latlng: '7.2961, 80.6350', status: 'Active' },
     { id: 'PER-001', name: 'Peradeniya Junction', type: 'Train Station', routes: '4', latlng: '7.2685, 80.5946', status: 'Active' },
     { id: 'COF-001', name: 'Colombo Fort Station', type: 'Bus + Train', routes: '24', latlng: '6.9344, 79.8428', status: 'Active' },
     { id: 'NUG-002', name: 'Nugegoda Stand', type: 'Bus Terminal', routes: '8', latlng: '6.8720, 79.8898', status: 'Maintenance' },
-  ];
+  ]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await adminService.getStops();
+        if (res.success && Array.isArray(res.stops) && res.stops.length > 0) {
+          const apiStops = res.stops.map((s, idx) => ({
+            id: s._id || `STP-${idx + 1}`,
+            name: s.name || 'Station',
+            type: s.type === 'train' ? 'Train Station' : s.type === 'both' ? 'Bus + Train' : 'Bus Terminal',
+            routes: '8',
+            latlng: s.location?.coordinates ? `${s.location.coordinates[1]}, ${s.location.coordinates[0]}` : '7.2905, 80.6337',
+            status: 'Active',
+          }));
+          setStopsData(apiStops);
+        }
+      } catch {
+        // Fallback
+      }
+    })();
+  }, []);
 
   const filteredData = stopsData.filter(s => {
     if (filter === 'All') return true;

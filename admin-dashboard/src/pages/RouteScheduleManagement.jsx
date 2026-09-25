@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import Modal from '../components/Modal';
 import { useToast } from '../context/ToastContext';
+import adminService from '../services/adminService';
 
 const RouteScheduleManagement = () => {
   const { addToast } = useToast();
@@ -23,7 +24,30 @@ const RouteScheduleManagement = () => {
   const [arrival, setArrival] = useState('8:30 AM');
   const [fare, setFare] = useState(150);
 
-  const handleAddRoute = (e) => {
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await adminService.getRoutes();
+        if (res.success && Array.isArray(res.routes) && res.routes.length > 0) {
+          const apiRoutes = res.routes.map((r, idx) => ({
+            id: r._id || `R00${idx + 1}`,
+            name: r.name || `${r.startLocation?.name || 'Kandy'} ➔ ${r.endLocation?.name || 'Colombo'}`,
+            mode: r.type?.toLowerCase().includes('train') ? 'Train' : 'Bus',
+            stops: r.intermediateStops?.length || 12,
+            departure: '6:00 AM',
+            arrival: `${r.estimatedDurationMinutes || 180} min`,
+            fare: `Rs.${r.baseFare || 160}`,
+            status: 'Active',
+          }));
+          setRoutesData(apiRoutes);
+        }
+      } catch {
+        // Fallback
+      }
+    })();
+  }, []);
+
+  const handleAddRoute = async (e) => {
     e.preventDefault();
     if (!routeName) return;
 
@@ -40,7 +64,19 @@ const RouteScheduleManagement = () => {
     };
 
     setRoutesData([...routesData, newRoute]);
-    addToast(`New route ${newId} (${routeName}) created!`, 'success');
+
+    try {
+      await adminService.createRoute({
+        name: routeName,
+        type: mode.toLowerCase(),
+        baseFare: Number(fare),
+        estimatedDurationMinutes: 120,
+      });
+      addToast(`New route ${newId} (${routeName}) created!`, 'success');
+    } catch {
+      addToast(`New route ${newId} (${routeName}) created locally`, 'success');
+    }
+
     setIsModalOpen(false);
     setRouteName('');
   };

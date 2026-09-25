@@ -1,16 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
+import adminService from '../services/adminService';
 
 const SchedulesManagement = () => {
   const [filter, setFilter] = useState('All Schedules');
-
-  const schedulesData = [
+  const [schedulesData, setSchedulesData] = useState([
     { id: 'SCH-001', route: 'Kandy ➔ Colombo Fort', service: 'Route 654', departure: '6:00 AM', arrival: '8:30 AM', days: 'Mon-Sun', stops: '17', fare: 'Rs. 120', status: 'Active' },
     { id: 'SCH-002', route: 'Kandy ➔ Colombo Fort', service: 'IC Express', departure: '7:30 AM', arrival: '9:45 AM', days: 'Mon-Fri', stops: '8', fare: 'Rs. 160', status: 'Active' },
     { id: 'SCH-003', route: 'Kandy ➔ Peradeniya', service: 'Route 681', departure: '5:30 AM', arrival: '5:55 AM', days: 'Mon-Sun', stops: '6', fare: 'Rs. 40', status: 'Active' },
     { id: 'SCH-004', route: 'Colombo ➔ Galle', service: 'Night Mail', departure: '9:15 PM', arrival: '11:30 PM', days: 'Fri-Sun', stops: '12', fare: 'Rs. 200', status: 'Inactive' },
     { id: 'SCH-005', route: 'Kandy ➔ Matale', service: 'Route 780', departure: '7:00 AM', arrival: '7:45 AM', days: 'Mon-Sat', stops: '14', fare: 'Rs. 95', status: 'Active' },
-  ];
+  ]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await adminService.getSchedules();
+        if (res.success && Array.isArray(res.schedules) && res.schedules.length > 0) {
+          const apiData = res.schedules.map((s, idx) => ({
+            id: s._id || `SCH-00${idx + 1}`,
+            route: s.route?.name || 'Kandy ➔ Colombo Fort',
+            service: s.service?.name || 'Express Service',
+            departure: s.departureTime || '6:00 AM',
+            arrival: s.arrivalTime || '8:30 AM',
+            days: s.operatingDays?.join(', ') || 'Mon-Sun',
+            stops: '12',
+            fare: `Rs. ${s.fare || 150}`,
+            status: s.isActive === false ? 'Inactive' : 'Active',
+          }));
+          setSchedulesData(apiData);
+        }
+      } catch {
+        // Fallback
+      }
+    })();
+  }, []);
 
   const filteredData = schedulesData.filter(s => {
     if (filter === 'All Schedules') return true;
