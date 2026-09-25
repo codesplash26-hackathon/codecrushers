@@ -11,6 +11,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -33,7 +34,15 @@ export default function LoginScreen({ navigation }: Props) {
   const { isDarkMode, colors } = useTheme();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isGoogleModalVisible, setIsGoogleModalVisible] = useState(false);
+  const [selectedGoogleAccount, setSelectedGoogleAccount] = useState<string | null>(null);
+
+  const googleAccounts = [
+    { name: "Malith Perera", email: "malith.perera@gmail.com", avatar: "M" },
+    { name: "CodeCrushers User", email: "user.codecrushers@gmail.com", avatar: "C" },
+  ];
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
@@ -60,10 +69,16 @@ export default function LoginScreen({ navigation }: Props) {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleOpenGoogleModal = () => {
+    setIsGoogleModalVisible(true);
+  };
+
+  const handleSelectGoogleAccount = async (email: string, name: string) => {
+    setSelectedGoogleAccount(email);
     try {
       setLoading(true);
-      const res = await authService.login("google_user", "google_oauth_pass");
+      const res = await authService.login(email, "google_oauth_pass");
+      setIsGoogleModalVisible(false);
       if (navigation) {
         navigation.replace("Home");
       }
@@ -71,6 +86,7 @@ export default function LoginScreen({ navigation }: Props) {
       Alert.alert("Error", "Google sign-in could not be completed.");
     } finally {
       setLoading(false);
+      setSelectedGoogleAccount(null);
     }
   };
 
@@ -122,7 +138,7 @@ export default function LoginScreen({ navigation }: Props) {
 
           {/* Form */}
           <View style={styles.form}>
-            {/* USERNAME */}
+            {/* USERNAME / EMAIL */}
             <View style={styles.inputGroup}>
               <Text
                 style={[
@@ -130,7 +146,7 @@ export default function LoginScreen({ navigation }: Props) {
                   isDarkMode && { color: colors.textSecondary },
                 ]}
               >
-                USERNAME
+                USERNAME OR EMAIL
               </Text>
               <TextInput
                 style={[
@@ -141,12 +157,14 @@ export default function LoginScreen({ navigation }: Props) {
                     color: colors.textPrimary,
                   },
                 ]}
-                placeholder="user"
+                placeholder="Enter email or username"
                 placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 value={username}
                 onChangeText={setUsername}
                 autoCapitalize="none"
                 autoCorrect={false}
+                keyboardType="email-address"
+                editable={!loading}
               />
             </View>
 
@@ -170,22 +188,35 @@ export default function LoginScreen({ navigation }: Props) {
                   </Text>
                 </TouchableOpacity>
               </View>
-              <TextInput
-                style={[
-                  styles.input,
-                  isDarkMode && {
-                    backgroundColor: colors.inputBg,
-                    borderColor: colors.inputBorder,
-                    color: colors.textPrimary,
-                  },
-                ]}
-                placeholder="••••••••"
-                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-              />
+              <View style={styles.passwordInputContainer}>
+                <TextInput
+                  style={[
+                    styles.input,
+                    { flex: 1 },
+                    isDarkMode && {
+                      backgroundColor: colors.inputBg,
+                      borderColor: colors.inputBorder,
+                      color: colors.textPrimary,
+                    },
+                  ]}
+                  placeholder="Enter password"
+                  placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  editable={!loading}
+                />
+                <TouchableOpacity
+                  style={styles.eyeIconBtn}
+                  onPress={() => setShowPassword(!showPassword)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.eyeIconText, isDarkMode && { color: colors.textSecondary }]}>
+                    {showPassword ? "👁️" : "🙈"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Log In Button */}
@@ -235,7 +266,7 @@ export default function LoginScreen({ navigation }: Props) {
                   borderColor: colors.cardBorder,
                 },
               ]}
-              onPress={handleGoogleLogin}
+              onPress={handleOpenGoogleModal}
               activeOpacity={0.85}
             >
               <View
@@ -280,6 +311,78 @@ export default function LoginScreen({ navigation }: Props) {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Google Account Selection Modal */}
+      <Modal
+        visible={isGoogleModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setIsGoogleModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setIsGoogleModalVisible(false)}
+        >
+          <TouchableOpacity
+            style={[
+              styles.googleModalCard,
+              isDarkMode && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder },
+            ]}
+            activeOpacity={1}
+          >
+            <View style={styles.googleModalHeader}>
+              <Text style={styles.googleBadgeIcon}>G</Text>
+              <Text style={[styles.googleModalTitle, isDarkMode && { color: colors.textPrimary }]}>
+                Choose an account
+              </Text>
+              <Text style={[styles.googleModalSubtitle, isDarkMode && { color: colors.textSecondary }]}>
+                to continue to BestRoute
+              </Text>
+            </View>
+
+            {googleAccounts.map((acc, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={[
+                  styles.googleAccountRow,
+                  isDarkMode && { borderColor: colors.cardBorder },
+                ]}
+                onPress={() => handleSelectGoogleAccount(acc.email, acc.name)}
+                disabled={loading}
+                activeOpacity={0.8}
+              >
+                <View style={styles.googleAvatarCircle}>
+                  <Text style={styles.googleAvatarLetter}>{acc.avatar}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.googleAccountName, isDarkMode && { color: colors.textPrimary }]}>
+                    {acc.name}
+                  </Text>
+                  <Text style={[styles.googleAccountEmail, isDarkMode && { color: colors.textSecondary }]}>
+                    {acc.email}
+                  </Text>
+                </View>
+                {loading && selectedGoogleAccount === acc.email ? (
+                  <ActivityIndicator color="#1D64EC" size="small" />
+                ) : (
+                  <Text style={{ fontSize: 18, color: "#94A3B8" }}>›</Text>
+                )}
+              </TouchableOpacity>
+            ))}
+
+            <TouchableOpacity
+              style={[styles.googleCancelBtn, isDarkMode && { backgroundColor: colors.subtleBg }]}
+              onPress={() => setIsGoogleModalVisible(false)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.googleCancelText, isDarkMode && { color: colors.textPrimary }]}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -441,6 +544,101 @@ const styles = StyleSheet.create({
     fontSize: 14.5,
     fontWeight: "600",
     color: "#1E293B",
+  },
+  passwordInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    position: "relative",
+  },
+  eyeIconBtn: {
+    position: "absolute",
+    right: 12,
+    padding: 8,
+    zIndex: 10,
+  },
+  eyeIconText: {
+    fontSize: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.6)",
+    justifyContent: "flex-end",
+  },
+  googleModalCard: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 36,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  googleModalHeader: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  googleBadgeIcon: {
+    fontSize: 28,
+    fontWeight: "900",
+    color: "#EA4335",
+    marginBottom: 6,
+  },
+  googleModalTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginBottom: 4,
+  },
+  googleModalSubtitle: {
+    fontSize: 13,
+    color: "#64748B",
+  },
+  googleAccountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderColor: "#F1F5F9",
+    borderRadius: 12,
+  },
+  googleAvatarCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#1D64EC",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
+  },
+  googleAvatarLetter: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  googleAccountName: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  googleAccountEmail: {
+    fontSize: 12.5,
+    color: "#64748B",
+    marginTop: 2,
+  },
+  googleCancelBtn: {
+    marginTop: 18,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: "#F1F5F9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  googleCancelText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#475569",
   },
   footer: {
     marginTop: 32,
