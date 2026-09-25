@@ -192,16 +192,34 @@ export default function HomeScreen({ navigation }: Props) {
   const handleApplyCustomize = () => {
     setSelectedOptimization(primaryPreference);
     setIsCustomizeVisible(false);
+    const filterKey: "recommended" | "fastest" | "cheapest" | "reliable" =
+      primaryPreference === "cheapest"
+        ? "cheapest"
+        : primaryPreference === "fastest"
+        ? "fastest"
+        : primaryPreference === "reliable"
+        ? "reliable"
+        : "recommended";
     navigation.navigate("RouteResults", {
       from: fromLocation,
       to: toLocation || "Colombo Fort",
+      initialFilter: filterKey,
     });
   };
 
   const handleFindRoutes = () => {
+    const filterKey: "recommended" | "fastest" | "cheapest" | "reliable" =
+      selectedOptimization === "cheapest"
+        ? "cheapest"
+        : selectedOptimization === "fastest"
+        ? "fastest"
+        : selectedOptimization === "reliable"
+        ? "reliable"
+        : "recommended";
     navigation.navigate("RouteResults", {
       from: fromLocation,
       to: toLocation || "Colombo Fort",
+      initialFilter: filterKey,
     });
   };
 

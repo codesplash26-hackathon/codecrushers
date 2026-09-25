@@ -33,7 +33,12 @@ export type RootStackParamList = {
   Notifications: undefined;
   Profile: undefined;
   RouteResults:
-    | { from?: string; to?: string; skipLoading?: boolean }
+    | {
+        from?: string;
+        to?: string;
+        skipLoading?: boolean;
+        initialFilter?: "recommended" | "fastest" | "cheapest" | "reliable";
+      }
     | undefined;
   RouteDetail:
     | {
