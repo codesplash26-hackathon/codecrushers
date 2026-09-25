@@ -4,12 +4,14 @@ const {
   searchJourneyController,
   createActiveJourneyController,
   rerouteJourneyController,
+  getJourneysController,
 } = require("../controllers/journeyController");
 
 const protect = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+router.get("/", getJourneysController);
 router.post("/search", protect, searchJourneyController);
 router.post("/active", protect, createActiveJourneyController);
 router.post("/:id/reroute", protect, rerouteJourneyController);

@@ -165,8 +165,36 @@ const rerouteJourneyController = async (req, res, next) => {
   }
 };
 
+/**
+ * Get all journeys (admin/monitoring)
+ * GET /api/journeys
+ */
+const getJourneysController = async (req, res, next) => {
+  try {
+    const journeys = await Journey.find()
+      .populate("user", "name email")
+      .populate("legs.service")
+      .populate("legs.route")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: journeys.length,
+      data: journeys,
+    });
+  } catch (error) {
+    if (next) return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch journeys",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   searchJourneyController,
   createActiveJourneyController,
   rerouteJourneyController,
-};
+  getJourneysController,
+};

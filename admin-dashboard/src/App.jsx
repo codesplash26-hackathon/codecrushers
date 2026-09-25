@@ -45,7 +45,7 @@ const AdminConsole = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <DashboardHome />;
+        return <DashboardHome setActiveTab={setActiveTab} />;
       case 'disruptions':
         return <DisruptionManagement />;
       case 'routes':
@@ -74,7 +74,7 @@ const AdminConsole = () => {
       case 'settings':
         return <SettingsPage />;
       default:
-        return <DashboardHome />;
+        return <DashboardHome setActiveTab={setActiveTab} />;
     }
   };
 
@@ -82,7 +82,7 @@ const AdminConsole = () => {
     <div className="dashboard-layout fade-in">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="main-content">
-        <Navbar activeTabTitle={tabTitles[activeTab]} />
+        <Navbar activeTabTitle={tabTitles[activeTab]} setActiveTab={setActiveTab} />
         {renderContent()}
       </div>
     </div>
