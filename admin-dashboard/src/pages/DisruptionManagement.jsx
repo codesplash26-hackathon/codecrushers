@@ -28,20 +28,35 @@ const DisruptionManagement = () => {
     (async () => {
       try {
         const res = await adminService.getDisruptions();
-        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-          const apiData = res.data.map((d, idx) => ({
-            id: d._id || `api-dis-${idx}`,
-            service: d.title || d.affectedService?.name || 'Service Disruption',
-            mode: d.affectedService?.type === 'train' ? 'Train' : 'Bus',
-            location: d.description || 'Active Section',
-            status: d.status === 'RESOLVED' ? 'On Time' : d.disruptionType || 'Delayed',
-            impact: d.severity || 'High',
-            updated: 'Just now',
-          }));
+        if (res && Array.isArray(res.data) && res.data.length > 0) {
+          const apiData = res.data.map((d, idx) => {
+            let statusLabel = 'Delayed';
+            if (d.status === 'RESOLVED') statusLabel = 'On Time';
+            else if (d.disruptionType === 'CANCELLATION') statusLabel = 'Cancelled';
+            else if (d.disruptionType === 'ROAD_CLOSURE') statusLabel = 'Diverted';
+            else if (d.disruptionType === 'DELAY') statusLabel = 'Delayed';
+            else if (d.disruptionType) statusLabel = d.disruptionType;
+
+            let impactLabel = 'High';
+            if (d.severity === 'LOW') impactLabel = 'Low';
+            else if (d.severity === 'MEDIUM') impactLabel = 'Medium';
+            else if (d.severity === 'HIGH' || d.severity === 'CRITICAL') impactLabel = 'High';
+            else if (d.severity) impactLabel = d.severity;
+
+            return {
+              id: d._id || `api-dis-${idx}`,
+              service: d.title || d.affectedService?.name || 'Service Disruption',
+              mode: d.affectedService?.type === 'train' ? 'Train' : 'Bus',
+              location: d.description || 'Active Section',
+              status: statusLabel,
+              impact: impactLabel,
+              updated: d.createdAt ? new Date(d.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now',
+            };
+          });
           setDisruptionsData(apiData);
         }
       } catch {
-        // Fallback to default
+        // Fallback
       }
     })();
   }, []);
@@ -50,33 +65,33 @@ const DisruptionManagement = () => {
     e.preventDefault();
     if (!service || !location) return;
 
-    const newEntry = {
-      id: Date.now().toString(),
-      service,
-      mode,
-      location,
-      status,
-      impact,
-      updated: 'Just now',
-    };
-
-    setDisruptionsData([newEntry, ...disruptionsData]);
-
     try {
-      await adminService.createDisruption({
+      const res = await adminService.createDisruption({
         title: service,
         description: location,
         disruptionType: status,
         severity: impact,
       });
-      addToast(`Disruption broadcasted for ${service}!`, 'success');
-    } catch {
-      addToast(`Disruption created locally for ${service}`, 'success');
-    }
 
-    setIsModalOpen(false);
-    setService('');
-    setLocation('');
+      const d = res?.data || res;
+      const createdItem = {
+        id: d._id || d.id || Date.now().toString(),
+        service: d.title || service,
+        mode: mode,
+        location: d.description || location,
+        status: d.status === 'RESOLVED' ? 'On Time' : d.disruptionType || status,
+        impact: d.severity || impact,
+        updated: 'Just now',
+      };
+
+      setDisruptionsData((prev) => [createdItem, ...prev.filter(item => item.id !== createdItem.id)]);
+      addToast(`Disruption broadcasted for ${service}!`, 'success');
+      setIsModalOpen(false);
+      setService('');
+      setLocation('');
+    } catch (err) {
+      addToast(`Failed to save disruption: ${err.message}`, 'error');
+    }
   };
 
   const handleResolve = async (id, serviceName) => {
