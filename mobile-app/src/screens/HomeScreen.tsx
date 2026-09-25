@@ -9,6 +9,7 @@ import {
   Platform,
   Modal,
   Switch,
+  ImageBackground,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
@@ -214,17 +215,32 @@ export default function HomeScreen({ navigation }: Props) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Top Hero Gradient Area */}
-        <LinearGradient
-          colors={
-            isDarkMode
-              ? ["#0B1B3D", "#0F2C6E", "#1D4ED8"]
-              : ["#1655E8", "#1E68F8", "#088DE8"]
-          }
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0.2, y: 1 }}
-          style={styles.heroGradient}
-        >
+        {/* Top Hero Transit Background Area */}
+        <View style={styles.heroWrapper}>
+          <ImageBackground
+            source={require("../../assets/images/transit-hero-bg.jpg")}
+            style={styles.heroImageBg}
+            imageStyle={styles.heroImageStyle}
+            resizeMode="cover"
+          >
+            <LinearGradient
+              colors={
+                isDarkMode
+                  ? [
+                      "rgba(11, 27, 61, 0.72)",
+                      "rgba(15, 44, 110, 0.82)",
+                      "rgba(9, 13, 22, 0.95)",
+                    ]
+                  : [
+                      "rgba(22, 85, 232, 0.75)",
+                      "rgba(30, 104, 248, 0.82)",
+                      "rgba(8, 141, 232, 0.92)",
+                    ]
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0.2, y: 1 }}
+              style={styles.heroGradient}
+            >
           {/* Top Bar Header */}
           <View style={styles.topBar}>
             <View>
@@ -577,7 +593,9 @@ export default function HomeScreen({ navigation }: Props) {
               </TouchableOpacity>
             </View>
           </View>
-        </LinearGradient>
+            </LinearGradient>
+          </ImageBackground>
+        </View>
 
         {/* Optimize Your Journey Section */}
         <View style={styles.section}>
@@ -2144,7 +2162,33 @@ const styles = StyleSheet.create({
     paddingBottom: 95,
   },
 
-  /* Hero Gradient */
+  /* Hero Transit Background & Gradient */
+  heroWrapper: {
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#0B1B3D",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+      web: {
+        boxShadow: "0 8px 24px rgba(11, 27, 61, 0.25)",
+      },
+    }),
+  },
+  heroImageBg: {
+    width: "100%",
+  },
+  heroImageStyle: {
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+  },
   heroGradient: {
     paddingTop: Platform.OS === "ios" ? 54 : 44,
     paddingHorizontal: 16,
@@ -2159,9 +2203,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   greetingText: {
-    color: "rgba(255, 255, 255, 0.88)",
+    color: "rgba(255, 255, 255, 0.95)",
     fontSize: 13,
     fontWeight: "600",
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   heroTitle: {
     color: "#FFFFFF",
@@ -2169,6 +2216,9 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginTop: 4,
     letterSpacing: -0.3,
+    textShadowColor: "rgba(0, 0, 0, 0.55)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   topBarActions: {
     flexDirection: "row",

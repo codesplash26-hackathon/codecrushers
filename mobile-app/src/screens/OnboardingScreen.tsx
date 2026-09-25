@@ -160,7 +160,7 @@ export default function OnboardingScreen({ navigation }: Props) {
       </ScrollView>
 
       {/* Persistent Bottom Action Area */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.screenBg }]}>
         <TouchableOpacity
           style={styles.actionButton}
           onPress={handleNext}
@@ -1161,7 +1161,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 24,
     paddingTop: 8,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "transparent",
   },
   actionButton: {
     backgroundColor: "#1D64EC",
