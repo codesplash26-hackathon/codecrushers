@@ -28,17 +28,37 @@ const createDisruption = async (req, res, next) => {
       });
     }
 
+    // Helper function to map UI types to Mongoose Enums
+    const mapType = (type) => {
+      if (!type) return "DELAY";
+      const u = type.toString().toUpperCase();
+      if (u.includes("CANCEL")) return "CANCELLATION";
+      if (u.includes("ROAD") || u.includes("DIVERT")) return "ROAD_CLOSURE";
+      if (u.includes("TRAFFIC")) return "TRAFFIC";
+      if (u.includes("DELAY")) return "DELAY";
+      return "ROUTE_INTERRUPTION";
+    };
+
+    const mapSeverity = (sev) => {
+      if (!sev) return "HIGH";
+      const u = sev.toString().toUpperCase();
+      if (u === "LOW") return "LOW";
+      if (u === "MEDIUM") return "MEDIUM";
+      if (u === "CRITICAL") return "CRITICAL";
+      return "HIGH";
+    };
+
     const disruption = await Disruption.create({
       affectedService,
       affectedRoute,
       affectedTrip,
-      disruptionType,
+      disruptionType: mapType(disruptionType),
       title,
       description,
       delayMinutes: delayMinutes || 0,
       startTime: startTime || new Date(),
       expectedEndTime,
-      severity,
+      severity: mapSeverity(severity),
       affectedStops: affectedStops || [],
       createdBy: req.user ? req.user._id : null,
     });
