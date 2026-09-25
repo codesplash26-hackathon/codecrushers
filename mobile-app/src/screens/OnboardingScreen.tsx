@@ -15,6 +15,8 @@ import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
 import { COLORS } from "../constants/theme";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -59,6 +61,7 @@ const SLIDES: SlideData[] = [
 ];
 
 export default function OnboardingScreen({ navigation }: Props) {
+  const { isDarkMode, colors } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
 
@@ -88,18 +91,30 @@ export default function OnboardingScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <StatusBar style="dark" />
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.screenBg }]}
+      edges={["top", "bottom"]}
+    >
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
 
-      {/* Top Header with Skip Button */}
+      {/* Top Header with Skip Button & ThemeToggle on Top Right Corner */}
       <View style={styles.headerBar}>
         <TouchableOpacity
           onPress={handleFinish}
           activeOpacity={0.7}
           style={styles.skipButton}
         >
-          <Text style={styles.skipText}>Skip</Text>
+          <Text
+            style={[
+              styles.skipText,
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
+            Skip
+          </Text>
         </TouchableOpacity>
+        {/* Dark Mode Change Button Displayed in Top Right Corner like Login */}
+        <ThemeToggle variant="solid" size={38} />
       </View>
 
       {/* Horizontal Paging Carousel */}
@@ -123,15 +138,29 @@ export default function OnboardingScreen({ navigation }: Props) {
 
             {/* Bottom Content Area */}
             <View style={styles.contentArea}>
-              <Text style={styles.title}>{slide.title}</Text>
-              <Text style={styles.subtitle}>{slide.subtitle}</Text>
+              <Text
+                style={[
+                  styles.title,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                {slide.title}
+              </Text>
+              <Text
+                style={[
+                  styles.subtitle,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                {slide.subtitle}
+              </Text>
             </View>
           </View>
         ))}
       </ScrollView>
 
       {/* Persistent Bottom Action Area */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.screenBg }]}>
         <TouchableOpacity
           style={styles.actionButton}
           onPress={handleNext}
@@ -151,53 +180,153 @@ export default function OnboardingScreen({ navigation }: Props) {
  * Bus -> Train -> Tuk -> Pin
  */
 function PlanJourneyIllustration() {
+  const { isDarkMode, colors } = useTheme();
+
   return (
-    <View style={[styles.illustrationCard, styles.journeyBg]}>
+    <View
+      style={[
+        styles.illustrationCard,
+        styles.journeyBg,
+        isDarkMode && {
+          backgroundColor: colors.cardBg,
+          borderColor: colors.cardBorder,
+          borderWidth: 1,
+        },
+      ]}
+    >
       {/* Soft floating background pastel orbs */}
-      <View style={styles.orbTopLeftBlue} />
-      <View style={styles.orbBottomRightBlue} />
+      <View style={[styles.orbTopLeftBlue, isDarkMode && { opacity: 0.15 }]} />
+      <View style={[styles.orbBottomRightBlue, isDarkMode && { opacity: 0.15 }]} />
 
       {/* S-curved journey route visualization */}
       <View style={styles.routeCanvas}>
         {/* Origin Node */}
         <View style={styles.originNodeWrapper}>
-          <View style={styles.originOuterRing}>
-            <View style={styles.originInnerDot} />
+          <View
+            style={[
+              styles.originOuterRing,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.primary,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.originInnerDot,
+                isDarkMode && { backgroundColor: colors.primary },
+              ]}
+            />
           </View>
         </View>
 
         {/* Diagonal trajectory line connector */}
-        <View style={styles.trackLineSegment1} />
-        <View style={styles.trackLineSegment2} />
-        <View style={styles.trackLineSegment3} />
+        <View
+          style={[
+            styles.trackLineSegment1,
+            isDarkMode && { borderColor: colors.primary },
+          ]}
+        />
+        <View
+          style={[
+            styles.trackLineSegment2,
+            isDarkMode && { borderColor: colors.primary },
+          ]}
+        />
+        <View
+          style={[
+            styles.trackLineSegment3,
+            isDarkMode && { borderTopColor: colors.primary },
+          ]}
+        />
 
         {/* Bus Stop Node */}
         <View style={styles.busNodeWrapper}>
-          <View style={styles.transitNodeBadgeBlue}>
+          <View
+            style={[
+              styles.transitNodeBadgeBlue,
+              isDarkMode && {
+                backgroundColor: "rgba(59, 130, 246, 0.2)",
+                borderColor: "rgba(59, 130, 246, 0.4)",
+              },
+            ]}
+          >
             <View style={styles.innerDotBlue} />
           </View>
-          <View style={styles.transitTagBlue}>
-            <Text style={styles.transitTagTextBlue}>Bus</Text>
+          <View
+            style={[
+              styles.transitTagBlue,
+              isDarkMode && { backgroundColor: "rgba(59, 130, 246, 0.25)" },
+            ]}
+          >
+            <Text
+              style={[
+                styles.transitTagTextBlue,
+                isDarkMode && { color: "#93C5FD" },
+              ]}
+            >
+              Bus
+            </Text>
           </View>
         </View>
 
         {/* Train Stop Node */}
         <View style={styles.trainNodeWrapper}>
-          <View style={styles.transitNodeBadgeGreen}>
+          <View
+            style={[
+              styles.transitNodeBadgeGreen,
+              isDarkMode && {
+                backgroundColor: "rgba(34, 197, 94, 0.2)",
+                borderColor: "rgba(34, 197, 94, 0.4)",
+              },
+            ]}
+          >
             <View style={styles.innerDotGreen} />
           </View>
-          <View style={styles.transitTagGreen}>
-            <Text style={styles.transitTagTextGreen}>Train</Text>
+          <View
+            style={[
+              styles.transitTagGreen,
+              isDarkMode && { backgroundColor: "rgba(34, 197, 94, 0.25)" },
+            ]}
+          >
+            <Text
+              style={[
+                styles.transitTagTextGreen,
+                isDarkMode && { color: "#86EFAC" },
+              ]}
+            >
+              Train
+            </Text>
           </View>
         </View>
 
         {/* Tuk-Tuk Stop Node */}
         <View style={styles.tukNodeWrapper}>
-          <View style={styles.transitNodeBadgePink}>
+          <View
+            style={[
+              styles.transitNodeBadgePink,
+              isDarkMode && {
+                backgroundColor: "rgba(244, 63, 94, 0.2)",
+                borderColor: "rgba(244, 63, 94, 0.4)",
+              },
+            ]}
+          >
             <View style={styles.innerDotPink} />
           </View>
-          <View style={styles.transitTagPink}>
-            <Text style={styles.transitTagTextPink}>Tuk</Text>
+          <View
+            style={[
+              styles.transitTagPink,
+              isDarkMode && { backgroundColor: "rgba(244, 63, 94, 0.25)" },
+            ]}
+          >
+            <Text
+              style={[
+                styles.transitTagTextPink,
+                isDarkMode && { color: "#FDA4AF" },
+              ]}
+            >
+              Tuk
+            </Text>
           </View>
         </View>
 
@@ -218,51 +347,126 @@ function PlanJourneyIllustration() {
  * ⚡ Fastest | 🔥 Cheapest | 🤍 Reliable
  */
 function ChooseMattersIllustration() {
+  const { isDarkMode, colors } = useTheme();
+
   return (
-    <View style={[styles.illustrationCard, styles.mattersBg]}>
+    <View
+      style={[
+        styles.illustrationCard,
+        styles.mattersBg,
+        isDarkMode && {
+          backgroundColor: colors.cardBg,
+          borderColor: colors.cardBorder,
+          borderWidth: 1,
+        },
+      ]}
+    >
       {/* Soft floating background pastel orbs */}
-      <View style={styles.orbTopLeftMint} />
-      <View style={styles.orbBottomRightMint} />
+      <View style={[styles.orbTopLeftMint, isDarkMode && { opacity: 0.15 }]} />
+      <View style={[styles.orbBottomRightMint, isDarkMode && { opacity: 0.15 }]} />
 
       {/* 3 Comparison Cards */}
       <View style={styles.cardsRow}>
         {/* Card 1: Fastest */}
-        <View style={[styles.optionCard, styles.fastestCard]}>
+        <View
+          style={[
+            styles.optionCard,
+            styles.fastestCard,
+            isDarkMode && {
+              backgroundColor: colors.cardSecondaryBg,
+              borderColor: colors.primary,
+            },
+          ]}
+        >
           <View style={styles.fastestBadge}>
             <Text style={styles.badgeTextWhite}>⚡ Fastest</Text>
           </View>
           <View style={styles.optionBody}>
             <Text style={[styles.timeText, { color: COLORS.fastest }]}>1h 20m</Text>
-            <Text style={styles.priceText}>Rs.450</Text>
-            <View style={styles.progressTrack}>
+            <Text
+              style={[
+                styles.priceText,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              Rs.450
+            </Text>
+            <View
+              style={[
+                styles.progressTrack,
+                isDarkMode && { backgroundColor: "rgba(255,255,255,0.08)" },
+              ]}
+            >
               <View style={[styles.progressBar, { backgroundColor: COLORS.fastest, width: "75%" }]} />
             </View>
           </View>
         </View>
 
         {/* Card 2: Cheapest */}
-        <View style={[styles.optionCard, styles.cheapestCard]}>
+        <View
+          style={[
+            styles.optionCard,
+            styles.cheapestCard,
+            isDarkMode && {
+              backgroundColor: colors.cardSecondaryBg,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+        >
           <View style={styles.cheapestBadge}>
             <Text style={styles.badgeTextOrange}>🔥 Cheapest</Text>
           </View>
           <View style={styles.optionBody}>
             <Text style={[styles.timeText, { color: COLORS.cheapest }]}>2h 05m</Text>
-            <Text style={styles.priceText}>Rs.220</Text>
-            <View style={styles.progressTrack}>
+            <Text
+              style={[
+                styles.priceText,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              Rs.220
+            </Text>
+            <View
+              style={[
+                styles.progressTrack,
+                isDarkMode && { backgroundColor: "rgba(255,255,255,0.08)" },
+              ]}
+            >
               <View style={[styles.progressBar, { backgroundColor: COLORS.cheapest, width: "45%" }]} />
             </View>
           </View>
         </View>
 
         {/* Card 3: Reliable */}
-        <View style={[styles.optionCard, styles.reliableCard]}>
+        <View
+          style={[
+            styles.optionCard,
+            styles.reliableCard,
+            isDarkMode && {
+              backgroundColor: colors.cardSecondaryBg,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+        >
           <View style={styles.reliableBadge}>
             <Text style={styles.badgeTextPurple}>♡ Reliable</Text>
           </View>
           <View style={styles.optionBody}>
             <Text style={[styles.timeText, { color: COLORS.reliable }]}>1h 35m</Text>
-            <Text style={styles.priceText}>Rs.320</Text>
-            <View style={styles.progressTrack}>
+            <Text
+              style={[
+                styles.priceText,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              Rs.320
+            </Text>
+            <View
+              style={[
+                styles.progressTrack,
+                isDarkMode && { backgroundColor: "rgba(255,255,255,0.08)" },
+              ]}
+            >
               <View style={[styles.progressBar, { backgroundColor: COLORS.reliable, width: "85%" }]} />
             </View>
           </View>
@@ -277,44 +481,120 @@ function ChooseMattersIllustration() {
  * ⚠️ Train delayed 15 min -> Alternative found
  */
 function StayAheadIllustration() {
+  const { isDarkMode, colors } = useTheme();
+
   return (
-    <View style={[styles.illustrationCard, styles.disruptionsBg]}>
+    <View
+      style={[
+        styles.illustrationCard,
+        styles.disruptionsBg,
+        isDarkMode && {
+          backgroundColor: colors.cardBg,
+          borderColor: colors.cardBorder,
+          borderWidth: 1,
+        },
+      ]}
+    >
       {/* Soft floating background pastel orbs */}
-      <View style={styles.orbTopLeftPeach} />
-      <View style={styles.orbBottomRightPeach} />
+      <View style={[styles.orbTopLeftPeach, isDarkMode && { opacity: 0.15 }]} />
+      <View style={[styles.orbBottomRightPeach, isDarkMode && { opacity: 0.15 }]} />
 
       <View style={styles.disruptionsFlow}>
         {/* Top Card: Disruption Warning */}
-        <View style={styles.warningCard}>
-          <View style={styles.warningIconBadge}>
+        <View
+          style={[
+            styles.warningCard,
+            isDarkMode && {
+              backgroundColor: colors.alertBg,
+              borderColor: colors.alertBorder,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.warningIconBadge,
+              isDarkMode && { backgroundColor: "rgba(245, 158, 11, 0.25)" },
+            ]}
+          >
             <View style={styles.warningDot} />
           </View>
           <View style={styles.alertContent}>
             <View style={styles.alertTitleRow}>
               <Text style={styles.alertIcon}>⚠️</Text>
-              <Text style={styles.warningTitle}>Train delayed 15 min</Text>
+              <Text
+                style={[
+                  styles.warningTitle,
+                  isDarkMode && { color: colors.alertText },
+                ]}
+              >
+                Train delayed 15 min
+              </Text>
             </View>
-            <Text style={styles.warningSubtext}>Connection at risk</Text>
+            <Text
+              style={[
+                styles.warningSubtext,
+                isDarkMode && { color: colors.alertSubtext },
+              ]}
+            >
+              Connection at risk
+            </Text>
           </View>
         </View>
 
         {/* Dashed Connecting Arrow */}
         <View style={styles.connectorContainer}>
-          <View style={styles.dashedVerticalLine} />
-          <Text style={styles.downArrow}>▼</Text>
+          <View
+            style={[
+              styles.dashedVerticalLine,
+              isDarkMode && { borderColor: colors.textMuted },
+            ]}
+          />
+          <Text
+            style={[
+              styles.downArrow,
+              isDarkMode && { color: colors.textMuted },
+            ]}
+          >
+            ▼
+          </Text>
         </View>
 
         {/* Bottom Card: Alternative Found */}
-        <View style={styles.successCard}>
-          <View style={styles.successIconBadge}>
+        <View
+          style={[
+            styles.successCard,
+            isDarkMode && {
+              backgroundColor: colors.successBg,
+              borderColor: colors.successBorder,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.successIconBadge,
+              isDarkMode && { backgroundColor: "rgba(16, 185, 129, 0.25)" },
+            ]}
+          >
             <View style={styles.successDot} />
           </View>
           <View style={styles.alertContent}>
             <View style={styles.alertTitleRow}>
               <Text style={styles.alertCheck}>✓</Text>
-              <Text style={styles.successTitle}>Alternative found</Text>
+              <Text
+                style={[
+                  styles.successTitle,
+                  isDarkMode && { color: colors.successText },
+                ]}
+              >
+                Alternative found
+              </Text>
             </View>
-            <Text style={styles.successSubtext}>
+            <Text
+              style={[
+                styles.successSubtext,
+                isDarkMode && { color: colors.successSubtext },
+              ]}
+            >
               Bus → Train → Bus — Low risk
             </Text>
           </View>
@@ -330,10 +610,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   headerBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 24,
     paddingTop: 8,
     paddingBottom: 4,
-    alignItems: "flex-start",
     zIndex: 20,
   },
   skipButton: {
@@ -879,7 +1161,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 24,
     paddingTop: 8,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "transparent",
   },
   actionButton: {
     backgroundColor: "#1D64EC",

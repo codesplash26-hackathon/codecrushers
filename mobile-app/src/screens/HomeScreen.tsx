@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,11 +9,17 @@ import {
   Platform,
   Modal,
   Switch,
+  ImageBackground,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
+import BottomNavigationBar from "../components/BottomNavigationBar";
+import authService, { AuthUser } from "../services/authService";
+import api from "../services/api";
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -42,6 +48,8 @@ interface NearbyStopItem {
 }
 
 export default function HomeScreen({ navigation }: Props) {
+  const { isDarkMode, toggleTheme, colors } = useTheme();
+
   // Main screen states
   const [fromLocation, setFromLocation] = useState("Kandy City");
   const [toLocation, setToLocation] = useState("");
@@ -56,6 +64,26 @@ export default function HomeScreen({ navigation }: Props) {
   const [activeTab, setActiveTab] = useState<
     "home" | "journeys" | "alerts" | "profile"
   >("home");
+  const [isProfilePopupVisible, setIsProfilePopupVisible] = useState(false);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [liveDisruptionsCount, setLiveDisruptionsCount] = useState<number>(1);
+
+  useEffect(() => {
+    (async () => {
+      const user = await authService.getCurrentUser();
+      if (user) {
+        setCurrentUser(user);
+      }
+      try {
+        const disruptionsRes = await api.getActiveDisruptions();
+        if (disruptionsRes.success && Array.isArray(disruptionsRes.data?.disruptions)) {
+          setLiveDisruptionsCount(disruptionsRes.data.disruptions.length);
+        }
+      } catch {
+        // Fallback to default
+      }
+    })();
+  }, []);
 
   // Search modal state
   const [isSearchVisible, setIsSearchVisible] = useState(false);
@@ -189,7 +217,7 @@ export default function HomeScreen({ navigation }: Props) {
   );
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colors.screenBg }]}>
       <StatusBar style="light" />
 
       <ScrollView
@@ -197,13 +225,32 @@ export default function HomeScreen({ navigation }: Props) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Top Hero Gradient Area */}
-        <LinearGradient
-          colors={["#1655E8", "#1E68F8", "#088DE8"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0.2, y: 1 }}
-          style={styles.heroGradient}
-        >
+        {/* Top Hero Transit Background Area */}
+        <View style={styles.heroWrapper}>
+          <ImageBackground
+            source={require("../../assets/images/transit-hero-bg.jpg")}
+            style={styles.heroImageBg}
+            imageStyle={styles.heroImageStyle}
+            resizeMode="cover"
+          >
+            <LinearGradient
+              colors={
+                isDarkMode
+                  ? [
+                      "rgba(11, 27, 61, 0.72)",
+                      "rgba(15, 44, 110, 0.82)",
+                      "rgba(9, 13, 22, 0.95)",
+                    ]
+                  : [
+                      "rgba(22, 85, 232, 0.75)",
+                      "rgba(30, 104, 248, 0.82)",
+                      "rgba(8, 141, 232, 0.92)",
+                    ]
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0.2, y: 1 }}
+              style={styles.heroGradient}
+            >
           {/* Top Bar Header */}
           <View style={styles.topBar}>
             <View>
@@ -212,27 +259,48 @@ export default function HomeScreen({ navigation }: Props) {
             </View>
 
             <View style={styles.topBarActions}>
+              {/* Dark mode change button in top right corner */}
+              <ThemeToggle variant="glass" size={38} />
               <TouchableOpacity
-                style={styles.themeIconButton}
+                style={[
+                  styles.avatarCircle,
+                  isDarkMode && { backgroundColor: "#1E293B" },
+                ]}
                 activeOpacity={0.8}
+                onPress={() => setIsProfilePopupVisible(true)}
               >
-                <Text style={styles.themeIcon}>🌙</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.avatarCircle}
-                activeOpacity={0.8}
-                onPress={() => navigation.navigate("Login")}
-              >
-                <View style={styles.avatarInner} />
+                <View
+                  style={[
+                    styles.avatarInner,
+                    isDarkMode && { backgroundColor: "#2A374D" },
+                  ]}
+                >
+                  <Text style={styles.avatarIcon}>👤</Text>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Search Card Container Floating in Header */}
-          <View style={styles.searchCard}>
+          <View
+            style={[
+              styles.searchCard,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.cardBorder,
+                borderWidth: 1,
+              },
+            ]}
+          >
             {/* FROM Input Box */}
             <TouchableOpacity
-              style={styles.locationInputBox}
+              style={[
+                styles.locationInputBox,
+                isDarkMode && {
+                  backgroundColor: colors.inputBg,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
               activeOpacity={0.9}
               onPress={() => openSearchModal("from")}
             >
@@ -240,11 +308,22 @@ export default function HomeScreen({ navigation }: Props) {
                 <View style={styles.bluePinInner} />
               </View>
               <View style={styles.locationTextWrapper}>
-                <Text style={styles.fieldLabel}>FROM</Text>
+                <Text
+                  style={[
+                    styles.fieldLabel,
+                    isDarkMode && { color: colors.primaryLight },
+                  ]}
+                >
+                  FROM
+                </Text>
                 <Text
                   style={[
                     styles.locationInputText,
-                    !fromLocation && styles.placeholderText,
+                    isDarkMode && { color: colors.textPrimary },
+                    !fromLocation && [
+                      styles.placeholderText,
+                      isDarkMode && { color: colors.textMuted },
+                    ],
                   ]}
                   numberOfLines={1}
                 >
@@ -255,19 +334,43 @@ export default function HomeScreen({ navigation }: Props) {
 
             {/* Connecting Track & Swap Button */}
             <View style={styles.dividerRow}>
-              <View style={styles.verticalLine} />
+              <View
+                style={[
+                  styles.verticalLine,
+                  isDarkMode && { backgroundColor: colors.borderLight },
+                ]}
+              />
               <TouchableOpacity
-                style={styles.swapButton}
+                style={[
+                  styles.swapButton,
+                  isDarkMode && {
+                    backgroundColor: colors.cardSecondaryBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
                 activeOpacity={0.7}
                 onPress={handleSwapLocations}
               >
-                <Text style={styles.swapIcon}>⇅</Text>
+                <Text
+                  style={[
+                    styles.swapIcon,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  ⇅
+                </Text>
               </TouchableOpacity>
             </View>
 
             {/* TO Input Box */}
             <TouchableOpacity
-              style={styles.locationInputBox}
+              style={[
+                styles.locationInputBox,
+                isDarkMode && {
+                  backgroundColor: colors.inputBg,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
               activeOpacity={0.9}
               onPress={() => openSearchModal("to")}
             >
@@ -275,11 +378,22 @@ export default function HomeScreen({ navigation }: Props) {
                 <Text style={styles.pinSymbol}>📍</Text>
               </View>
               <View style={styles.locationTextWrapper}>
-                <Text style={styles.fieldLabel}>TO</Text>
+                <Text
+                  style={[
+                    styles.fieldLabel,
+                    isDarkMode && { color: colors.primaryLight },
+                  ]}
+                >
+                  TO
+                </Text>
                 <Text
                   style={[
                     styles.locationInputText,
-                    !toLocation && styles.placeholderText,
+                    isDarkMode && { color: colors.textPrimary },
+                    !toLocation && [
+                      styles.placeholderText,
+                      isDarkMode && { color: colors.textMuted },
+                    ],
                   ]}
                   numberOfLines={1}
                 >
@@ -289,7 +403,12 @@ export default function HomeScreen({ navigation }: Props) {
             </TouchableOpacity>
 
             {/* Depart At / Arrive By Segmented Toggle */}
-            <View style={styles.segmentedContainer}>
+            <View
+              style={[
+                styles.segmentedContainer,
+                isDarkMode && { backgroundColor: colors.subtleBg },
+              ]}
+            >
               <TouchableOpacity
                 style={[
                   styles.segmentButton,
@@ -301,6 +420,7 @@ export default function HomeScreen({ navigation }: Props) {
                 <Text
                   style={[
                     styles.segmentText,
+                    isDarkMode && { color: colors.textSecondary },
                     departMode === "depart" && styles.segmentTextActive,
                   ]}
                 >
@@ -318,6 +438,7 @@ export default function HomeScreen({ navigation }: Props) {
                 <Text
                   style={[
                     styles.segmentText,
+                    isDarkMode && { color: colors.textSecondary },
                     departMode === "arrive" && styles.segmentTextActive,
                   ]}
                 >
@@ -329,24 +450,78 @@ export default function HomeScreen({ navigation }: Props) {
             {/* Quick Time Selectors */}
             <View style={styles.quickTimeRow}>
               <TouchableOpacity
-                style={styles.leaveNowButton}
+                style={[
+                  styles.leaveNowButton,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
                 activeOpacity={0.8}
+                onPress={() => {
+                  setDepartMode("depart");
+                  setSelectedDate("Today");
+                  const now = new Date();
+                  const hours = now.getHours();
+                  const mins = now.getMinutes();
+                  const ampm = hours >= 12 ? "PM" : "AM";
+                  const formatted = `${hours % 12 || 12}:${mins < 10 ? "0" + mins : mins} ${ampm}`;
+                  setSelectedTime(formatted);
+                }}
               >
                 <Text style={styles.leaveNowIcon}>🕒</Text>
-                <Text style={styles.leaveNowText}>Leave now</Text>
+                <Text
+                  style={[
+                    styles.leaveNowText,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Leave now
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.todayDropdownButton}
+                style={[
+                  styles.todayDropdownButton,
+                  isDarkMode && {
+                    backgroundColor: colors.subtleBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
                 activeOpacity={0.8}
+                onPress={() => {
+                  setSelectedDate(selectedDate === "Today" ? "Tomorrow" : "Today");
+                }}
               >
-                <Text style={styles.todayDropdownText}>Today · Now ▾</Text>
+                <Text
+                  style={[
+                    styles.todayDropdownText,
+                    isDarkMode && { color: colors.primaryLight },
+                  ]}
+                >
+                  {selectedDate} · Now ▾
+                </Text>
               </TouchableOpacity>
             </View>
 
             {/* Date & Time Picker Box */}
-            <View style={styles.pickerBox}>
-              <Text style={styles.pickerLabel}>DATE</Text>
+            <View
+              style={[
+                styles.pickerBox,
+                isDarkMode && {
+                  backgroundColor: colors.inputBg,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.pickerLabel,
+                  isDarkMode && { color: colors.textMuted },
+                ]}
+              >
+                DATE
+              </Text>
               <View style={styles.pillsRow}>
                 {["Today", "Tomorrow", "Wed 17", "Thu 18"].map((date) => {
                   const isSelected = selectedDate === date;
@@ -355,6 +530,10 @@ export default function HomeScreen({ navigation }: Props) {
                       key={date}
                       style={[
                         styles.datePill,
+                        isDarkMode && {
+                          backgroundColor: colors.cardBg,
+                          borderColor: colors.cardBorder,
+                        },
                         isSelected && styles.datePillActive,
                       ]}
                       onPress={() => setSelectedDate(date)}
@@ -363,6 +542,7 @@ export default function HomeScreen({ navigation }: Props) {
                       <Text
                         style={[
                           styles.datePillText,
+                          isDarkMode && { color: colors.textSecondary },
                           isSelected && styles.datePillTextActive,
                         ]}
                       >
@@ -373,7 +553,15 @@ export default function HomeScreen({ navigation }: Props) {
                 })}
               </View>
 
-              <Text style={[styles.pickerLabel, { marginTop: 12 }]}>TIME</Text>
+              <Text
+                style={[
+                  styles.pickerLabel,
+                  { marginTop: 12 },
+                  isDarkMode && { color: colors.textMuted },
+                ]}
+              >
+                TIME
+              </Text>
               <View style={styles.pillsRow}>
                 {["8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM"].map((time) => {
                   const isSelected = selectedTime === time;
@@ -382,6 +570,10 @@ export default function HomeScreen({ navigation }: Props) {
                       key={time}
                       style={[
                         styles.timePill,
+                        isDarkMode && {
+                          backgroundColor: colors.cardBg,
+                          borderColor: colors.cardBorder,
+                        },
                         isSelected && styles.timePillActive,
                       ]}
                       onPress={() => setSelectedTime(time)}
@@ -390,6 +582,7 @@ export default function HomeScreen({ navigation }: Props) {
                       <Text
                         style={[
                           styles.timePillText,
+                          isDarkMode && { color: colors.textSecondary },
                           isSelected && styles.timePillTextActive,
                         ]}
                       >
@@ -410,12 +603,21 @@ export default function HomeScreen({ navigation }: Props) {
               </TouchableOpacity>
             </View>
           </View>
-        </LinearGradient>
+            </LinearGradient>
+          </ImageBackground>
+        </View>
 
         {/* Optimize Your Journey Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionHeading}>Optimize your journey</Text>
+            <Text
+              style={[
+                styles.sectionHeading,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
+              Optimize your journey
+            </Text>
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={() => {
@@ -423,7 +625,14 @@ export default function HomeScreen({ navigation }: Props) {
                 setIsCustomizeVisible(true);
               }}
             >
-              <Text style={styles.sectionLink}>More options</Text>
+              <Text
+                style={[
+                  styles.sectionLink,
+                  isDarkMode && { color: colors.primaryLight },
+                ]}
+              >
+                More options
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -436,6 +645,10 @@ export default function HomeScreen({ navigation }: Props) {
             <TouchableOpacity
               style={[
                 styles.filterPill,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
                 selectedOptimization === "fastest" && styles.filterPillActive,
               ]}
               onPress={() => setSelectedOptimization("fastest")}
@@ -444,6 +657,7 @@ export default function HomeScreen({ navigation }: Props) {
               <Text
                 style={[
                   styles.filterPillText,
+                  isDarkMode && { color: colors.textSecondary },
                   selectedOptimization === "fastest" &&
                     styles.filterPillTextActive,
                 ]}
@@ -455,6 +669,10 @@ export default function HomeScreen({ navigation }: Props) {
             <TouchableOpacity
               style={[
                 styles.filterPill,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
                 selectedOptimization === "cheapest" && styles.filterPillActive,
               ]}
               onPress={() => setSelectedOptimization("cheapest")}
@@ -463,6 +681,7 @@ export default function HomeScreen({ navigation }: Props) {
               <Text
                 style={[
                   styles.filterPillText,
+                  isDarkMode && { color: colors.textSecondary },
                   selectedOptimization === "cheapest" &&
                     styles.filterPillTextActive,
                 ]}
@@ -474,6 +693,10 @@ export default function HomeScreen({ navigation }: Props) {
             <TouchableOpacity
               style={[
                 styles.filterPill,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
                 selectedOptimization === "walking" && styles.filterPillActive,
               ]}
               onPress={() => setSelectedOptimization("walking")}
@@ -482,6 +705,7 @@ export default function HomeScreen({ navigation }: Props) {
               <Text
                 style={[
                   styles.filterPillText,
+                  isDarkMode && { color: colors.textSecondary },
                   selectedOptimization === "walking" &&
                     styles.filterPillTextActive,
                 ]}
@@ -491,7 +715,13 @@ export default function HomeScreen({ navigation }: Props) {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.filterIconPill}
+              style={[
+                styles.filterIconPill,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
               activeOpacity={0.8}
               onPress={() => {
                 setPrimaryPreference(selectedOptimization);
@@ -515,15 +745,40 @@ export default function HomeScreen({ navigation }: Props) {
         {/* Recent Journeys Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionHeading}>Recent Journeys</Text>
-            <TouchableOpacity activeOpacity={0.7}>
-              <Text style={styles.sectionLink}>See all</Text>
+            <Text
+              style={[
+                styles.sectionHeading,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
+              Recent Journeys
+            </Text>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() =>
+                navigation.navigate("Journeys", { initialTab: "completed" })
+              }
+            >
+              <Text
+                style={[
+                  styles.sectionLink,
+                  isDarkMode && { color: colors.primaryLight },
+                ]}
+              >
+                See all
+              </Text>
             </TouchableOpacity>
           </View>
 
           {/* Recent Card 1 */}
           <TouchableOpacity
-            style={styles.recentCard}
+            style={[
+              styles.recentCard,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
             activeOpacity={0.8}
             onPress={() =>
               navigation.navigate("RouteResults", {
@@ -533,15 +788,32 @@ export default function HomeScreen({ navigation }: Props) {
               })
             }
           >
-            <View style={styles.recentPinBox}>
+            <View
+              style={[
+                styles.recentPinBox,
+                isDarkMode && { backgroundColor: colors.subtleBg },
+              ]}
+            >
               <Text style={styles.recentPinIcon}>📍</Text>
             </View>
 
             <View style={styles.recentDetails}>
-              <Text style={styles.recentRoute}>
+              <Text
+                style={[
+                  styles.recentRoute,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
                 Kandy City <Text style={styles.arrowText}>➔</Text> Colombo Fort
               </Text>
-              <Text style={styles.recentSubtext}>Today, 8:30 AM · Rs. 320</Text>
+              <Text
+                style={[
+                  styles.recentSubtext,
+                  isDarkMode && { color: colors.textMuted },
+                ]}
+              >
+                Today, 8:30 AM · Rs. 320
+              </Text>
             </View>
 
             <TouchableOpacity
@@ -557,7 +829,13 @@ export default function HomeScreen({ navigation }: Props) {
 
           {/* Recent Card 2 */}
           <TouchableOpacity
-            style={styles.recentCard}
+            style={[
+              styles.recentCard,
+              isDarkMode && {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
             activeOpacity={0.8}
             onPress={() =>
               navigation.navigate("RouteResults", {
@@ -567,15 +845,32 @@ export default function HomeScreen({ navigation }: Props) {
               })
             }
           >
-            <View style={styles.recentPinBox}>
+            <View
+              style={[
+                styles.recentPinBox,
+                isDarkMode && { backgroundColor: colors.subtleBg },
+              ]}
+            >
               <Text style={styles.recentPinIcon}>📍</Text>
             </View>
 
             <View style={styles.recentDetails}>
-              <Text style={styles.recentRoute}>
+              <Text
+                style={[
+                  styles.recentRoute,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
                 University of Sri Jay. <Text style={styles.arrowText}>➔</Text> Kandy
               </Text>
-              <Text style={styles.recentSubtext}>Yesterday · Rs. 180</Text>
+              <Text
+                style={[
+                  styles.recentSubtext,
+                  isDarkMode && { color: colors.textMuted },
+                ]}
+              >
+                Yesterday · Rs. 180
+              </Text>
             </View>
 
             <TouchableOpacity
@@ -592,146 +887,84 @@ export default function HomeScreen({ navigation }: Props) {
 
         {/* Your Travel Summary Section */}
         <View style={[styles.section, { marginBottom: 36 }]}>
-          <Text style={styles.sectionHeading}>Your travel summary</Text>
+          <Text
+            style={[
+              styles.sectionHeading,
+              isDarkMode && { color: colors.textPrimary },
+            ]}
+          >
+            Your travel summary
+          </Text>
 
           <View style={styles.summaryRow}>
             {/* Stat 1 */}
-            <View style={styles.summaryCard}>
+            <View
+              style={[
+                styles.summaryCard,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
               <Text style={styles.summaryNumberBlue}>24</Text>
-              <Text style={styles.summaryLabel}>Journeys</Text>
+              <Text
+                style={[
+                  styles.summaryLabel,
+                  isDarkMode && { color: colors.textMuted },
+                ]}
+              >
+                Journeys
+              </Text>
             </View>
 
             {/* Stat 2 */}
-            <View style={styles.summaryCard}>
+            <View
+              style={[
+                styles.summaryCard,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
               <Text style={styles.summaryNumberGreen}>Rs.1.2k</Text>
-              <Text style={styles.summaryLabel}>Saved</Text>
+              <Text
+                style={[
+                  styles.summaryLabel,
+                  isDarkMode && { color: colors.textMuted },
+                ]}
+              >
+                Saved
+              </Text>
             </View>
 
             {/* Stat 3 */}
-            <View style={styles.summaryCard}>
+            <View
+              style={[
+                styles.summaryCard,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
               <Text style={styles.summaryNumberTeal}>3.5h</Text>
-              <Text style={styles.summaryLabel}>Hours saved</Text>
+              <Text
+                style={[
+                  styles.summaryLabel,
+                  isDarkMode && { color: colors.textMuted },
+                ]}
+              >
+                Hours saved
+              </Text>
             </View>
           </View>
         </View>
       </ScrollView>
 
-      {/* Bottom Navigation Bar */}
-      <View style={styles.bottomNav}>
-        {/* Home Tab */}
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => setActiveTab("home")}
-          activeOpacity={0.7}
-        >
-          <Text
-            style={[
-              styles.navIcon,
-              activeTab === "home" ? styles.navIconActive : styles.navIconInactive,
-            ]}
-          >
-            🏠
-          </Text>
-          <Text
-            style={[
-              styles.navLabel,
-              activeTab === "home" ? styles.navLabelActive : styles.navLabelInactive,
-            ]}
-          >
-            Home
-          </Text>
-          {activeTab === "home" && <View style={styles.activeTabIndicator} />}
-        </TouchableOpacity>
-
-        {/* Journeys Tab */}
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate("Journeys")}
-          activeOpacity={0.7}
-        >
-          <Text
-            style={[
-              styles.navIcon,
-              activeTab === "journeys"
-                ? styles.navIconActive
-                : styles.navIconInactive,
-            ]}
-          >
-            🗺️
-          </Text>
-          <Text
-            style={[
-              styles.navLabel,
-              activeTab === "journeys"
-                ? styles.navLabelActive
-                : styles.navLabelInactive,
-            ]}
-          >
-            Journeys
-          </Text>
-        </TouchableOpacity>
-
-        {/* Alerts Tab */}
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate("Notifications")}
-          activeOpacity={0.7}
-        >
-          <View style={styles.alertIconWrapper}>
-            <Text
-              style={[
-                styles.navIcon,
-                activeTab === "alerts"
-                  ? styles.navIconActive
-                  : styles.navIconInactive,
-              ]}
-            >
-              🔔
-            </Text>
-            <View style={styles.badgeContainer}>
-              <Text style={styles.badgeText}>2</Text>
-            </View>
-          </View>
-          <Text
-            style={[
-              styles.navLabel,
-              activeTab === "alerts"
-                ? styles.navLabelActive
-                : styles.navLabelInactive,
-            ]}
-          >
-            Alerts
-          </Text>
-        </TouchableOpacity>
-
-        {/* Profile Tab */}
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate("Profile")}
-          activeOpacity={0.7}
-        >
-          <Text
-            style={[
-              styles.navIcon,
-              activeTab === "profile"
-                ? styles.navIconActive
-                : styles.navIconInactive,
-            ]}
-          >
-            👤
-          </Text>
-          <Text
-            style={[
-              styles.navLabel,
-              activeTab === "profile"
-                ? styles.navLabelActive
-                : styles.navLabelInactive,
-            ]}
-          >
-            Profile
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {/* Unified Fixed-Position Bottom Navigation Bar */}
+      <BottomNavigationBar activeTab="home" navigation={navigation} />
 
       {/* ================= LOCATION SEARCH MODAL ================= */}
       <Modal
@@ -740,38 +973,82 @@ export default function HomeScreen({ navigation }: Props) {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsSearchVisible(false)}
       >
-        <View style={styles.searchModalContainer}>
-          <StatusBar style="dark" />
+        <View
+          style={[
+            styles.searchModalContainer,
+            isDarkMode && { backgroundColor: colors.screenBg },
+          ]}
+        >
+          <StatusBar style={isDarkMode ? "light" : "dark"} />
 
           {/* Modal Header */}
-          <View style={styles.modalHeader}>
+          <View
+            style={[
+              styles.modalHeader,
+              isDarkMode && {
+                backgroundColor: colors.headerBg,
+                borderBottomColor: colors.cardBorder,
+              },
+            ]}
+          >
             <TouchableOpacity
-              style={styles.modalBackButton}
+              style={[
+                styles.modalBackButton,
+                isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+              ]}
               activeOpacity={0.7}
               onPress={() => setIsSearchVisible(false)}
             >
-              <Text style={styles.modalBackIcon}>‹</Text>
+              <Text
+                style={[
+                  styles.modalBackIcon,
+                  isDarkMode && { color: colors.primaryLight },
+                ]}
+              >
+                ‹
+              </Text>
             </TouchableOpacity>
 
             <View style={styles.modalTitleContainer}>
-              <Text style={styles.modalTitle}>
+              <Text
+                style={[
+                  styles.modalTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
                 {searchTarget === "from"
                   ? "Where are you starting?"
                   : "Where are you going?"}
               </Text>
-              <Text style={styles.modalSubtitle}>
+              <Text
+                style={[
+                  styles.modalSubtitle,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
                 Search for a location, station or stop
               </Text>
             </View>
           </View>
 
           {/* Search Input Box */}
-          <View style={styles.modalSearchBox}>
+          <View
+            style={[
+              styles.modalSearchBox,
+              isDarkMode && {
+                backgroundColor: colors.inputBg,
+                borderColor: colors.inputBorder,
+              },
+            ]}
+          >
             <Text style={styles.modalSearchIcon}>🔍</Text>
             <TextInput
-              style={styles.modalSearchInput}
+              style={[
+                styles.modalSearchInput,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
               placeholder="Search location, station or stop"
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoFocus
@@ -797,11 +1074,24 @@ export default function HomeScreen({ navigation }: Props) {
             showsVerticalScrollIndicator={false}
           >
             {/* Quick Access Section */}
-            <Text style={styles.modalSectionHeading}>QUICK ACCESS</Text>
+            <Text
+              style={[
+                styles.modalSectionHeading,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              QUICK ACCESS
+            </Text>
             {filteredQuickAccess.map((item) => (
               <TouchableOpacity
                 key={item.id}
-                style={styles.quickAccessCard}
+                style={[
+                  styles.quickAccessCard,
+                  isDarkMode && {
+                    backgroundColor: colors.cardBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
                 activeOpacity={0.75}
                 onPress={() => handleSelectLocation(item.title)}
               >
@@ -809,10 +1099,10 @@ export default function HomeScreen({ navigation }: Props) {
                 <View
                   style={[
                     styles.quickAccessIconBox,
-                    item.type === "current" && styles.iconBoxCurrent,
-                    item.type === "train" && styles.iconBoxTrain,
-                    item.type === "bus" && styles.iconBoxBus,
-                    item.type === "location" && styles.iconBoxLocation,
+                    item.type === "current" && (isDarkMode ? { backgroundColor: colors.subtleBg } : styles.iconBoxCurrent),
+                    item.type === "train" && (isDarkMode ? { backgroundColor: "rgba(34, 197, 94, 0.2)" } : styles.iconBoxTrain),
+                    item.type === "bus" && (isDarkMode ? { backgroundColor: "rgba(234, 88, 12, 0.2)" } : styles.iconBoxBus),
+                    item.type === "location" && (isDarkMode ? { backgroundColor: colors.subtleBg } : styles.iconBoxLocation),
                   ]}
                 >
                   {item.type === "current" && (
@@ -831,10 +1121,22 @@ export default function HomeScreen({ navigation }: Props) {
 
                 {/* Texts */}
                 <View style={styles.quickAccessTextContainer}>
-                  <Text style={styles.quickAccessTitle} numberOfLines={1}>
+                  <Text
+                    style={[
+                      styles.quickAccessTitle,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                    numberOfLines={1}
+                  >
                     {item.title}
                   </Text>
-                  <Text style={styles.quickAccessSubtitle} numberOfLines={1}>
+                  <Text
+                    style={[
+                      styles.quickAccessSubtitle,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                    numberOfLines={1}
+                  >
                     {item.subtitle}
                   </Text>
                 </View>
@@ -863,16 +1165,33 @@ export default function HomeScreen({ navigation }: Props) {
             ))}
 
             {/* Nearby Stops Section */}
-            <Text style={[styles.modalSectionHeading, { marginTop: 22 }]}>
+            <Text
+              style={[
+                styles.modalSectionHeading,
+                { marginTop: 22 },
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
               NEARBY STOPS
             </Text>
-            <View style={styles.nearbyCardContainer}>
+            <View
+              style={[
+                styles.nearbyCardContainer,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
               {filteredNearby.map((stop, index) => (
                 <TouchableOpacity
                   key={stop.id}
                   style={[
                     styles.nearbyRow,
-                    index !== filteredNearby.length - 1 && styles.nearbyDivider,
+                    index !== filteredNearby.length - 1 && [
+                      styles.nearbyDivider,
+                      isDarkMode && { borderBottomColor: colors.cardBorder },
+                    ],
                   ]}
                   activeOpacity={0.75}
                   onPress={() => handleSelectLocation(stop.title)}
@@ -888,10 +1207,24 @@ export default function HomeScreen({ navigation }: Props) {
                   />
 
                   {/* Stop Name */}
-                  <Text style={styles.nearbyTitle}>{stop.title}</Text>
+                  <Text
+                    style={[
+                      styles.nearbyTitle,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    {stop.title}
+                  </Text>
 
                   {/* Distance */}
-                  <Text style={styles.nearbyDistance}>{stop.distance}</Text>
+                  <Text
+                    style={[
+                      styles.nearbyDistance,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                  >
+                    {stop.distance}
+                  </Text>
 
                   {/* Badge */}
                   <View
@@ -927,22 +1260,59 @@ export default function HomeScreen({ navigation }: Props) {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsCustomizeVisible(false)}
       >
-        <View style={styles.customizeModalContainer}>
-          <StatusBar style="dark" />
+        <View
+          style={[
+            styles.customizeModalContainer,
+            isDarkMode && { backgroundColor: colors.screenBg },
+          ]}
+        >
+          <StatusBar style={isDarkMode ? "light" : "dark"} />
 
           {/* Header */}
-          <View style={styles.modalHeader}>
+          <View
+            style={[
+              styles.modalHeader,
+              isDarkMode && {
+                backgroundColor: colors.headerBg,
+                borderBottomColor: colors.cardBorder,
+              },
+            ]}
+          >
             <TouchableOpacity
-              style={styles.modalBackButton}
+              style={[
+                styles.modalBackButton,
+                isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+              ]}
               activeOpacity={0.7}
               onPress={() => setIsCustomizeVisible(false)}
             >
-              <Text style={styles.modalBackIcon}>‹</Text>
+              <Text
+                style={[
+                  styles.modalBackIcon,
+                  isDarkMode && { color: colors.primaryLight },
+                ]}
+              >
+                ‹
+              </Text>
             </TouchableOpacity>
 
             <View style={styles.modalTitleContainer}>
-              <Text style={styles.modalTitle}>Customize your journey</Text>
-              <Text style={styles.modalSubtitle}>Tell us what matters most</Text>
+              <Text
+                style={[
+                  styles.modalTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Customize your journey
+              </Text>
+              <Text
+                style={[
+                  styles.modalSubtitle,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                Tell us what matters most
+              </Text>
             </View>
           </View>
 
@@ -952,13 +1322,30 @@ export default function HomeScreen({ navigation }: Props) {
             showsVerticalScrollIndicator={false}
           >
             {/* PRIMARY PREFERENCE Section */}
-            <Text style={styles.modalSectionHeading}>PRIMARY PREFERENCE</Text>
+            <Text
+              style={[
+                styles.modalSectionHeading,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              PRIMARY PREFERENCE
+            </Text>
 
             {/* Option 1: Fastest */}
             <TouchableOpacity
               style={[
                 styles.preferenceCard,
-                primaryPreference === "fastest" && styles.preferenceCardActive,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+                primaryPreference === "fastest" && [
+                  styles.preferenceCardActive,
+                  isDarkMode && {
+                    borderColor: colors.primary,
+                    backgroundColor: colors.cardSecondaryBg,
+                  },
+                ],
               ]}
               activeOpacity={0.8}
               onPress={() => setPrimaryPreference("fastest")}
@@ -967,14 +1354,27 @@ export default function HomeScreen({ navigation }: Props) {
                 <Text style={styles.prefIconSymbol}>⚡</Text>
               </View>
               <View style={styles.prefTextContainer}>
-                <Text style={styles.prefTitle}>Fastest</Text>
-                <Text style={styles.prefSubtitle}>
+                <Text
+                  style={[
+                    styles.prefTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Fastest
+                </Text>
+                <Text
+                  style={[
+                    styles.prefSubtitle,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
                   Minimize total travel time
                 </Text>
               </View>
               <View
                 style={[
                   styles.radioButton,
+                  isDarkMode && { borderColor: colors.cardBorder },
                   primaryPreference === "fastest" && styles.radioButtonActive,
                 ]}
               >
@@ -988,23 +1388,55 @@ export default function HomeScreen({ navigation }: Props) {
             <TouchableOpacity
               style={[
                 styles.preferenceCard,
-                primaryPreference === "cheapest" && styles.preferenceCardActive,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+                primaryPreference === "cheapest" && [
+                  styles.preferenceCardActive,
+                  isDarkMode && {
+                    borderColor: colors.primary,
+                    backgroundColor: colors.cardSecondaryBg,
+                  },
+                ],
               ]}
               activeOpacity={0.8}
               onPress={() => setPrimaryPreference("cheapest")}
             >
-              <View style={[styles.prefIconBox, styles.prefIconCheapest]}>
+              <View
+                style={[
+                  styles.prefIconBox,
+                  styles.prefIconCheapest,
+                  isDarkMode && {
+                    backgroundColor: colors.cardSecondaryBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
                 <Text style={styles.prefIconSymbol}>💰</Text>
               </View>
               <View style={styles.prefTextContainer}>
-                <Text style={styles.prefTitle}>Cheapest</Text>
-                <Text style={styles.prefSubtitle}>
+                <Text
+                  style={[
+                    styles.prefTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Cheapest
+                </Text>
+                <Text
+                  style={[
+                    styles.prefSubtitle,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
                   Minimize total journey cost
                 </Text>
               </View>
               <View
                 style={[
                   styles.radioButton,
+                  isDarkMode && { borderColor: colors.cardBorder },
                   primaryPreference === "cheapest" && styles.radioButtonActive,
                 ]}
               >
@@ -1018,23 +1450,55 @@ export default function HomeScreen({ navigation }: Props) {
             <TouchableOpacity
               style={[
                 styles.preferenceCard,
-                primaryPreference === "walking" && styles.preferenceCardActive,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+                primaryPreference === "walking" && [
+                  styles.preferenceCardActive,
+                  isDarkMode && {
+                    borderColor: colors.primary,
+                    backgroundColor: colors.cardSecondaryBg,
+                  },
+                ],
               ]}
               activeOpacity={0.8}
               onPress={() => setPrimaryPreference("walking")}
             >
-              <View style={[styles.prefIconBox, styles.prefIconWalking]}>
+              <View
+                style={[
+                  styles.prefIconBox,
+                  styles.prefIconWalking,
+                  isDarkMode && {
+                    backgroundColor: colors.cardSecondaryBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
                 <Text style={styles.prefIconSymbol}>🚶</Text>
               </View>
               <View style={styles.prefTextContainer}>
-                <Text style={styles.prefTitle}>Less Walking</Text>
-                <Text style={styles.prefSubtitle}>
+                <Text
+                  style={[
+                    styles.prefTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Less Walking
+                </Text>
+                <Text
+                  style={[
+                    styles.prefSubtitle,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
                   Minimize walking distance
                 </Text>
               </View>
               <View
                 style={[
                   styles.radioButton,
+                  isDarkMode && { borderColor: colors.cardBorder },
                   primaryPreference === "walking" && styles.radioButtonActive,
                 ]}
               >
@@ -1048,24 +1512,55 @@ export default function HomeScreen({ navigation }: Props) {
             <TouchableOpacity
               style={[
                 styles.preferenceCard,
-                primaryPreference === "transfers" &&
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+                primaryPreference === "transfers" && [
                   styles.preferenceCardActive,
+                  isDarkMode && {
+                    borderColor: colors.primary,
+                    backgroundColor: colors.cardSecondaryBg,
+                  },
+                ],
               ]}
               activeOpacity={0.8}
               onPress={() => setPrimaryPreference("transfers")}
             >
-              <View style={[styles.prefIconBox, styles.prefIconTransfers]}>
+              <View
+                style={[
+                  styles.prefIconBox,
+                  styles.prefIconTransfers,
+                  isDarkMode && {
+                    backgroundColor: colors.cardSecondaryBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
                 <Text style={styles.prefIconSymbol}>🔄</Text>
               </View>
               <View style={styles.prefTextContainer}>
-                <Text style={styles.prefTitle}>Fewer Transfers</Text>
-                <Text style={styles.prefSubtitle}>
+                <Text
+                  style={[
+                    styles.prefTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Fewer Transfers
+                </Text>
+                <Text
+                  style={[
+                    styles.prefSubtitle,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
                   Reduce transportation changes
                 </Text>
               </View>
               <View
                 style={[
                   styles.radioButton,
+                  isDarkMode && { borderColor: colors.cardBorder },
                   primaryPreference === "transfers" && styles.radioButtonActive,
                 ]}
               >
@@ -1079,23 +1574,55 @@ export default function HomeScreen({ navigation }: Props) {
             <TouchableOpacity
               style={[
                 styles.preferenceCard,
-                primaryPreference === "reliable" && styles.preferenceCardActive,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+                primaryPreference === "reliable" && [
+                  styles.preferenceCardActive,
+                  isDarkMode && {
+                    borderColor: colors.primary,
+                    backgroundColor: colors.cardSecondaryBg,
+                  },
+                ],
               ]}
               activeOpacity={0.8}
               onPress={() => setPrimaryPreference("reliable")}
             >
-              <View style={[styles.prefIconBox, styles.prefIconReliable]}>
+              <View
+                style={[
+                  styles.prefIconBox,
+                  styles.prefIconReliable,
+                  isDarkMode && {
+                    backgroundColor: colors.cardSecondaryBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
                 <Text style={styles.prefIconSymbol}>🛡️</Text>
               </View>
               <View style={styles.prefTextContainer}>
-                <Text style={styles.prefTitle}>Most Reliable</Text>
-                <Text style={styles.prefSubtitle}>
+                <Text
+                  style={[
+                    styles.prefTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Most Reliable
+                </Text>
+                <Text
+                  style={[
+                    styles.prefSubtitle,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
                   Prioritize reliable connections
                 </Text>
               </View>
               <View
                 style={[
                   styles.radioButton,
+                  isDarkMode && { borderColor: colors.cardBorder },
                   primaryPreference === "reliable" && styles.radioButtonActive,
                 ]}
               >
@@ -1106,38 +1633,98 @@ export default function HomeScreen({ navigation }: Props) {
             </TouchableOpacity>
 
             {/* ADVANCED OPTIONS Section */}
-            <Text style={[styles.modalSectionHeading, { marginTop: 22 }]}>
+            <Text
+              style={[
+                styles.modalSectionHeading,
+                { marginTop: 22 },
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
               ADVANCED OPTIONS
             </Text>
 
-            <View style={styles.advancedOptionsCard}>
+            <View
+              style={[
+                styles.advancedOptionsCard,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
               {/* Avoid Walking Row */}
               <View style={styles.advancedRow}>
                 <View style={styles.advancedTextWrapper}>
-                  <Text style={styles.advancedRowTitle}>Avoid walking</Text>
-                  <Text style={styles.advancedRowSubtitle}>
+                  <Text
+                    style={[
+                      styles.advancedRowTitle,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    Avoid walking
+                  </Text>
+                  <Text
+                    style={[
+                      styles.advancedRowSubtitle,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                  >
                     Prefer transport over walking
                   </Text>
                 </View>
                 <Switch
                   value={avoidWalking}
                   onValueChange={setAvoidWalking}
-                  trackColor={{ false: "#E2E8F0", true: "#93C5FD" }}
-                  thumbColor={avoidWalking ? "#2563EB" : "#FFFFFF"}
+                  trackColor={{
+                    false: isDarkMode ? "#334155" : "#E2E8F0",
+                    true: "#3B82F6",
+                  }}
+                  thumbColor={
+                    avoidWalking
+                      ? "#60A5FA"
+                      : isDarkMode
+                      ? "#94A3B8"
+                      : "#FFFFFF"
+                  }
+                  ios_backgroundColor={isDarkMode ? "#334155" : "#E2E8F0"}
                 />
               </View>
 
-              <View style={styles.advancedDivider} />
+              <View
+                style={[
+                  styles.advancedDivider,
+                  isDarkMode && { backgroundColor: colors.cardBorder },
+                ]}
+              />
 
               {/* Maximum Transfers Row */}
               <View style={styles.transfersHeaderRow}>
                 <View style={styles.advancedTextWrapper}>
-                  <Text style={styles.advancedRowTitle}>Maximum transfers</Text>
-                  <Text style={styles.advancedRowSubtitle}>
+                  <Text
+                    style={[
+                      styles.advancedRowTitle,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    Maximum transfers
+                  </Text>
+                  <Text
+                    style={[
+                      styles.advancedRowSubtitle,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                  >
                     Route connection changes
                   </Text>
                 </View>
-                <Text style={styles.transfersCurrentValue}>{maxTransfers}</Text>
+                <Text
+                  style={[
+                    styles.transfersCurrentValue,
+                    isDarkMode && { color: colors.primaryLight },
+                  ]}
+                >
+                  {maxTransfers}
+                </Text>
               </View>
 
               {/* Transfers Segment Buttons */}
@@ -1149,7 +1736,17 @@ export default function HomeScreen({ navigation }: Props) {
                       key={count}
                       style={[
                         styles.transferOptionButton,
-                        isSelected && styles.transferOptionButtonActive,
+                        isDarkMode && {
+                          backgroundColor: colors.cardSecondaryBg,
+                          borderColor: colors.cardBorder,
+                        },
+                        isSelected && [
+                          styles.transferOptionButtonActive,
+                          isDarkMode && {
+                            backgroundColor: colors.primary,
+                            borderColor: colors.primary,
+                          },
+                        ],
                       ]}
                       onPress={() => setMaxTransfers(count)}
                       activeOpacity={0.8}
@@ -1157,6 +1754,7 @@ export default function HomeScreen({ navigation }: Props) {
                       <Text
                         style={[
                           styles.transferOptionText,
+                          isDarkMode && { color: colors.textPrimary },
                           isSelected && styles.transferOptionTextActive,
                         ]}
                       >
@@ -1167,14 +1765,29 @@ export default function HomeScreen({ navigation }: Props) {
                 })}
               </View>
 
-              <View style={styles.advancedDivider} />
+              <View
+                style={[
+                  styles.advancedDivider,
+                  isDarkMode && { backgroundColor: colors.cardBorder },
+                ]}
+              />
 
               {/* Max Walking Distance Row */}
               <View style={styles.distanceHeaderRow}>
-                <Text style={styles.advancedRowTitle}>
+                <Text
+                  style={[
+                    styles.advancedRowTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
                   Max walking distance
                 </Text>
-                <Text style={styles.distanceValueText}>
+                <Text
+                  style={[
+                    styles.distanceValueText,
+                    isDarkMode && { color: colors.primaryLight },
+                  ]}
+                >
                   {maxWalkingDistance} min
                 </Text>
               </View>
@@ -1188,7 +1801,17 @@ export default function HomeScreen({ navigation }: Props) {
                       key={mins}
                       style={[
                         styles.distanceStepPill,
-                        isSelected && styles.distanceStepPillActive,
+                        isDarkMode && {
+                          backgroundColor: colors.cardSecondaryBg,
+                          borderColor: colors.cardBorder,
+                        },
+                        isSelected && [
+                          styles.distanceStepPillActive,
+                          isDarkMode && {
+                            backgroundColor: "rgba(59, 130, 246, 0.2)",
+                            borderColor: colors.primary,
+                          },
+                        ],
                       ]}
                       onPress={() => setMaxWalkingDistance(mins)}
                       activeOpacity={0.8}
@@ -1196,7 +1819,11 @@ export default function HomeScreen({ navigation }: Props) {
                       <Text
                         style={[
                           styles.distanceStepText,
-                          isSelected && styles.distanceStepTextActive,
+                          isDarkMode && { color: colors.textSecondary },
+                          isSelected && [
+                            styles.distanceStepTextActive,
+                            isDarkMode && { color: colors.primaryLight },
+                          ],
                         ]}
                       >
                         {mins}m
@@ -1207,14 +1834,36 @@ export default function HomeScreen({ navigation }: Props) {
               </View>
 
               <View style={styles.distanceMinMaxRow}>
-                <Text style={styles.minMaxLabel}>5 min</Text>
-                <Text style={styles.minMaxLabel}>30 min</Text>
+                <Text
+                  style={[
+                    styles.minMaxLabel,
+                    isDarkMode && { color: colors.textMuted },
+                  ]}
+                >
+                  5 min
+                </Text>
+                <Text
+                  style={[
+                    styles.minMaxLabel,
+                    isDarkMode && { color: colors.textMuted },
+                  ]}
+                >
+                  30 min
+                </Text>
               </View>
             </View>
           </ScrollView>
 
           {/* Bottom Show Routes Button */}
-          <View style={styles.customizeBottomBar}>
+          <View
+            style={[
+              styles.customizeBottomBar,
+              isDarkMode && {
+                backgroundColor: colors.headerBg,
+                borderTopColor: colors.cardBorder,
+              },
+            ]}
+          >
             <TouchableOpacity
               style={styles.showRoutesButton}
               activeOpacity={0.85}
@@ -1224,6 +1873,288 @@ export default function HomeScreen({ navigation }: Props) {
             </TouchableOpacity>
           </View>
         </View>
+      </Modal>
+
+      {/* QUICK USER PROFILE POPUP CARD */}
+      <Modal
+        visible={isProfilePopupVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsProfilePopupVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.popupOverlay}
+          activeOpacity={1}
+          onPress={() => setIsProfilePopupVisible(false)}
+        >
+          <View
+            style={[
+              styles.popupCard,
+              isDarkMode && {
+                backgroundColor: colors.modalBg,
+                borderColor: colors.cardBorder,
+                borderWidth: 1,
+              },
+            ]}
+            onStartShouldSetResponder={() => true}
+          >
+            {/* User Info Header */}
+            <View style={styles.popupHeaderRow}>
+              <View style={styles.popupAvatarWrapper}>
+                <View
+                  style={[
+                    styles.popupAvatarContainer,
+                    isDarkMode && { backgroundColor: "#1E293B" },
+                  ]}
+                >
+                  <Text style={styles.popupAvatarEmoji}>👨‍💼</Text>
+                </View>
+                <View style={styles.popupActiveDot} />
+              </View>
+
+              <View style={styles.popupUserTextCol}>
+                <Text
+                  style={[
+                    styles.popupUserName,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  {currentUser?.name || "Alex Perera"}
+                </Text>
+                <Text
+                  style={[
+                    styles.popupUserEmail,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  {currentUser?.email || "alex@example.com"}
+                </Text>
+                <View style={styles.popupBadgeRow}>
+                  <Text style={styles.popupBadgeText}>
+                    🌟 {currentUser?.role === "driver" ? "Registered Driver" : "Verified Traveler"}
+                  </Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.popupCloseBtn,
+                  isDarkMode && { backgroundColor: colors.inputBg },
+                ]}
+                onPress={() => setIsProfilePopupVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.popupCloseText,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  ✕
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Stats Row */}
+            <View
+              style={[
+                styles.popupStatsBox,
+                isDarkMode && {
+                  backgroundColor: colors.inputBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
+              <View style={styles.popupStatItem}>
+                <Text style={styles.popupStatNumBlue}>24</Text>
+                <Text
+                  style={[
+                    styles.popupStatLabel,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  Journeys
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.popupStatDivider,
+                  isDarkMode && { backgroundColor: colors.borderLight },
+                ]}
+              />
+              <View style={styles.popupStatItem}>
+                <Text style={styles.popupStatNumGreen}>Rs.1.2k</Text>
+                <Text
+                  style={[
+                    styles.popupStatLabel,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  Saved
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.popupStatDivider,
+                  isDarkMode && { backgroundColor: colors.borderLight },
+                ]}
+              />
+              <View style={styles.popupStatItem}>
+                <Text style={styles.popupStatNumAmber}>4.8★</Text>
+                <Text
+                  style={[
+                    styles.popupStatLabel,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  Rating
+                </Text>
+              </View>
+            </View>
+
+            {/* Quick Navigation Items */}
+            <View style={styles.popupActionsList}>
+              {/* Theme Toggle row */}
+              <TouchableOpacity
+                style={styles.popupActionItem}
+                onPress={toggleTheme}
+                activeOpacity={0.7}
+              >
+                <View style={styles.popupActionLeft}>
+                  <Text style={styles.popupActionIcon}>
+                    {isDarkMode ? "☀️" : "🌙"}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.popupActionLabel,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    {isDarkMode ? "Light Mode" : "Dark Mode"}
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    styles.popupActionChevron,
+                    {
+                      fontSize: 12,
+                      fontWeight: "700",
+                      color: isDarkMode ? "#60A5FA" : "#1D64EC",
+                    },
+                  ]}
+                >
+                  {isDarkMode ? "ACTIVE ☀️" : "SWITCH 🌙"}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.popupActionItem}
+                onPress={() => {
+                  setIsProfilePopupVisible(false);
+                  navigation.navigate("Profile");
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.popupActionLeft}>
+                  <Text style={styles.popupActionIcon}>👤</Text>
+                  <Text
+                    style={[
+                      styles.popupActionLabel,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    View Full Profile
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    styles.popupActionChevron,
+                    isDarkMode && { color: colors.textMuted },
+                  ]}
+                >
+                  ›
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.popupActionItem}
+                onPress={() => {
+                  setIsProfilePopupVisible(false);
+                  navigation.navigate("Journeys");
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.popupActionLeft}>
+                  <Text style={styles.popupActionIcon}>🗺️</Text>
+                  <Text
+                    style={[
+                      styles.popupActionLabel,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    My Journeys
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    styles.popupActionChevron,
+                    isDarkMode && { color: colors.textMuted },
+                  ]}
+                >
+                  ›
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.popupActionItem}
+                onPress={() => {
+                  setIsProfilePopupVisible(false);
+                  navigation.navigate("DriverRegistration");
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.popupActionLeft}>
+                  <Text style={styles.popupActionIcon}>🚖</Text>
+                  <Text
+                    style={[
+                      styles.popupActionLabel,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    Become a Driver
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    styles.popupActionChevron,
+                    isDarkMode && { color: colors.textMuted },
+                  ]}
+                >
+                  ›
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Divider */}
+            <View style={styles.popupDivider} />
+
+            {/* Sign Out Button */}
+            <TouchableOpacity
+              style={styles.popupSignOutBtn}
+              onPress={() => {
+                setIsProfilePopupVisible(false);
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: "Login" }],
+                });
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.popupSignOutIcon}>🚪</Text>
+              <Text style={styles.popupSignOutText}>Sign Out</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
@@ -1238,10 +2169,36 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 24,
+    paddingBottom: 95,
   },
 
-  /* Hero Gradient */
+  /* Hero Transit Background & Gradient */
+  heroWrapper: {
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#0B1B3D",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+      web: {
+        boxShadow: "0 8px 24px rgba(11, 27, 61, 0.25)",
+      },
+    }),
+  },
+  heroImageBg: {
+    width: "100%",
+  },
+  heroImageStyle: {
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+  },
   heroGradient: {
     paddingTop: Platform.OS === "ios" ? 54 : 44,
     paddingHorizontal: 16,
@@ -1256,9 +2213,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   greetingText: {
-    color: "rgba(255, 255, 255, 0.88)",
+    color: "rgba(255, 255, 255, 0.95)",
     fontSize: 13,
     fontWeight: "600",
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   heroTitle: {
     color: "#FFFFFF",
@@ -1266,6 +2226,9 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginTop: 4,
     letterSpacing: -0.3,
+    textShadowColor: "rgba(0, 0, 0, 0.55)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   topBarActions: {
     flexDirection: "row",
@@ -1290,12 +2253,21 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     justifyContent: "center",
     alignItems: "center",
+    ...Platform.select({
+      web: { boxShadow: "0 2px 6px rgba(0, 0, 0, 0.12)" },
+      default: { elevation: 2 },
+    }),
   },
   avatarInner: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "#E2E8F0",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#EFF6FF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarIcon: {
+    fontSize: 17,
   },
 
   /* Search Card */
@@ -1373,24 +2345,25 @@ const styles = StyleSheet.create({
 
   /* Divider & Swap Button */
   dividerRow: {
-    height: 22,
+    height: 16,
     position: "relative",
     justifyContent: "center",
   },
   verticalLine: {
     position: "absolute",
     left: 27,
-    top: 0,
-    bottom: 0,
+    top: -2,
+    bottom: -2,
     width: 1.5,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#CBD5E1",
   },
   swapButton: {
     position: "absolute",
     right: 18,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    top: -8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#E2E8F0",
@@ -1399,21 +2372,24 @@ const styles = StyleSheet.create({
     zIndex: 10,
     ...Platform.select({
       web: {
-        boxShadow: "0 2px 5px rgba(0, 0, 0, 0.08)",
+        boxShadow: "0 2px 6px rgba(0, 0, 0, 0.12)",
       },
       default: {
-        elevation: 2,
+        elevation: 3,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.12,
         shadowRadius: 3,
       },
     }),
   },
   swapIcon: {
-    fontSize: 13,
+    fontSize: 14,
+    lineHeight: 18,
     color: "#64748B",
     fontWeight: "bold",
+    textAlign: "center",
+    includeFontPadding: false,
   },
 
   /* Segmented Control */
@@ -2329,5 +3305,202 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
+  },
+
+  /* Profile Popup Modal */
+  popupOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.45)",
+    justifyContent: "flex-start",
+    alignItems: "flex-end",
+    paddingTop: Platform.OS === "ios" ? 64 : 48,
+    paddingRight: 16,
+  },
+  popupCard: {
+    width: 310,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 18,
+    ...Platform.select({
+      web: { boxShadow: "0 12px 36px rgba(15, 23, 42, 0.2)" },
+      default: {
+        elevation: 8,
+        shadowColor: "#0F172A",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.18,
+        shadowRadius: 16,
+      },
+    }),
+  },
+  popupHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  popupAvatarWrapper: {
+    position: "relative",
+    marginRight: 12,
+  },
+  popupAvatarContainer: {
+    width: 46,
+    height: 46,
+    borderRadius: 16,
+    backgroundColor: "#EFF6FF",
+    borderWidth: 1.5,
+    borderColor: "#BFDBFE",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  popupAvatarEmoji: {
+    fontSize: 24,
+  },
+  popupActiveDot: {
+    position: "absolute",
+    bottom: -2,
+    right: -2,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#10B981",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+  },
+  popupUserTextCol: {
+    flex: 1,
+  },
+  popupUserName: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginBottom: 1,
+  },
+  popupUserEmail: {
+    fontSize: 12,
+    color: "#64748B",
+    fontWeight: "500",
+  },
+  popupBadgeRow: {
+    marginTop: 3,
+  },
+  popupBadgeText: {
+    fontSize: 10.5,
+    color: "#1D64EC",
+    fontWeight: "700",
+  },
+  popupCloseBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#F1F5F9",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  popupCloseText: {
+    fontSize: 12,
+    color: "#64748B",
+    fontWeight: "700",
+  },
+
+  /* Popup Stats */
+  popupStatsBox: {
+    flexDirection: "row",
+    backgroundColor: "#F8FAFC",
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    alignItems: "center",
+    justifyContent: "space-around",
+    marginBottom: 14,
+  },
+  popupStatItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  popupStatNumBlue: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#2563EB",
+  },
+  popupStatNumGreen: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#16A34A",
+  },
+  popupStatNumAmber: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#D97706",
+  },
+  popupStatLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#94A3B8",
+    marginTop: 1,
+  },
+  popupStatDivider: {
+    width: 1,
+    height: 22,
+    backgroundColor: "#E2E8F0",
+  },
+
+  /* Popup Actions */
+  popupActionsList: {
+    gap: 2,
+    marginBottom: 8,
+  },
+  popupActionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 9,
+    paddingHorizontal: 6,
+    borderRadius: 8,
+  },
+  popupActionLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  popupActionIcon: {
+    fontSize: 16,
+  },
+  popupActionLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#334155",
+  },
+  popupActionChevron: {
+    fontSize: 16,
+    color: "#94A3B8",
+    fontWeight: "600",
+  },
+  popupDivider: {
+    height: 1,
+    backgroundColor: "#F1F5F9",
+    marginVertical: 6,
+  },
+
+  /* Sign Out */
+  popupSignOutBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#FEF2F2",
+    borderRadius: 12,
+    paddingVertical: 11,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: "#FEE2E2",
+  },
+  popupSignOutIcon: {
+    fontSize: 16,
+  },
+  popupSignOutText: {
+    fontSize: 13.5,
+    fontWeight: "700",
+    color: "#EF4444",
   },
 });

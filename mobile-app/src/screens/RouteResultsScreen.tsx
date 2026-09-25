@@ -13,6 +13,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../navigations/AppNavigator";
 import RealisticRouteMap from "../components/RealisticRouteMap";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 type RouteResultsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -38,6 +40,7 @@ const CHECKLIST_STEPS = [
 ];
 
 export default function RouteResultsScreen({ navigation, route }: Props) {
+  const { isDarkMode, colors } = useTheme();
   const fromCity = route.params?.from || "Kandy";
   const toCity = route.params?.to || "Colombo Fort";
   const skipLoading = route.params?.skipLoading ?? false;
@@ -380,14 +383,26 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
         {/* Dark Navy Band Above Bottom Sheet */}
         <View style={styles.darkNavyBand} />
 
-        {/* Bottom White Progress & Checklist Sheet */}
+        {/* Bottom Progress & Checklist Sheet */}
         <TouchableOpacity
-          style={styles.bottomSheetCard}
+          style={[
+            styles.bottomSheetCard,
+            isDarkMode && {
+              backgroundColor: colors.cardBg,
+              borderTopColor: colors.cardBorder,
+              borderTopWidth: 1,
+            },
+          ]}
           activeOpacity={0.95}
           onPress={handleSkipLoading}
         >
           {/* Smooth Animated Progress Bar */}
-          <View style={styles.progressTrack}>
+          <View
+            style={[
+              styles.progressTrack,
+              isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+            ]}
+          >
             <Animated.View
               style={[
                 styles.progressFill,
@@ -422,7 +437,12 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
                       </Animated.View>
                     </View>
                   ) : (
-                    <View style={styles.iconCirclePending}>
+                    <View
+                      style={[
+                        styles.iconCirclePending,
+                        isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+                      ]}
+                    >
                       <View style={styles.pendingDotGhost} />
                     </View>
                   )}
@@ -431,8 +451,15 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
                     style={[
                       styles.stepTextBase,
                       isDone && styles.stepTextSuccess,
-                      isActive && styles.stepTextActive,
-                      !isDone && !isActive && styles.stepTextPending,
+                      isActive && [
+                        styles.stepTextActive,
+                        isDarkMode && { color: colors.textPrimary },
+                      ],
+                      !isDone &&
+                        !isActive && [
+                          styles.stepTextPending,
+                          isDarkMode && { color: colors.textMuted },
+                        ],
                     ]}
                   >
                     {step.label}
@@ -444,10 +471,20 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
 
           {/* Footer Note */}
           <View style={styles.sheetFooter}>
-            <Text style={styles.footerMainText}>
+            <Text
+              style={[
+                styles.footerMainText,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
               Optimizing your journey...
             </Text>
-            <Text style={styles.footerSubText}>
+            <Text
+              style={[
+                styles.footerSubText,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
               Evaluating {evalCombinations}+ route combinations
             </Text>
           </View>
@@ -458,33 +495,80 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
 
   // ================= 2. ROUTE RESULTS VIEW (Second Interface in Photo) =================
   return (
-    <View style={styles.resultsContainer}>
-      <StatusBar style="dark" />
+    <View style={[styles.resultsContainer, { backgroundColor: colors.screenBg }]}>
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
 
-      {/* Header with Back and Replay Buttons */}
-      <View style={styles.resultsHeader}>
+      {/* Header with Back, Replay and Theme Toggle in Top Right Corner */}
+      <View
+        style={[
+          styles.resultsHeader,
+          isDarkMode && { backgroundColor: colors.headerBg },
+        ]}
+      >
         <TouchableOpacity
-          style={styles.backButton}
+          style={[
+            styles.backButton,
+            isDarkMode && {
+              backgroundColor: colors.cardSecondaryBg,
+              borderColor: colors.cardBorder,
+            },
+          ]}
           activeOpacity={0.7}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backButtonText}>‹</Text>
+          <Text
+            style={[
+              styles.backButtonText,
+              isDarkMode && { color: colors.textPrimary },
+            ]}
+          >
+            ‹
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.headerTitles}>
-          <Text style={styles.headerMainTitle}>Routes to {toCity}</Text>
-          <Text style={styles.headerSubtitle}>
+          <Text
+            style={[
+              styles.headerMainTitle,
+              isDarkMode && { color: colors.textPrimary },
+            ]}
+          >
+            Routes to {toCity}
+          </Text>
+          <Text
+            style={[
+              styles.headerSubtitle,
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
             Today · Departing 8:30 AM · 3 routes found
           </Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.replayButton}
-          activeOpacity={0.7}
-          onPress={handleRestartOptimization}
-        >
-          <Text style={styles.replayButtonText}>↻</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <TouchableOpacity
+            style={[
+              styles.replayButton,
+              isDarkMode && {
+                backgroundColor: colors.cardSecondaryBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
+            activeOpacity={0.7}
+            onPress={handleRestartOptimization}
+          >
+            <Text
+              style={[
+                styles.replayButtonText,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
+              ↻
+            </Text>
+          </TouchableOpacity>
+          {/* Dark Mode Change Button Displayed in Top Right Corner */}
+          <ThemeToggle variant="solid" size={36} />
+        </View>
       </View>
 
       <ScrollView
@@ -518,6 +602,10 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
                 key={item.id}
                 style={[
                   styles.resultsFilterPill,
+                  isDarkMode && {
+                    backgroundColor: colors.cardSecondaryBg,
+                    borderColor: colors.cardBorder,
+                  },
                   isSelected && styles.resultsFilterPillActive,
                 ]}
                 onPress={() => setActiveFilter(item.id)}
@@ -526,6 +614,7 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
                 <Text
                   style={[
                     styles.resultsFilterPillText,
+                    isDarkMode && { color: colors.textPrimary },
                     isSelected && styles.resultsFilterPillTextActive,
                   ]}
                 >
@@ -537,7 +626,15 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
         </View>
 
         {/* ============ ROUTE CARD 1: BEST MATCH ============ */}
-        <View style={styles.routeCard}>
+        <View
+          style={[
+            styles.routeCard,
+            isDarkMode && {
+              backgroundColor: colors.cardBg,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+        >
           {/* Card Top Row: Badge & Risk */}
           <View style={styles.cardHeaderRow}>
             <View style={styles.bestMatchBadge}>
@@ -553,7 +650,12 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
           {/* Time & Price Row */}
           <View style={styles.timePriceRow}>
             <View>
-              <Text style={styles.timeRangeText}>
+              <Text
+                style={[
+                  styles.timeRangeText,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
                 8:30 AM <Text style={styles.arrowLight}>➔</Text> 10:05 AM
               </Text>
               <Text style={styles.durationText}>⏱ 1h 35m</Text>
@@ -623,7 +725,15 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
         </View>
 
         {/* ============ ROUTE CARD 2: FASTEST ============ */}
-        <View style={styles.routeCard}>
+        <View
+          style={[
+            styles.routeCard,
+            isDarkMode && {
+              backgroundColor: colors.cardBg,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+        >
           <View style={styles.cardHeaderRow}>
             <View style={[styles.bestMatchBadge, styles.fastestBadge]}>
               <Text style={styles.badgeTextWhite}>FASTEST</Text>
@@ -637,7 +747,12 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
 
           <View style={styles.timePriceRow}>
             <View>
-              <Text style={styles.timeRangeText}>
+              <Text
+                style={[
+                  styles.timeRangeText,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
                 8:45 AM <Text style={styles.arrowLight}>➔</Text> 10:05 AM
               </Text>
               <Text style={styles.durationText}>⏱ 1h 20m</Text>
@@ -684,7 +799,13 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
           </View>
 
           <TouchableOpacity
-            style={styles.viewRouteButtonSecondary}
+            style={[
+              styles.viewRouteButtonSecondary,
+              isDarkMode && {
+                backgroundColor: colors.cardSecondaryBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
             activeOpacity={0.85}
             onPress={() =>
               navigation.navigate("RouteDetail", {
@@ -698,12 +819,27 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
               })
             }
           >
-            <Text style={styles.viewRouteButtonTextSecondary}>View Route</Text>
+            <Text
+              style={[
+                styles.viewRouteButtonTextSecondary,
+                isDarkMode && { color: colors.primaryLight },
+              ]}
+            >
+              View Route
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* ============ ROUTE CARD 3: CHEAPEST ============ */}
-        <View style={styles.routeCard}>
+        <View
+          style={[
+            styles.routeCard,
+            isDarkMode && {
+              backgroundColor: colors.cardBg,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+        >
           <View style={styles.cardHeaderRow}>
             <View style={[styles.bestMatchBadge, styles.cheapestBadge]}>
               <Text style={styles.badgeTextWhite}>CHEAPEST</Text>
@@ -717,7 +853,12 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
 
           <View style={styles.timePriceRow}>
             <View>
-              <Text style={styles.timeRangeText}>
+              <Text
+                style={[
+                  styles.timeRangeText,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
                 8:30 AM <Text style={styles.arrowLight}>➔</Text> 10:35 AM
               </Text>
               <Text style={styles.durationText}>⏱ 2h 05m</Text>
@@ -764,7 +905,13 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
           </View>
 
           <TouchableOpacity
-            style={styles.viewRouteButtonSecondary}
+            style={[
+              styles.viewRouteButtonSecondary,
+              isDarkMode && {
+                backgroundColor: colors.cardSecondaryBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
             activeOpacity={0.85}
             onPress={() =>
               navigation.navigate("RouteDetail", {
@@ -778,27 +925,42 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
               })
             }
           >
-            <Text style={styles.viewRouteButtonTextSecondary}>View Route</Text>
+            <Text
+              style={[
+                styles.viewRouteButtonTextSecondary,
+                isDarkMode && { color: colors.primaryLight },
+              ]}
+            >
+              View Route
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Compare All Routes Button */}
         <TouchableOpacity
-          style={styles.compareAllButton}
+          style={[
+            styles.compareAllButton,
+            isDarkMode && {
+              backgroundColor: colors.cardSecondaryBg,
+              borderColor: colors.primaryLight,
+            },
+          ]}
           activeOpacity={0.85}
           onPress={() =>
-            navigation.navigate("RouteDetail", {
+            navigation.navigate("CompareRoutes", {
               from: fromCity,
               to: toCity,
-              routeType: "BEST MATCH",
-              fare: "Rs. 320",
-              duration: "1h 35m",
-              departureTime: "8:30 AM",
-              arrivalTime: "10:05 AM",
             })
           }
         >
-          <Text style={styles.compareAllButtonText}>Compare All Routes</Text>
+          <Text
+            style={[
+              styles.compareAllButtonText,
+              isDarkMode && { color: colors.primaryLight },
+            ]}
+          >
+            Compare All Routes
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

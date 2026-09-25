@@ -23,6 +23,8 @@ type RouteDetailScreenRouteProp = RouteProp<
 >;
 
 import RealisticRouteMap from "../components/RealisticRouteMap";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 interface Props {
   navigation: RouteDetailScreenNavigationProp;
@@ -30,6 +32,7 @@ interface Props {
 }
 
 export default function RouteDetailScreen({ navigation, route }: Props) {
+  const { isDarkMode, colors } = useTheme();
   const fromCity = route.params?.from || "Kandy";
   const toCity = route.params?.to || "Colombo Fort";
   const fare = route.params?.fare || "Rs. 320";
@@ -37,8 +40,11 @@ export default function RouteDetailScreen({ navigation, route }: Props) {
   const [isFavorited, setIsFavorited] = useState(false);
 
   return (
-    <View style={styles.screen}>
-      <StatusBar style="dark" />
+    <View style={[styles.screen, { backgroundColor: colors.screenBg }]}>
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
+
+      {/* Floating Dark Mode Button Displayed in Top Right Corner */}
+      <ThemeToggle floating={true} size={38} />
 
       <ScrollView
         style={styles.scrollContainer}
@@ -81,55 +87,142 @@ export default function RouteDetailScreen({ navigation, route }: Props) {
         </View>
 
         {/* Floating "Your Journey" Summary Card */}
-        <View style={styles.journeySummaryCard}>
+        <View
+          style={[
+            styles.journeySummaryCard,
+            isDarkMode && {
+              backgroundColor: colors.cardBg,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+        >
           {/* Title & Fare Row */}
           <View style={styles.summaryTitleRow}>
             <View>
-              <Text style={styles.summaryTitle}>Your Journey</Text>
-              <Text style={styles.summarySubtitle}>
+              <Text
+                style={[
+                  styles.summaryTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Your Journey
+              </Text>
+              <Text
+                style={[
+                  styles.summarySubtitle,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
                 {fromCity} ➔ {toCity}
               </Text>
             </View>
 
             <View style={styles.priceColumn}>
               <Text style={styles.priceAmount}>{fare}</Text>
-              <Text style={styles.priceLabel}>Estimated total</Text>
+              <Text
+                style={[
+                  styles.priceLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                Estimated total
+              </Text>
             </View>
           </View>
 
           {/* 4 Stat Boxes Row */}
           <View style={styles.statBoxesRow}>
             {/* Stat 1: Duration */}
-            <View style={[styles.statBox, styles.statBoxBlue]}>
+            <View
+              style={[
+                styles.statBox,
+                styles.statBoxBlue,
+                isDarkMode && { backgroundColor: "rgba(29, 100, 236, 0.15)" },
+              ]}
+            >
               <Text style={styles.statBoxIcon}>⏱️</Text>
               <Text style={styles.statValueBlue}>1h 35m</Text>
-              <Text style={styles.statLabel}>Duration</Text>
+              <Text
+                style={[
+                  styles.statLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                Duration
+              </Text>
             </View>
 
             {/* Stat 2: Walking */}
-            <View style={[styles.statBox, styles.statBoxCyan]}>
+            <View
+              style={[
+                styles.statBox,
+                styles.statBoxCyan,
+                isDarkMode && { backgroundColor: "rgba(8, 145, 178, 0.15)" },
+              ]}
+            >
               <Text style={styles.statBoxIcon}>🚶</Text>
               <Text style={styles.statValueCyan}>8 min</Text>
-              <Text style={styles.statLabel}>Walking</Text>
+              <Text
+                style={[
+                  styles.statLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                Walking
+              </Text>
             </View>
 
             {/* Stat 3: Transfers */}
-            <View style={[styles.statBox, styles.statBoxPurple]}>
+            <View
+              style={[
+                styles.statBox,
+                styles.statBoxPurple,
+                isDarkMode && { backgroundColor: "rgba(124, 58, 237, 0.15)" },
+              ]}
+            >
               <Text style={styles.statBoxIcon}>🔄</Text>
               <Text style={styles.statValuePurple}>2</Text>
-              <Text style={styles.statLabel}>Transfers</Text>
+              <Text
+                style={[
+                  styles.statLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                Transfers
+              </Text>
             </View>
 
             {/* Stat 4: Reliability */}
-            <View style={[styles.statBox, styles.statBoxGreen]}>
+            <View
+              style={[
+                styles.statBox,
+                styles.statBoxGreen,
+                isDarkMode && { backgroundColor: "rgba(22, 163, 74, 0.15)" },
+              ]}
+            >
               <Text style={styles.statBoxIcon}>🛡️</Text>
               <Text style={styles.statValueGreen}>High</Text>
-              <Text style={styles.statLabel}>Reliability</Text>
+              <Text
+                style={[
+                  styles.statLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                Reliability
+              </Text>
             </View>
           </View>
 
           {/* Connection Risk Banner */}
-          <View style={styles.connectionRiskBanner}>
+          <View
+            style={[
+              styles.connectionRiskBanner,
+              isDarkMode && {
+                backgroundColor: "rgba(22, 163, 74, 0.15)",
+                borderColor: "rgba(22, 163, 74, 0.3)",
+              },
+            ]}
+          >
             <View style={styles.riskLeftCol}>
               <View style={styles.greenRiskDot} />
               <Text style={styles.greenRiskText}>Connection Risk: Low</Text>
@@ -142,29 +235,71 @@ export default function RouteDetailScreen({ navigation, route }: Props) {
 
         {/* JOURNEY TIMELINE SECTION */}
         <View style={styles.timelineSection}>
-          <Text style={styles.timelineHeading}>JOURNEY TIMELINE</Text>
+          <Text
+            style={[
+              styles.timelineHeading,
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
+            JOURNEY TIMELINE
+          </Text>
 
           <View style={styles.timelineContainer}>
             {/* Step 1: Bus 654 */}
             <View style={styles.timelineRow}>
               <View style={styles.timelineLeftTrack}>
-                <Text style={styles.timelineTimeText}>8:30 AM</Text>
+                <Text
+                  style={[
+                    styles.timelineTimeText,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  8:30 AM
+                </Text>
                 <View style={[styles.timelineNode, styles.nodeBus]}>
                   <Text style={styles.nodeIcon}>🚌</Text>
                 </View>
-                <View style={styles.verticalTrackLine} />
+                <View
+                  style={[
+                    styles.verticalTrackLine,
+                    isDarkMode && { backgroundColor: colors.cardBorder },
+                  ]}
+                />
               </View>
 
-              <View style={styles.timelineContentCard}>
-                <Text style={styles.cardStepTitle}>
+              <View
+                style={[
+                  styles.timelineContentCard,
+                  isDarkMode && {
+                    backgroundColor: colors.cardBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.cardStepTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
                   Board Bus 654 — Colombo Fort
                 </Text>
-                <Text style={styles.cardStepLocation}>
+                <Text
+                  style={[
+                    styles.cardStepLocation,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
                   Kandy Bus Stand, Platform 3
                 </Text>
 
                 <View style={styles.cardFooterRow}>
-                  <Text style={styles.cardFooterInfo}>
+                  <Text
+                    style={[
+                      styles.cardFooterInfo,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                  >
                     Departs 8:30 AM · Rs. 120
                   </Text>
                   <View style={styles.pillDurationBlue}>
@@ -177,25 +312,74 @@ export default function RouteDetailScreen({ navigation, route }: Props) {
             {/* Step 2: Walk */}
             <View style={styles.timelineRow}>
               <View style={styles.timelineLeftTrack}>
-                <Text style={styles.timelineTimeText}>8:50 AM</Text>
+                <Text
+                  style={[
+                    styles.timelineTimeText,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  8:50 AM
+                </Text>
                 <View style={[styles.timelineNode, styles.nodeWalk]}>
                   <Text style={styles.nodeIcon}>🚶</Text>
                 </View>
-                <View style={styles.verticalTrackLine} />
+                <View
+                  style={[
+                    styles.verticalTrackLine,
+                    isDarkMode && { backgroundColor: colors.cardBorder },
+                  ]}
+                />
               </View>
 
-              <View style={styles.timelineContentCard}>
-                <Text style={styles.cardStepTitle}>
+              <View
+                style={[
+                  styles.timelineContentCard,
+                  isDarkMode && {
+                    backgroundColor: colors.cardBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.cardStepTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
                   Walk to Fort Railway Station
                 </Text>
-                <Text style={styles.cardStepLocation}>
+                <Text
+                  style={[
+                    styles.cardStepLocation,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
                   Via Colombo Street
                 </Text>
 
                 <View style={styles.cardFooterRow}>
-                  <Text style={styles.cardFooterInfo}>~380 m</Text>
-                  <View style={styles.pillDurationGray}>
-                    <Text style={styles.pillDurationTextGray}>5 min</Text>
+                  <Text
+                    style={[
+                      styles.cardFooterInfo,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                  >
+                    ~380 m
+                  </Text>
+                  <View
+                    style={[
+                      styles.pillDurationGray,
+                      isDarkMode && { backgroundColor: colors.subtleBg },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.pillDurationTextGray,
+                        isDarkMode && { color: colors.textSecondary },
+                      ]}
+                    >
+                      5 min
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -204,23 +388,58 @@ export default function RouteDetailScreen({ navigation, route }: Props) {
             {/* Step 3: Train */}
             <View style={styles.timelineRow}>
               <View style={styles.timelineLeftTrack}>
-                <Text style={styles.timelineTimeText}>8:55 AM</Text>
+                <Text
+                  style={[
+                    styles.timelineTimeText,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  8:55 AM
+                </Text>
                 <View style={[styles.timelineNode, styles.nodeTrain]}>
                   <Text style={styles.nodeIcon}>🚆</Text>
                 </View>
-                <View style={styles.verticalTrackLine} />
+                <View
+                  style={[
+                    styles.verticalTrackLine,
+                    isDarkMode && { backgroundColor: colors.cardBorder },
+                  ]}
+                />
               </View>
 
-              <View style={styles.timelineContentCard}>
-                <Text style={styles.cardStepTitle}>
+              <View
+                style={[
+                  styles.timelineContentCard,
+                  isDarkMode && {
+                    backgroundColor: colors.cardBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.cardStepTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
                   Intercity Express — Colombo Fort
                 </Text>
-                <Text style={styles.cardStepLocation}>
+                <Text
+                  style={[
+                    styles.cardStepLocation,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
                   Platform 1, Coach C
                 </Text>
 
                 <View style={styles.cardFooterRow}>
-                  <Text style={styles.cardFooterInfo}>
+                  <Text
+                    style={[
+                      styles.cardFooterInfo,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                  >
                     Departs 8:55 AM · Rs. 160 · Platform 1
                   </Text>
                   <View style={styles.pillDurationGreen}>
@@ -233,23 +452,60 @@ export default function RouteDetailScreen({ navigation, route }: Props) {
             {/* Step 4: Tuk-tuk */}
             <View style={styles.timelineRow}>
               <View style={styles.timelineLeftTrack}>
-                <Text style={styles.timelineTimeText}>9:50 AM</Text>
+                <Text
+                  style={[
+                    styles.timelineTimeText,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  9:50 AM
+                </Text>
                 <View style={[styles.timelineNode, styles.nodeTuk]}>
                   <Text style={styles.nodeIcon}>🛺</Text>
                 </View>
-                <View style={styles.verticalTrackLine} />
+                <View
+                  style={[
+                    styles.verticalTrackLine,
+                    isDarkMode && { backgroundColor: colors.cardBorder },
+                  ]}
+                />
               </View>
 
-              <View style={styles.timelineContentCard}>
-                <Text style={styles.cardStepTitle}>
+              <View
+                style={[
+                  styles.timelineContentCard,
+                  isDarkMode && {
+                    backgroundColor: colors.cardBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.cardStepTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
                   Tuk-tuk to Destination
                 </Text>
-                <Text style={styles.cardStepLocation}>
+                <Text
+                  style={[
+                    styles.cardStepLocation,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
                   Colombo Fort Station Exit
                 </Text>
 
                 <View style={styles.cardFooterRow}>
-                  <Text style={styles.cardFooterInfo}>Estimate Rs. 40</Text>
+                  <Text
+                    style={[
+                      styles.cardFooterInfo,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                  >
+                    Estimate Rs. 40
+                  </Text>
                   <View style={styles.pillDurationPink}>
                     <Text style={styles.pillDurationTextPink}>10 min</Text>
                   </View>
@@ -260,15 +516,36 @@ export default function RouteDetailScreen({ navigation, route }: Props) {
             {/* Step 5: Arrived at Colombo Fort */}
             <View style={styles.timelineRow}>
               <View style={styles.timelineLeftTrack}>
-                <Text style={styles.timelineTimeText}>10:05 AM</Text>
+                <Text
+                  style={[
+                    styles.timelineTimeText,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  10:05 AM
+                </Text>
                 <View style={[styles.timelineNode, styles.nodeDestination]}>
                   <Text style={styles.nodeIconWhite}>📍</Text>
                 </View>
               </View>
 
-              <View style={[styles.timelineContentCard, styles.cardArrived]}>
+              <View
+                style={[
+                  styles.timelineContentCard,
+                  styles.cardArrived,
+                  isDarkMode && {
+                    backgroundColor: "rgba(220, 38, 38, 0.15)",
+                    borderColor: "rgba(220, 38, 38, 0.3)",
+                  },
+                ]}
+              >
                 <Text style={styles.cardArrivedTitle}>Colombo Fort</Text>
-                <Text style={styles.cardArrivedSubtitle}>
+                <Text
+                  style={[
+                    styles.cardArrivedSubtitle,
+                    isDarkMode && { color: "#FCA5A5" },
+                  ]}
+                >
                   Arrived · Journey complete
                 </Text>
               </View>
@@ -277,37 +554,111 @@ export default function RouteDetailScreen({ navigation, route }: Props) {
         </View>
 
         {/* LAST-MILE VEHICLES SECTION */}
-        <View style={styles.lastMileContainer}>
+        <View
+          style={[
+            styles.lastMileContainer,
+            isDarkMode && {
+              backgroundColor: "rgba(217, 119, 6, 0.12)",
+              borderColor: "rgba(217, 119, 6, 0.25)",
+            },
+          ]}
+        >
           {/* Top Info Header */}
           <View style={styles.lastMileHeaderRow}>
             <View style={styles.lastMileTitleWrapper}>
-              <Text style={styles.lastMileTitle}>🛺 LAST-MILE VEHICLES</Text>
+              <Text
+                style={[
+                  styles.lastMileTitle,
+                  isDarkMode && { color: "#FBBF24" },
+                ]}
+              >
+                🛺 LAST-MILE VEHICLES
+              </Text>
             </View>
-            <View style={styles.arrivalLocationBadge}>
-              <Text style={styles.arrivalLocationBadgeText}>
+            <View
+              style={[
+                styles.arrivalLocationBadge,
+                isDarkMode && { backgroundColor: "rgba(251, 191, 36, 0.2)" },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.arrivalLocationBadgeText,
+                  isDarkMode && { color: "#FDE68A" },
+                ]}
+              >
                 Colombo Fort arrival
               </Text>
             </View>
           </View>
 
-          <Text style={styles.lastMileDescription}>
+          <Text
+            style={[
+              styles.lastMileDescription,
+              isDarkMode && { color: "#FCD34D" },
+            ]}
+          >
             Expected vehicles available when your train arrives at 10:05 AM
           </Text>
 
           {/* Two Vehicle Option Cards */}
           <View style={styles.vehiclesTwoColRow}>
             {/* Taxi Box */}
-            <View style={styles.vehicleColBox}>
-              <Text style={styles.vehicleBoxHeading}>🚕 Taxi</Text>
+            <View
+              style={[
+                styles.vehicleColBox,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.vehicleBoxHeading,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                🚕 Taxi
+              </Text>
               <Text style={styles.vehicleCountText}>8+</Text>
-              <Text style={styles.vehicleFareInfo}>~2 min · Rs. 350-500</Text>
+              <Text
+                style={[
+                  styles.vehicleFareInfo,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                ~2 min · Rs. 350-500
+              </Text>
             </View>
 
             {/* Tuk-tuk Box */}
-            <View style={styles.vehicleColBox}>
-              <Text style={styles.vehicleBoxHeading}>🛺 Tuk-tuk</Text>
+            <View
+              style={[
+                styles.vehicleColBox,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.vehicleBoxHeading,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                🛺 Tuk-tuk
+              </Text>
               <Text style={styles.vehicleCountText}>12+</Text>
-              <Text style={styles.vehicleFareInfo}>~1 min · Rs. 150-250</Text>
+              <Text
+                style={[
+                  styles.vehicleFareInfo,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                ~1 min · Rs. 150-250
+              </Text>
             </View>
           </View>
 
@@ -315,6 +666,12 @@ export default function RouteDetailScreen({ navigation, route }: Props) {
           <TouchableOpacity
             style={styles.viewVehiclesButton}
             activeOpacity={0.85}
+            onPress={() =>
+              navigation.navigate("AvailableVehicles", {
+                station: toCity,
+                arrivalTime: "5:40 PM",
+              })
+            }
           >
             <Text style={styles.viewVehiclesButtonText}>
               View Available Vehicles ➔
@@ -324,10 +681,24 @@ export default function RouteDetailScreen({ navigation, route }: Props) {
       </ScrollView>
 
       {/* Fixed Bottom Action Bar */}
-      <View style={styles.bottomActionBar}>
+      <View
+        style={[
+          styles.bottomActionBar,
+          isDarkMode && {
+            backgroundColor: colors.cardBg,
+            borderTopColor: colors.cardBorder,
+          },
+        ]}
+      >
         {/* Favorite Button */}
         <TouchableOpacity
-          style={styles.favoriteButton}
+          style={[
+            styles.favoriteButton,
+            isDarkMode && {
+              backgroundColor: colors.subtleBg,
+              borderColor: colors.cardBorder,
+            },
+          ]}
           activeOpacity={0.7}
           onPress={() => setIsFavorited(!isFavorited)}
         >

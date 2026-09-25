@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,11 @@ import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
+import BottomNavigationBar from "../components/BottomNavigationBar";
+import authService, { AuthUser } from "../services/authService";
+import api from "../services/api";
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -27,6 +32,8 @@ interface Props {
 }
 
 export default function ProfileScreen({ navigation }: Props) {
+  const { isDarkMode, toggleTheme, colors } = useTheme();
+
   // Modal states
   const [isPreferencesVisible, setIsPreferencesVisible] = useState(false);
   const [isLanguageVisible, setIsLanguageVisible] = useState(false);
@@ -37,70 +44,77 @@ export default function ProfileScreen({ navigation }: Props) {
 
   // Preference states
   const [selectedLanguage, setSelectedLanguage] = useState<"English" | "Sinhala" | "Tamil">("English");
+
+  // Travel Preferences states (matching modern preferences UI)
+  const [defaultPref, setDefaultPref] = useState<"Fastest" | "Cheapest" | "Reliable" | "Less Walk">("Fastest");
+  const [walkingTolerance, setWalkingTolerance] = useState<"Low" | "Medium" | "High">("Medium");
+  const [maxTransfers, setMaxTransfers] = useState<"1" | "2" | "3+">("2");
   const [preferBus, setPreferBus] = useState(true);
   const [preferTrain, setPreferTrain] = useState(true);
+  const [preferTaxi, setPreferTaxi] = useState(true);
   const [preferTuk, setPreferTuk] = useState(true);
-  const [avoidCrowded, setAvoidCrowded] = useState(false);
-  const [ecoFriendly, setEcoFriendly] = useState(true);
+  const [preferWalking, setPreferWalking] = useState(true);
+
+  // Notification toggles in travel preferences
+  const [notifyJourneyUpdates, setNotifyJourneyUpdates] = useState(true);
+  const [notifyConnectionRisks, setNotifyConnectionRisks] = useState(true);
+  const [notifyDisruptions, setNotifyDisruptions] = useState(true);
+  const [notifyAltRoutes, setNotifyAltRoutes] = useState(true);
+
   const [locationTracking, setLocationTracking] = useState(true);
   const [pushAlerts, setPushAlerts] = useState(true);
 
+  const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const cached = await authService.getCurrentUser();
+      if (cached) {
+        setCurrentUser(cached);
+      }
+      try {
+        const res = await api.getProfile();
+        if (res.success && res.data?.user) {
+          setCurrentUser(res.data.user);
+        }
+      } catch {
+        // Backend offline / using cached
+      }
+    })();
+  }, []);
+
   const handleLogout = () => {
-    Alert.alert(
-      "Log Out",
-      "Are you sure you want to log out of your BestRoute account?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Log Out",
-          style: "destructive",
-          onPress: () => {
-            navigation.replace("Login");
-          },
-        },
-      ]
-    );
+    setIsLogoutModalVisible(true);
+  };
+
+  const confirmLogout = async () => {
+    setIsLogoutModalVisible(false);
+    await authService.logout();
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Login" }],
+    });
+  };
+
+  const handleSavePreferences = async () => {
+    setIsPreferencesVisible(false);
+    let prefKey = "fastest";
+    if (defaultPref === "Cheapest") prefKey = "cheapest";
+    else if (defaultPref === "Reliable") prefKey = "most_reliable";
+    else if (defaultPref === "Less Walk") prefKey = "minimum_walking";
+
+    try {
+      await api.updatePreference(prefKey);
+      Alert.alert("Preferences Saved", "Your journey preferences have been saved to your account.");
+    } catch {
+      Alert.alert("Preferences Saved", "Preferences updated locally.");
+    }
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.screenBg }]}>
       <StatusBar style="light" />
-
-      {/* Top Profile Header Banner with Gradient */}
-      <LinearGradient
-        colors={["#0B3E9E", "#1763D5", "#1D64EC"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
-      >
-        <SafeAreaView edges={["top"]} style={styles.safeHeader}>
-          <View style={styles.profileHeaderContent}>
-            {/* Avatar container */}
-            <View style={styles.avatarWrapper}>
-              <View style={styles.avatarContainer}>
-                <Text style={styles.avatarEmoji}>👨‍💼</Text>
-              </View>
-              <View style={styles.avatarBadgeDot} />
-            </View>
-
-            {/* User Info */}
-            <View style={styles.userInfo}>
-              <Text style={styles.userName} numberOfLines={1}>
-                Alex Perera
-              </Text>
-              <Text style={styles.userEmail} numberOfLines={1}>
-                alex@example.com
-              </Text>
-              <View style={styles.memberTagRow}>
-                <View style={styles.activeGreenDot} />
-                <Text style={styles.memberTagText}>
-                  24 journeys · Member since 2024
-                </Text>
-              </View>
-            </View>
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
 
       {/* Main Content Area */}
       <ScrollView
@@ -108,30 +122,126 @@ export default function ProfileScreen({ navigation }: Props) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Top Profile Header Banner with Gradient */}
+        <LinearGradient
+          colors={
+            isDarkMode
+              ? ["#071630", "#0B2554", "#1541A0"]
+              : ["#0B3E9E", "#1763D5", "#1D64EC"]
+          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        >
+          <SafeAreaView edges={["top"]} style={styles.safeHeader}>
+            <View style={styles.profileHeaderContent}>
+              {/* Avatar container */}
+              <View style={styles.avatarWrapper}>
+                <View
+                  style={[
+                    styles.avatarContainer,
+                    isDarkMode && { backgroundColor: "#1E293B" },
+                  ]}
+                >
+                  <Text style={styles.avatarEmoji}>👨‍💼</Text>
+                </View>
+                <View style={styles.avatarBadgeDot} />
+              </View>
+
+              {/* User Info */}
+              <View style={styles.userInfo}>
+                <Text style={styles.userName} numberOfLines={1}>
+                  {currentUser?.name || "Alex Perera"}
+                </Text>
+                <Text style={styles.userEmail} numberOfLines={1}>
+                  {currentUser?.email || "alex@example.com"}
+                </Text>
+                <View style={styles.memberTagRow}>
+                  <View style={styles.activeGreenDot} />
+                  <Text style={styles.memberTagText}>
+                    {currentUser?.role === "driver" ? "Registered Driver · 2024" : "24 journeys · Member since 2024"}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Dark Mode Change Button Displayed in Top Right Corner */}
+              <ThemeToggle variant="glass" size={40} />
+            </View>
+          </SafeAreaView>
+        </LinearGradient>
+
         {/* Floating Quick Stats Card */}
-        <View style={styles.statsCard}>
+        <View
+          style={[
+            styles.statsCard,
+            isDarkMode && {
+              backgroundColor: colors.cardBg,
+              borderColor: colors.cardBorder,
+              borderWidth: 1,
+            },
+          ]}
+        >
           <View style={styles.statColumn}>
             <Text style={styles.statNumberBlue}>24</Text>
-            <Text style={styles.statLabel}>Journeys</Text>
+            <Text
+              style={[
+                styles.statLabel,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              Journeys
+            </Text>
           </View>
 
-          <View style={styles.statDivider} />
+          <View
+            style={[
+              styles.statDivider,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           <View style={styles.statColumn}>
             <Text style={styles.statNumberGreen}>Rs.1.2k</Text>
-            <Text style={styles.statLabel}>Saved</Text>
+            <Text
+              style={[
+                styles.statLabel,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              Saved
+            </Text>
           </View>
 
-          <View style={styles.statDivider} />
+          <View
+            style={[
+              styles.statDivider,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           <View style={styles.statColumn}>
             <Text style={styles.statNumberAmber}>4.8★</Text>
-            <Text style={styles.statLabel}>Avg Rating</Text>
+            <Text
+              style={[
+                styles.statLabel,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              Avg Rating
+            </Text>
           </View>
         </View>
 
         {/* Section 1: Travel & Activity */}
-        <View style={styles.menuGroup}>
+        <View
+          style={[
+            styles.menuGroup,
+            isDarkMode && {
+              backgroundColor: colors.cardBg,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+        >
           {/* My Journeys */}
           <TouchableOpacity
             style={styles.menuItem}
@@ -140,12 +250,31 @@ export default function ProfileScreen({ navigation }: Props) {
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>🗺️</Text>
-              <Text style={styles.menuTitle}>My Journeys</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                My Journeys
+              </Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
 
-          <View style={styles.itemSeparator} />
+          <View
+            style={[
+              styles.itemSeparator,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           {/* Favourite Routes */}
           <TouchableOpacity
@@ -157,12 +286,31 @@ export default function ProfileScreen({ navigation }: Props) {
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>💖</Text>
-              <Text style={styles.menuTitle}>Favourite Routes</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Favourite Routes
+              </Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
 
-          <View style={styles.itemSeparator} />
+          <View
+            style={[
+              styles.itemSeparator,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           {/* Travel Preferences */}
           <TouchableOpacity
@@ -172,29 +320,98 @@ export default function ProfileScreen({ navigation }: Props) {
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>⚙️</Text>
-              <Text style={styles.menuTitle}>Travel Preferences</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Travel Preferences
+              </Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
 
-          <View style={styles.itemSeparator} />
+          <View
+            style={[
+              styles.itemSeparator,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           {/* Become a Driver */}
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => setIsDriverModalVisible(true)}
+            onPress={() => navigation.navigate("DriverRegistration")}
             activeOpacity={0.7}
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>🚖</Text>
-              <Text style={styles.menuTitle}>Become a Driver</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Become a Driver
+              </Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Section 2: Preferences & Security */}
-        <View style={styles.menuGroup}>
+        <View
+          style={[
+            styles.menuGroup,
+            isDarkMode && {
+              backgroundColor: colors.cardBg,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+        >
+          {/* Dark Mode Toggle */}
+          <View style={styles.menuItem}>
+            <View style={styles.menuLeft}>
+              <Text style={styles.menuIcon}>{isDarkMode ? "🌙" : "☀️"}</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Dark Mode
+              </Text>
+            </View>
+            <Switch
+              value={isDarkMode}
+              onValueChange={toggleTheme}
+              trackColor={{ false: "#CBD5E1", true: "#3B82F6" }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+
+          <View
+            style={[
+              styles.itemSeparator,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
+
           {/* Notifications */}
           <TouchableOpacity
             style={styles.menuItem}
@@ -203,12 +420,31 @@ export default function ProfileScreen({ navigation }: Props) {
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>🔔</Text>
-              <Text style={styles.menuTitle}>Notifications</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Notifications
+              </Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
 
-          <View style={styles.itemSeparator} />
+          <View
+            style={[
+              styles.itemSeparator,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           {/* Language */}
           <TouchableOpacity
@@ -218,15 +454,41 @@ export default function ProfileScreen({ navigation }: Props) {
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>🌐</Text>
-              <Text style={styles.menuTitle}>Language</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Language
+              </Text>
             </View>
             <View style={styles.menuRightInfo}>
-              <Text style={styles.menuCurrentSetting}>{selectedLanguage}</Text>
-              <Text style={styles.menuChevron}>›</Text>
+              <Text
+                style={[
+                  styles.menuCurrentSetting,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                {selectedLanguage}
+              </Text>
+              <Text
+                style={[
+                  styles.menuChevron,
+                  isDarkMode && { color: colors.textMuted },
+                ]}
+              >
+                ›
+              </Text>
             </View>
           </TouchableOpacity>
 
-          <View style={styles.itemSeparator} />
+          <View
+            style={[
+              styles.itemSeparator,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           {/* Privacy */}
           <TouchableOpacity
@@ -236,14 +498,36 @@ export default function ProfileScreen({ navigation }: Props) {
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>🔒</Text>
-              <Text style={styles.menuTitle}>Privacy</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Privacy
+              </Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Section 3: Help & Log Out */}
-        <View style={styles.menuGroup}>
+        <View
+          style={[
+            styles.menuGroup,
+            isDarkMode && {
+              backgroundColor: colors.cardBg,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+        >
           {/* Help & Support */}
           <TouchableOpacity
             style={styles.menuItem}
@@ -252,12 +536,31 @@ export default function ProfileScreen({ navigation }: Props) {
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>❓</Text>
-              <Text style={styles.menuTitle}>Help & Support</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Help & Support
+              </Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
 
-          <View style={styles.itemSeparator} />
+          <View
+            style={[
+              styles.itemSeparator,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           {/* About BestRoute */}
           <TouchableOpacity
@@ -267,12 +570,31 @@ export default function ProfileScreen({ navigation }: Props) {
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>ℹ️</Text>
-              <Text style={styles.menuTitle}>About BestRoute</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                About BestRoute
+              </Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
 
-          <View style={styles.itemSeparator} />
+          <View
+            style={[
+              styles.itemSeparator,
+              isDarkMode && { backgroundColor: colors.borderLight },
+            ]}
+          />
 
           {/* Log Out */}
           <TouchableOpacity
@@ -284,63 +606,40 @@ export default function ProfileScreen({ navigation }: Props) {
               <Text style={styles.menuIcon}>🚪</Text>
               <Text style={[styles.menuTitle, styles.logoutText]}>Log Out</Text>
             </View>
-            <Text style={styles.menuChevron}>›</Text>
+            <Text
+              style={[
+                styles.menuChevron,
+                isDarkMode && { color: colors.textMuted },
+              ]}
+            >
+              ›
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* App Version Stamp */}
         <View style={styles.footerStamp}>
-          <Text style={styles.versionText}>BestRoute Mobile v1.0.4</Text>
-          <Text style={styles.copyrightText}>
+          <Text
+            style={[
+              styles.versionText,
+              isDarkMode && { color: colors.textMuted },
+            ]}
+          >
+            BestRoute Mobile v1.0.4
+          </Text>
+          <Text
+            style={[
+              styles.copyrightText,
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
             Multimodal Transit Network of Sri Lanka
           </Text>
         </View>
       </ScrollView>
 
-      {/* Bottom Navigation Bar */}
-      <View style={styles.bottomNav}>
-        {/* Home Tab */}
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate("Home")}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.navIcon, styles.navIconInactive]}>🏠</Text>
-          <Text style={[styles.navLabel, styles.navLabelInactive]}>Home</Text>
-        </TouchableOpacity>
-
-        {/* Journeys Tab */}
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate("Journeys")}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.navIcon, styles.navIconInactive]}>🗺️</Text>
-          <Text style={[styles.navLabel, styles.navLabelInactive]}>Journeys</Text>
-        </TouchableOpacity>
-
-        {/* Alerts Tab */}
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate("Notifications")}
-          activeOpacity={0.7}
-        >
-          <View style={styles.alertIconWrapper}>
-            <Text style={[styles.navIcon, styles.navIconInactive]}>🔔</Text>
-            <View style={styles.badgeContainer}>
-              <Text style={styles.badgeText}>2</Text>
-            </View>
-          </View>
-          <Text style={[styles.navLabel, styles.navLabelInactive]}>Alerts</Text>
-        </TouchableOpacity>
-
-        {/* Profile Tab (Active) */}
-        <TouchableOpacity style={styles.navItem} activeOpacity={0.8}>
-          <Text style={[styles.navIcon, styles.navIconActive]}>👤</Text>
-          <Text style={[styles.navLabel, styles.navLabelActive]}>Profile</Text>
-          <View style={styles.activeTabIndicator} />
-        </TouchableOpacity>
-      </View>
+      {/* Unified Fixed-Position Bottom Navigation Bar */}
+      <BottomNavigationBar activeTab="profile" navigation={navigation} />
 
       {/* ================= TRAVEL PREFERENCES MODAL ================= */}
       <Modal
@@ -349,94 +648,634 @@ export default function ProfileScreen({ navigation }: Props) {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsPreferencesVisible(false)}
       >
-        <SafeAreaView style={styles.modalSafeArea} edges={["top", "bottom"]}>
-          <View style={styles.modalHeader}>
+        <SafeAreaView
+          style={[
+            styles.tpContainer,
+            isDarkMode && { backgroundColor: colors.screenBg },
+          ]}
+          edges={["top", "bottom"]}
+        >
+          {/* Header with back button */}
+          <View
+            style={[
+              styles.tpHeader,
+              isDarkMode && {
+                backgroundColor: colors.headerBg,
+                borderBottomColor: colors.cardBorder,
+              },
+            ]}
+          >
             <TouchableOpacity
-              style={styles.modalCloseButton}
+              style={[
+                styles.tpBackButton,
+                isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+              ]}
               onPress={() => setIsPreferencesVisible(false)}
+              activeOpacity={0.7}
             >
-              <Text style={styles.modalCloseText}>✕</Text>
+              <Text
+                style={[
+                  styles.tpBackIcon,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                ‹
+              </Text>
             </TouchableOpacity>
-            <Text style={styles.modalHeaderTitle}>Travel Preferences</Text>
-            <TouchableOpacity
-              style={styles.modalDoneBtn}
-              onPress={() => setIsPreferencesVisible(false)}
+            <Text
+              style={[
+                styles.tpHeaderTitle,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
             >
-              <Text style={styles.modalDoneText}>Save</Text>
-            </TouchableOpacity>
+              Travel Preferences
+            </Text>
           </View>
 
-          <ScrollView style={styles.modalBody}>
-            <Text style={styles.prefSectionTitle}>Preferred Transit Modes</Text>
-            <View style={styles.switchRow}>
-              <View>
-                <Text style={styles.switchLabel}>Public & Highway Buses</Text>
-                <Text style={styles.switchSub}>SLTB & Private Bus Network</Text>
+          {/* Preferences Body */}
+          <ScrollView
+            style={[
+              styles.tpScrollView,
+              isDarkMode && { backgroundColor: colors.screenBg },
+            ]}
+            contentContainerStyle={styles.tpScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Card 1: DEFAULT PREFERENCE */}
+            <View
+              style={[
+                styles.tpCard,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tpCardLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                DEFAULT PREFERENCE
+              </Text>
+              <View style={styles.tpGridRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.tpPrefButton,
+                    defaultPref === "Fastest"
+                      ? styles.tpPrefButtonActive
+                      : [
+                          styles.tpPrefButtonInactive,
+                          isDarkMode && {
+                            backgroundColor: colors.cardSecondaryBg,
+                            borderColor: colors.cardBorder,
+                          },
+                        ],
+                  ]}
+                  onPress={() => setDefaultPref("Fastest")}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.tpPrefEmoji}>⚡</Text>
+                  <Text
+                    style={[
+                      styles.tpPrefText,
+                      defaultPref === "Fastest"
+                        ? styles.tpPrefTextActive
+                        : [
+                            styles.tpPrefTextInactive,
+                            isDarkMode && { color: colors.textPrimary },
+                          ],
+                    ]}
+                  >
+                    Fastest
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.tpPrefButton,
+                    defaultPref === "Cheapest"
+                      ? styles.tpPrefButtonActive
+                      : [
+                          styles.tpPrefButtonInactive,
+                          isDarkMode && {
+                            backgroundColor: colors.cardSecondaryBg,
+                            borderColor: colors.cardBorder,
+                          },
+                        ],
+                  ]}
+                  onPress={() => setDefaultPref("Cheapest")}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.tpPrefEmoji}>💰</Text>
+                  <Text
+                    style={[
+                      styles.tpPrefText,
+                      defaultPref === "Cheapest"
+                        ? styles.tpPrefTextActive
+                        : [
+                            styles.tpPrefTextInactive,
+                            isDarkMode && { color: colors.textPrimary },
+                          ],
+                    ]}
+                  >
+                    Cheapest
+                  </Text>
+                </TouchableOpacity>
               </View>
-              <Switch
-                value={preferBus}
-                onValueChange={setPreferBus}
-                trackColor={{ false: "#E2E8F0", true: "#BFDBFE" }}
-                thumbColor={preferBus ? "#1D64EC" : "#94A3B8"}
-              />
+
+              <View style={styles.tpGridRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.tpPrefButton,
+                    defaultPref === "Reliable"
+                      ? styles.tpPrefButtonActive
+                      : [
+                          styles.tpPrefButtonInactive,
+                          isDarkMode && {
+                            backgroundColor: colors.cardSecondaryBg,
+                            borderColor: colors.cardBorder,
+                          },
+                        ],
+                  ]}
+                  onPress={() => setDefaultPref("Reliable")}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.tpPrefEmoji}>🛡️</Text>
+                  <Text
+                    style={[
+                      styles.tpPrefText,
+                      defaultPref === "Reliable"
+                        ? styles.tpPrefTextActive
+                        : [
+                            styles.tpPrefTextInactive,
+                            isDarkMode && { color: colors.textPrimary },
+                          ],
+                    ]}
+                  >
+                    Reliable
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.tpPrefButton,
+                    defaultPref === "Less Walk"
+                      ? styles.tpPrefButtonActive
+                      : [
+                          styles.tpPrefButtonInactive,
+                          isDarkMode && {
+                            backgroundColor: colors.cardSecondaryBg,
+                            borderColor: colors.cardBorder,
+                          },
+                        ],
+                  ]}
+                  onPress={() => setDefaultPref("Less Walk")}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.tpPrefEmoji}>🚶</Text>
+                  <Text
+                    style={[
+                      styles.tpPrefText,
+                      defaultPref === "Less Walk"
+                        ? styles.tpPrefTextActive
+                        : [
+                            styles.tpPrefTextInactive,
+                            isDarkMode && { color: colors.textPrimary },
+                          ],
+                    ]}
+                  >
+                    Less Walk
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
-            <View style={styles.switchRow}>
-              <View>
-                <Text style={styles.switchLabel}>Sri Lanka Railways Trains</Text>
-                <Text style={styles.switchSub}>Main Line & Coastal Express</Text>
+            {/* Card 2: WALKING TOLERANCE */}
+            <View
+              style={[
+                styles.tpCard,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tpCardLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                WALKING TOLERANCE
+              </Text>
+              <View style={styles.tpPillsRow}>
+                {(["Low", "Medium", "High"] as const).map((tier) => {
+                  const isSelected = walkingTolerance === tier;
+                  return (
+                    <TouchableOpacity
+                      key={tier}
+                      style={[
+                        styles.tpPillButton,
+                        isSelected
+                          ? styles.tpTolerancePillActive
+                          : [
+                              styles.tpPillInactive,
+                              isDarkMode && {
+                                backgroundColor: colors.cardSecondaryBg,
+                                borderColor: colors.cardBorder,
+                              },
+                            ],
+                      ]}
+                      onPress={() => setWalkingTolerance(tier)}
+                      activeOpacity={0.8}
+                    >
+                      <Text
+                        style={[
+                          styles.tpPillText,
+                          isSelected
+                            ? styles.tpPillTextActive
+                            : [
+                                styles.tpPillTextInactive,
+                                isDarkMode && { color: colors.textPrimary },
+                              ],
+                        ]}
+                      >
+                        {tier}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
-              <Switch
-                value={preferTrain}
-                onValueChange={setPreferTrain}
-                trackColor={{ false: "#E2E8F0", true: "#BFDBFE" }}
-                thumbColor={preferTrain ? "#1D64EC" : "#94A3B8"}
-              />
             </View>
 
-            <View style={styles.switchRow}>
-              <View>
-                <Text style={styles.switchLabel}>Three-Wheelers (Tuks) & Taxis</Text>
-                <Text style={styles.switchSub}>Last-mile connector rides</Text>
+            {/* Card 3: MAX TRANSFERS */}
+            <View
+              style={[
+                styles.tpCard,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
+              <View style={styles.tpCardHeaderBetween}>
+                <Text
+                  style={[
+                    styles.tpCardLabelNoMargin,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  MAX TRANSFERS
+                </Text>
+                <Text
+                  style={[
+                    styles.tpTransfersBadge,
+                    isDarkMode && { color: colors.primaryLight },
+                  ]}
+                >
+                  {maxTransfers}
+                </Text>
               </View>
-              <Switch
-                value={preferTuk}
-                onValueChange={setPreferTuk}
-                trackColor={{ false: "#E2E8F0", true: "#BFDBFE" }}
-                thumbColor={preferTuk ? "#1D64EC" : "#94A3B8"}
-              />
+              <View style={styles.tpPillsRow}>
+                {(["1", "2", "3+"] as const).map((count) => {
+                  const isSelected = maxTransfers === count;
+                  return (
+                    <TouchableOpacity
+                      key={count}
+                      style={[
+                        styles.tpPillButton,
+                        isSelected
+                          ? styles.tpTransfersPillActive
+                          : [
+                              styles.tpPillInactive,
+                              isDarkMode && {
+                                backgroundColor: colors.cardSecondaryBg,
+                                borderColor: colors.cardBorder,
+                              },
+                            ],
+                      ]}
+                      onPress={() => setMaxTransfers(count)}
+                      activeOpacity={0.8}
+                    >
+                      <Text
+                        style={[
+                          styles.tpPillText,
+                          isSelected
+                            ? styles.tpPillTextActive
+                            : [
+                                styles.tpPillTextInactive,
+                                isDarkMode && { color: colors.textPrimary },
+                              ],
+                        ]}
+                      >
+                        {count}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
 
-            <Text style={[styles.prefSectionTitle, { marginTop: 24 }]}>
-              Optimization Rules
-            </Text>
+            {/* Card 4: TRANSPORT MODES */}
+            <View
+              style={[
+                styles.tpCard,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tpCardLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                TRANSPORT MODES
+              </Text>
 
-            <View style={styles.switchRow}>
-              <View>
-                <Text style={styles.switchLabel}>Prioritize Eco-friendly Routes</Text>
-                <Text style={styles.switchSub}>Minimizes carbon footprint</Text>
+              <View
+                style={[
+                  styles.tpToggleRow,
+                  isDarkMode && { borderBottomColor: colors.borderLight },
+                ]}
+              >
+                <View style={styles.tpModeLeft}>
+                  <Text style={styles.tpModeEmoji}>🚌</Text>
+                  <Text
+                    style={[
+                      styles.tpModeLabel,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    Bus
+                  </Text>
+                </View>
+                <Switch
+                  value={preferBus}
+                  onValueChange={setPreferBus}
+                  trackColor={{
+                    false: isDarkMode ? "#334155" : "#E2E8F0",
+                    true: "#2563EB",
+                  }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor={isDarkMode ? "#334155" : "#E2E8F0"}
+                />
               </View>
-              <Switch
-                value={ecoFriendly}
-                onValueChange={setEcoFriendly}
-                trackColor={{ false: "#E2E8F0", true: "#BBF7D0" }}
-                thumbColor={ecoFriendly ? "#16A34A" : "#94A3B8"}
-              />
+
+              <View
+                style={[
+                  styles.tpToggleRow,
+                  isDarkMode && { borderBottomColor: colors.borderLight },
+                ]}
+              >
+                <View style={styles.tpModeLeft}>
+                  <Text style={styles.tpModeEmoji}>🚆</Text>
+                  <Text
+                    style={[
+                      styles.tpModeLabel,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    Train
+                  </Text>
+                </View>
+                <Switch
+                  value={preferTrain}
+                  onValueChange={setPreferTrain}
+                  trackColor={{
+                    false: isDarkMode ? "#334155" : "#E2E8F0",
+                    true: "#2563EB",
+                  }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor={isDarkMode ? "#334155" : "#E2E8F0"}
+                />
+              </View>
+
+              <View
+                style={[
+                  styles.tpToggleRow,
+                  isDarkMode && { borderBottomColor: colors.borderLight },
+                ]}
+              >
+                <View style={styles.tpModeLeft}>
+                  <Text style={styles.tpModeEmoji}>🚕</Text>
+                  <Text
+                    style={[
+                      styles.tpModeLabel,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    Taxi
+                  </Text>
+                </View>
+                <Switch
+                  value={preferTaxi}
+                  onValueChange={setPreferTaxi}
+                  trackColor={{
+                    false: isDarkMode ? "#334155" : "#E2E8F0",
+                    true: "#2563EB",
+                  }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor={isDarkMode ? "#334155" : "#E2E8F0"}
+                />
+              </View>
+
+              <View
+                style={[
+                  styles.tpToggleRow,
+                  isDarkMode && { borderBottomColor: colors.borderLight },
+                ]}
+              >
+                <View style={styles.tpModeLeft}>
+                  <Text style={styles.tpModeEmoji}>🛺</Text>
+                  <Text
+                    style={[
+                      styles.tpModeLabel,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    Tuk-tuk
+                  </Text>
+                </View>
+                <Switch
+                  value={preferTuk}
+                  onValueChange={setPreferTuk}
+                  trackColor={{
+                    false: isDarkMode ? "#334155" : "#E2E8F0",
+                    true: "#2563EB",
+                  }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor={isDarkMode ? "#334155" : "#E2E8F0"}
+                />
+              </View>
+
+              <View style={[styles.tpToggleRow, { borderBottomWidth: 0 }]}>
+                <View style={styles.tpModeLeft}>
+                  <Text style={styles.tpModeEmoji}>🚶</Text>
+                  <Text
+                    style={[
+                      styles.tpModeLabel,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                  >
+                    Walking
+                  </Text>
+                </View>
+                <Switch
+                  value={preferWalking}
+                  onValueChange={setPreferWalking}
+                  trackColor={{
+                    false: isDarkMode ? "#334155" : "#E2E8F0",
+                    true: "#2563EB",
+                  }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor={isDarkMode ? "#334155" : "#E2E8F0"}
+                />
+              </View>
             </View>
 
-            <View style={styles.switchRow}>
-              <View>
-                <Text style={styles.switchLabel}>Avoid Overcrowded Trains/Buses</Text>
-                <Text style={styles.switchSub}>Suggests alternative departure times</Text>
+            {/* Card 5: NOTIFICATIONS */}
+            <View
+              style={[
+                styles.tpCard,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tpCardLabel,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                NOTIFICATIONS
+              </Text>
+
+              <View
+                style={[
+                  styles.tpToggleRow,
+                  isDarkMode && { borderBottomColor: colors.borderLight },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.tpNotifLabel,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Journey updates
+                </Text>
+                <Switch
+                  value={notifyJourneyUpdates}
+                  onValueChange={setNotifyJourneyUpdates}
+                  trackColor={{
+                    false: isDarkMode ? "#334155" : "#E2E8F0",
+                    true: "#2563EB",
+                  }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor={isDarkMode ? "#334155" : "#E2E8F0"}
+                />
               </View>
-              <Switch
-                value={avoidCrowded}
-                onValueChange={setAvoidCrowded}
-                trackColor={{ false: "#E2E8F0", true: "#BFDBFE" }}
-                thumbColor={avoidCrowded ? "#1D64EC" : "#94A3B8"}
-              />
+
+              <View
+                style={[
+                  styles.tpToggleRow,
+                  isDarkMode && { borderBottomColor: colors.borderLight },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.tpNotifLabel,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Connection risks
+                </Text>
+                <Switch
+                  value={notifyConnectionRisks}
+                  onValueChange={setNotifyConnectionRisks}
+                  trackColor={{
+                    false: isDarkMode ? "#334155" : "#E2E8F0",
+                    true: "#2563EB",
+                  }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor={isDarkMode ? "#334155" : "#E2E8F0"}
+                />
+              </View>
+
+              <View
+                style={[
+                  styles.tpToggleRow,
+                  isDarkMode && { borderBottomColor: colors.borderLight },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.tpNotifLabel,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Service disruptions
+                </Text>
+                <Switch
+                  value={notifyDisruptions}
+                  onValueChange={setNotifyDisruptions}
+                  trackColor={{
+                    false: isDarkMode ? "#334155" : "#E2E8F0",
+                    true: "#2563EB",
+                  }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor={isDarkMode ? "#334155" : "#E2E8F0"}
+                />
+              </View>
+
+              <View style={[styles.tpToggleRow, { borderBottomWidth: 0 }]}>
+                <Text
+                  style={[
+                    styles.tpNotifLabel,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Alternative routes
+                </Text>
+                <Switch
+                  value={notifyAltRoutes}
+                  onValueChange={setNotifyAltRoutes}
+                  trackColor={{
+                    false: isDarkMode ? "#334155" : "#E2E8F0",
+                    true: "#2563EB",
+                  }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor={isDarkMode ? "#334155" : "#E2E8F0"}
+                />
+              </View>
             </View>
           </ScrollView>
+
+          {/* Sticky Bottom Save Preferences */}
+          <View
+            style={[
+              styles.tpBottomBar,
+              isDarkMode && {
+                backgroundColor: colors.headerBg,
+                borderTopColor: colors.cardBorder,
+              },
+            ]}
+          >
+            <TouchableOpacity
+              style={styles.tpSaveButton}
+              onPress={handleSavePreferences}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.tpSaveButtonText}>Save Preferences</Text>
+            </TouchableOpacity>
+          </View>
         </SafeAreaView>
       </Modal>
 
@@ -447,15 +1286,43 @@ export default function ProfileScreen({ navigation }: Props) {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsLanguageVisible(false)}
       >
-        <SafeAreaView style={styles.modalSafeArea} edges={["top", "bottom"]}>
-          <View style={styles.modalHeader}>
+        <SafeAreaView
+          style={[
+            styles.modalSafeArea,
+            isDarkMode && { backgroundColor: colors.modalBg },
+          ]}
+          edges={["top", "bottom"]}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              isDarkMode && { borderBottomColor: colors.cardBorder },
+            ]}
+          >
             <TouchableOpacity
-              style={styles.modalCloseButton}
+              style={[
+                styles.modalCloseButton,
+                isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+              ]}
               onPress={() => setIsLanguageVisible(false)}
             >
-              <Text style={styles.modalCloseText}>✕</Text>
+              <Text
+                style={[
+                  styles.modalCloseText,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                ✕
+              </Text>
             </TouchableOpacity>
-            <Text style={styles.modalHeaderTitle}>Select Language</Text>
+            <Text
+              style={[
+                styles.modalHeaderTitle,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
+              Select Language
+            </Text>
             <View style={{ width: 32 }} />
           </View>
 
@@ -472,7 +1339,17 @@ export default function ProfileScreen({ navigation }: Props) {
                   key={lang}
                   style={[
                     styles.langOptionCard,
-                    isSelected && styles.langOptionCardActive,
+                    isDarkMode && {
+                      backgroundColor: colors.cardBg,
+                      borderColor: colors.cardBorder,
+                    },
+                    isSelected && [
+                      styles.langOptionCardActive,
+                      isDarkMode && {
+                        backgroundColor: "rgba(37, 99, 235, 0.2)",
+                        borderColor: "#3B82F6",
+                      },
+                    ],
                   ]}
                   onPress={() => {
                     setSelectedLanguage(lang);
@@ -483,12 +1360,25 @@ export default function ProfileScreen({ navigation }: Props) {
                   <Text
                     style={[
                       styles.langOptionText,
-                      isSelected && styles.langOptionTextActive,
+                      isDarkMode && { color: colors.textPrimary },
+                      isSelected && [
+                        styles.langOptionTextActive,
+                        isDarkMode && { color: "#60A5FA" },
+                      ],
                     ]}
                   >
                     {nativeLabels[lang]}
                   </Text>
-                  {isSelected && <Text style={styles.langCheck}>✓</Text>}
+                  {isSelected && (
+                    <Text
+                      style={[
+                        styles.langCheck,
+                        isDarkMode && { color: "#60A5FA" },
+                      ]}
+                    >
+                      ✓
+                    </Text>
+                  )}
                 </TouchableOpacity>
               );
             })}
@@ -503,38 +1393,108 @@ export default function ProfileScreen({ navigation }: Props) {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsDriverModalVisible(false)}
       >
-        <SafeAreaView style={styles.modalSafeArea} edges={["top", "bottom"]}>
-          <View style={styles.modalHeader}>
+        <SafeAreaView
+          style={[
+            styles.modalSafeArea,
+            isDarkMode && { backgroundColor: colors.modalBg },
+          ]}
+          edges={["top", "bottom"]}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              isDarkMode && { borderBottomColor: colors.cardBorder },
+            ]}
+          >
             <TouchableOpacity
-              style={styles.modalCloseButton}
+              style={[
+                styles.modalCloseButton,
+                isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+              ]}
               onPress={() => setIsDriverModalVisible(false)}
             >
-              <Text style={styles.modalCloseText}>✕</Text>
+              <Text
+                style={[
+                  styles.modalCloseText,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                ✕
+              </Text>
             </TouchableOpacity>
-            <Text style={styles.modalHeaderTitle}>Partner with BestRoute</Text>
+            <Text
+              style={[
+                styles.modalHeaderTitle,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
+              Partner with BestRoute
+            </Text>
             <View style={{ width: 32 }} />
           </View>
 
           <ScrollView style={styles.modalBody}>
-            <View style={styles.driverBannerBox}>
+            <View
+              style={[
+                styles.driverBannerBox,
+                isDarkMode && {
+                  backgroundColor: "rgba(217, 119, 6, 0.18)",
+                  borderColor: "rgba(217, 119, 6, 0.4)",
+                  borderWidth: 1,
+                },
+              ]}
+            >
               <Text style={styles.driverBigEmoji}>🚖</Text>
-              <Text style={styles.driverBannerTitle}>
+              <Text
+                style={[
+                  styles.driverBannerTitle,
+                  isDarkMode && { color: "#FDE68A" },
+                ]}
+              >
                 Drive with Sri Lanka's Smart Transit Network
               </Text>
-              <Text style={styles.driverBannerSub}>
+              <Text
+                style={[
+                  styles.driverBannerSub,
+                  isDarkMode && { color: "#FCD34D" },
+                ]}
+              >
                 Connect daily commuters with last-mile tuk and taxi rides at train
                 stations and bus terminals.
               </Text>
             </View>
 
-            <View style={styles.driverPerksBox}>
-              <Text style={styles.driverPerkItem}>
+            <View
+              style={[
+                styles.driverPerksBox,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.driverPerkItem,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
                 💰 Instant daily payouts with 0% commission introductory offer
               </Text>
-              <Text style={styles.driverPerkItem}>
+              <Text
+                style={[
+                  styles.driverPerkItem,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
                 📍 Guaranteed high-demand passenger pickups at railway hubs
               </Text>
-              <Text style={styles.driverPerkItem}>
+              <Text
+                style={[
+                  styles.driverPerkItem,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
                 🛡️ In-ride safety monitoring and GPS live tracking
               </Text>
             </View>
@@ -543,10 +1503,7 @@ export default function ProfileScreen({ navigation }: Props) {
               style={styles.driverRegisterBtn}
               onPress={() => {
                 setIsDriverModalVisible(false);
-                Alert.alert(
-                  "Application Started",
-                  "Thank you for your interest! A BestRoute partner onboarding specialist will contact you shortly."
-                );
+                navigation.navigate("DriverRegistration");
               }}
               activeOpacity={0.8}
             >
@@ -565,29 +1522,92 @@ export default function ProfileScreen({ navigation }: Props) {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsAboutVisible(false)}
       >
-        <SafeAreaView style={styles.modalSafeArea} edges={["top", "bottom"]}>
-          <View style={styles.modalHeader}>
+        <SafeAreaView
+          style={[
+            styles.modalSafeArea,
+            isDarkMode && { backgroundColor: colors.modalBg },
+          ]}
+          edges={["top", "bottom"]}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              isDarkMode && { borderBottomColor: colors.cardBorder },
+            ]}
+          >
             <TouchableOpacity
-              style={styles.modalCloseButton}
+              style={[
+                styles.modalCloseButton,
+                isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+              ]}
               onPress={() => setIsAboutVisible(false)}
             >
-              <Text style={styles.modalCloseText}>✕</Text>
+              <Text
+                style={[
+                  styles.modalCloseText,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                ✕
+              </Text>
             </TouchableOpacity>
-            <Text style={styles.modalHeaderTitle}>About BestRoute</Text>
+            <Text
+              style={[
+                styles.modalHeaderTitle,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
+              About BestRoute
+            </Text>
             <View style={{ width: 32 }} />
           </View>
 
           <View style={styles.aboutContent}>
             <Text style={styles.aboutLogoEmoji}>🌐</Text>
-            <Text style={styles.aboutAppName}>BestRoute</Text>
-            <Text style={styles.aboutTagline}>Your journey. Optimized.</Text>
-            <Text style={styles.aboutDesc}>
+            <Text
+              style={[
+                styles.aboutAppName,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
+              BestRoute
+            </Text>
+            <Text
+              style={[
+                styles.aboutTagline,
+                isDarkMode && { color: colors.primaryLight },
+              ]}
+            >
+              Your journey. Optimized.
+            </Text>
+            <Text
+              style={[
+                styles.aboutDesc,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
               BestRoute is Sri Lanka's pioneering multimodal transit optimization
               platform, unifying buses, trains, three-wheelers, and walking into
               seamless, eco-conscious commutes.
             </Text>
-            <View style={styles.aboutVersionBadge}>
-              <Text style={styles.aboutVersionText}>Version 1.0.4 (Build 42)</Text>
+            <View
+              style={[
+                styles.aboutVersionBadge,
+                isDarkMode && {
+                  backgroundColor: colors.cardSecondaryBg,
+                  borderColor: colors.cardBorder,
+                  borderWidth: 1,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.aboutVersionText,
+                  isDarkMode && { color: colors.textMuted },
+                ]}
+              >
+                Version 1.0.4 (Build 42)
+              </Text>
             </View>
           </View>
         </SafeAreaView>
@@ -600,21 +1620,55 @@ export default function ProfileScreen({ navigation }: Props) {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsSupportVisible(false)}
       >
-        <SafeAreaView style={styles.modalSafeArea} edges={["top", "bottom"]}>
-          <View style={styles.modalHeader}>
+        <SafeAreaView
+          style={[
+            styles.modalSafeArea,
+            isDarkMode && { backgroundColor: colors.modalBg },
+          ]}
+          edges={["top", "bottom"]}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              isDarkMode && { borderBottomColor: colors.cardBorder },
+            ]}
+          >
             <TouchableOpacity
-              style={styles.modalCloseButton}
+              style={[
+                styles.modalCloseButton,
+                isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+              ]}
               onPress={() => setIsSupportVisible(false)}
             >
-              <Text style={styles.modalCloseText}>✕</Text>
+              <Text
+                style={[
+                  styles.modalCloseText,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                ✕
+              </Text>
             </TouchableOpacity>
-            <Text style={styles.modalHeaderTitle}>Help & Support</Text>
+            <Text
+              style={[
+                styles.modalHeaderTitle,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
+              Help & Support
+            </Text>
             <View style={{ width: 32 }} />
           </View>
 
           <ScrollView style={styles.modalBody}>
             <TouchableOpacity
-              style={styles.supportContactCard}
+              style={[
+                styles.supportContactCard,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
               onPress={() =>
                 Alert.alert(
                   "Call Support",
@@ -625,13 +1679,33 @@ export default function ProfileScreen({ navigation }: Props) {
             >
               <Text style={styles.supportIcon}>📞</Text>
               <View>
-                <Text style={styles.supportTitle}>24/7 Transit Helpline</Text>
-                <Text style={styles.supportSub}>Call 1919 for live assistance</Text>
+                <Text
+                  style={[
+                    styles.supportTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  24/7 Transit Helpline
+                </Text>
+                <Text
+                  style={[
+                    styles.supportSub,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  Call 1919 for live assistance
+                </Text>
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.supportContactCard}
+              style={[
+                styles.supportContactCard,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
               onPress={() =>
                 Alert.alert(
                   "Email Support",
@@ -642,8 +1716,22 @@ export default function ProfileScreen({ navigation }: Props) {
             >
               <Text style={styles.supportIcon}>✉️</Text>
               <View>
-                <Text style={styles.supportTitle}>Email Our Team</Text>
-                <Text style={styles.supportSub}>support@bestroute.lk</Text>
+                <Text
+                  style={[
+                    styles.supportTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Email Our Team
+                </Text>
+                <Text
+                  style={[
+                    styles.supportSub,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  support@bestroute.lk
+                </Text>
               </View>
             </TouchableOpacity>
           </ScrollView>
@@ -657,56 +1745,220 @@ export default function ProfileScreen({ navigation }: Props) {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsPrivacyVisible(false)}
       >
-        <SafeAreaView style={styles.modalSafeArea} edges={["top", "bottom"]}>
-          <View style={styles.modalHeader}>
+        <SafeAreaView
+          style={[
+            styles.modalSafeArea,
+            isDarkMode && { backgroundColor: colors.modalBg },
+          ]}
+          edges={["top", "bottom"]}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              isDarkMode && { borderBottomColor: colors.cardBorder },
+            ]}
+          >
             <TouchableOpacity
-              style={styles.modalCloseButton}
+              style={[
+                styles.modalCloseButton,
+                isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+              ]}
               onPress={() => setIsPrivacyVisible(false)}
             >
-              <Text style={styles.modalCloseText}>✕</Text>
+              <Text
+                style={[
+                  styles.modalCloseText,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                ✕
+              </Text>
             </TouchableOpacity>
-            <Text style={styles.modalHeaderTitle}>Privacy & Security</Text>
+            <Text
+              style={[
+                styles.modalHeaderTitle,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
+              Privacy & Security
+            </Text>
             <TouchableOpacity
               style={styles.modalDoneBtn}
               onPress={() => setIsPrivacyVisible(false)}
             >
-              <Text style={styles.modalDoneText}>Done</Text>
+              <Text
+                style={[
+                  styles.modalDoneText,
+                  isDarkMode && { color: colors.primaryLight },
+                ]}
+              >
+                Done
+              </Text>
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.modalBody}>
-            <Text style={styles.prefSectionTitle}>Permissions & Data</Text>
-            <View style={styles.switchRow}>
+            <Text
+              style={[
+                styles.prefSectionTitle,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              Permissions & Data
+            </Text>
+            <View
+              style={[
+                styles.switchRow,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
               <View>
-                <Text style={styles.switchLabel}>Accurate GPS Location</Text>
-                <Text style={styles.switchSub}>
+                <Text
+                  style={[
+                    styles.switchLabel,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Accurate GPS Location
+                </Text>
+                <Text
+                  style={[
+                    styles.switchSub,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
                   Enables live station navigation & nearby bus tracking
                 </Text>
               </View>
               <Switch
                 value={locationTracking}
                 onValueChange={setLocationTracking}
-                trackColor={{ false: "#E2E8F0", true: "#BFDBFE" }}
-                thumbColor={locationTracking ? "#1D64EC" : "#94A3B8"}
+                trackColor={{
+                  false: isDarkMode ? "#334155" : "#E2E8F0",
+                  true: "#BFDBFE",
+                }}
+                thumbColor={locationTracking ? "#1D64EC" : (isDarkMode ? "#64748B" : "#94A3B8")}
               />
             </View>
 
-            <View style={styles.switchRow}>
+            <View
+              style={[
+                styles.switchRow,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
               <View>
-                <Text style={styles.switchLabel}>Push Delay Alerts</Text>
-                <Text style={styles.switchSub}>
+                <Text
+                  style={[
+                    styles.switchLabel,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Push Delay Alerts
+                </Text>
+                <Text
+                  style={[
+                    styles.switchSub,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
                   Instant notification when scheduled train/bus is delayed
                 </Text>
               </View>
               <Switch
                 value={pushAlerts}
                 onValueChange={setPushAlerts}
-                trackColor={{ false: "#E2E8F0", true: "#BFDBFE" }}
-                thumbColor={pushAlerts ? "#1D64EC" : "#94A3B8"}
+                trackColor={{
+                  false: isDarkMode ? "#334155" : "#E2E8F0",
+                  true: "#BFDBFE",
+                }}
+                thumbColor={pushAlerts ? "#1D64EC" : (isDarkMode ? "#64748B" : "#94A3B8")}
               />
             </View>
           </ScrollView>
         </SafeAreaView>
+      </Modal>
+
+      {/* ================= LOGOUT CONFIRMATION MODAL ================= */}
+      <Modal
+        visible={isLogoutModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsLogoutModalVisible(false)}
+      >
+        <View style={styles.logoutModalOverlay}>
+          <View
+            style={[
+              styles.logoutModalCard,
+              isDarkMode && {
+                backgroundColor: colors.modalBg,
+                borderColor: colors.cardBorder,
+                borderWidth: 1,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.logoutIconWrapper,
+                isDarkMode && { backgroundColor: "rgba(239, 68, 68, 0.18)" },
+              ]}
+            >
+              <Text style={styles.logoutModalIcon}>🚪</Text>
+            </View>
+            <Text
+              style={[
+                styles.logoutModalTitle,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
+              Log Out
+            </Text>
+            <Text
+              style={[
+                styles.logoutModalMessage,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
+              Are you sure you want to log out of your BestRoute account?
+            </Text>
+            <View style={styles.logoutButtonsRow}>
+              <TouchableOpacity
+                style={[
+                  styles.logoutCancelBtn,
+                  isDarkMode && {
+                    backgroundColor: colors.cardSecondaryBg,
+                    borderColor: colors.cardBorder,
+                    borderWidth: 1,
+                  },
+                ]}
+                onPress={() => setIsLogoutModalVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.logoutCancelBtnText,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.logoutConfirmBtn}
+                onPress={confirmLogout}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.logoutConfirmBtnText}>Log Out</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
     </View>
   );
@@ -718,7 +1970,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
   },
   headerGradient: {
-    paddingBottom: 40,
+    paddingBottom: 48,
   },
   safeHeader: {
     paddingHorizontal: 20,
@@ -803,7 +2055,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 28,
+    paddingBottom: 95,
   },
   // Floating Stats Card
   statsCard: {
@@ -812,20 +2064,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
-    paddingVertical: 16,
+    paddingVertical: 18,
     paddingHorizontal: 16,
     marginHorizontal: 16,
-    marginTop: -26,
+    marginTop: -28,
     marginBottom: 16,
+    zIndex: 10,
+    position: "relative",
     ...Platform.select({
-      ios: {
+      web: {
+        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.08)",
+      },
+      default: {
+        elevation: 4,
         shadowColor: "#1E293B",
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.08,
         shadowRadius: 8,
-      },
-      android: {
-        elevation: 3,
       },
     }),
   },
@@ -1232,5 +2487,302 @@ const styles = StyleSheet.create({
   supportSub: {
     fontSize: 13,
     color: "#64748B",
+  },
+
+  /* Logout Modal Styles */
+  logoutModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  logoutModalCard: {
+    width: "100%",
+    maxWidth: 340,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 24,
+    alignItems: "center",
+    ...Platform.select({
+      web: { boxShadow: "0 10px 30px rgba(0,0,0,0.2)" },
+      default: { elevation: 6 },
+    }),
+  },
+  logoutIconWrapper: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#FEE2E2",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  logoutModalIcon: {
+    fontSize: 28,
+  },
+  logoutModalTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginBottom: 8,
+  },
+  logoutModalMessage: {
+    fontSize: 13.5,
+    color: "#64748B",
+    textAlign: "center",
+    lineHeight: 19,
+    marginBottom: 22,
+  },
+  logoutButtonsRow: {
+    flexDirection: "row",
+    gap: 12,
+    width: "100%",
+  },
+  logoutCancelBtn: {
+    flex: 1,
+    backgroundColor: "#F1F5F9",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  logoutCancelBtnText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#475569",
+  },
+  logoutConfirmBtn: {
+    flex: 1,
+    backgroundColor: "#EF4444",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    ...Platform.select({
+      web: { boxShadow: "0 2px 8px rgba(239, 68, 68, 0.3)" },
+      default: { elevation: 2 },
+    }),
+  },
+  logoutConfirmBtnText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+
+  /* Travel Preferences Modal Styles */
+  tpContainer: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+  },
+  tpHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingTop: 12,
+    paddingBottom: 14,
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F5F9",
+  },
+  tpBackButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "#F1F5F9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tpBackIcon: {
+    fontSize: 24,
+    color: "#334155",
+    fontWeight: "600",
+    marginTop: -2,
+  },
+  tpHeaderTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginLeft: 14,
+    letterSpacing: -0.3,
+  },
+  tpScrollView: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+  },
+  tpScrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 24,
+  },
+  tpCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    padding: 16,
+    marginBottom: 14,
+    ...Platform.select({
+      web: { boxShadow: "0 2px 8px rgba(0,0,0,0.03)" },
+      android: { elevation: 1 },
+    }),
+  },
+  tpCardLabel: {
+    fontSize: 11.5,
+    fontWeight: "800",
+    color: "#94A3B8",
+    letterSpacing: 0.6,
+    marginBottom: 12,
+    textTransform: "uppercase",
+  },
+  tpCardHeaderBetween: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  tpCardLabelNoMargin: {
+    fontSize: 11.5,
+    fontWeight: "800",
+    color: "#94A3B8",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+  },
+  tpTransfersBadge: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#2563EB",
+  },
+  tpGridRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 10,
+  },
+  tpPrefButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 13,
+    paddingHorizontal: 8,
+    borderRadius: 14,
+    gap: 6,
+  },
+  tpPrefButtonActive: {
+    backgroundColor: "#2563EB",
+    borderWidth: 1,
+    borderColor: "#2563EB",
+    ...Platform.select({
+      web: { boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)" },
+      android: { elevation: 2 },
+    }),
+  },
+  tpPrefButtonInactive: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  tpPrefEmoji: {
+    fontSize: 15,
+  },
+  tpPrefText: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  tpPrefTextActive: {
+    color: "#FFFFFF",
+  },
+  tpPrefTextInactive: {
+    color: "#334155",
+  },
+  tpPillsRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  tpPillButton: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+  tpTolerancePillActive: {
+    backgroundColor: "#0284C7", // Cyan/Teal blue
+    borderWidth: 1,
+    borderColor: "#0284C7",
+    ...Platform.select({
+      web: { boxShadow: "0 4px 12px rgba(2, 132, 199, 0.25)" },
+      android: { elevation: 2 },
+    }),
+  },
+  tpTransfersPillActive: {
+    backgroundColor: "#2563EB", // Vibrant Royal Blue
+    borderWidth: 1,
+    borderColor: "#2563EB",
+    ...Platform.select({
+      web: { boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)" },
+      android: { elevation: 2 },
+    }),
+  },
+  tpPillInactive: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  tpPillText: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  tpPillTextActive: {
+    color: "#FFFFFF",
+  },
+  tpPillTextInactive: {
+    color: "#334155",
+  },
+  tpToggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 11,
+  },
+  tpModeLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  tpModeEmoji: {
+    fontSize: 17,
+  },
+  tpModeLabel: {
+    fontSize: 14.5,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  tpNotifLabel: {
+    fontSize: 14.5,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  tpBottomBar: {
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === "ios" ? 28 : 16,
+    borderTopWidth: 1,
+    borderTopColor: "#F1F5F9",
+  },
+  tpSaveButton: {
+    backgroundColor: "#1D64EC",
+    borderRadius: 14,
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    ...Platform.select({
+      web: { boxShadow: "0 6px 16px rgba(29, 100, 236, 0.3)" },
+      android: { elevation: 3 },
+    }),
+  },
+  tpSaveButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "700",
   },
 });

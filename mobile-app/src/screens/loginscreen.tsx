@@ -17,6 +17,8 @@ import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
 import authService from "../services/authService";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -28,6 +30,7 @@ interface Props {
 }
 
 export default function LoginScreen({ navigation }: Props) {
+  const { isDarkMode, colors } = useTheme();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -72,8 +75,10 @@ export default function LoginScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.screenBg }]}
+    >
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.container}
@@ -83,6 +88,11 @@ export default function LoginScreen({ navigation }: Props) {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Dark Mode Change Button Displayed in Top Right Corner */}
+          <View style={styles.topRightBar}>
+            <ThemeToggle variant="solid" size={38} />
+          </View>
+
           {/* Brand Logo Header */}
           <View style={styles.logoWrapper}>
             <Image
@@ -93,18 +103,46 @@ export default function LoginScreen({ navigation }: Props) {
           </View>
 
           {/* Heading */}
-          <Text style={styles.title}>Welcome back</Text>
-          <Text style={styles.subtitle}>Plan smarter. Travel better.</Text>
+          <Text
+            style={[
+              styles.title,
+              isDarkMode && { color: colors.textPrimary },
+            ]}
+          >
+            Welcome back
+          </Text>
+          <Text
+            style={[
+              styles.subtitle,
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
+            Plan smarter. Travel better.
+          </Text>
 
           {/* Form */}
           <View style={styles.form}>
             {/* USERNAME */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>USERNAME</Text>
+              <Text
+                style={[
+                  styles.label,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                USERNAME
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 placeholder="user"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 value={username}
                 onChangeText={setUsername}
                 autoCapitalize="none"
@@ -115,7 +153,14 @@ export default function LoginScreen({ navigation }: Props) {
             {/* PASSWORD */}
             <View style={styles.inputGroup}>
               <View style={styles.passwordHeaderRow}>
-                <Text style={styles.label}>PASSWORD</Text>
+                <Text
+                  style={[
+                    styles.label,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  PASSWORD
+                </Text>
                 <TouchableOpacity
                   onPress={() => navigation?.navigate("ForgotPassword")}
                   activeOpacity={0.7}
@@ -126,9 +171,16 @@ export default function LoginScreen({ navigation }: Props) {
                 </TouchableOpacity>
               </View>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 placeholder="••••••••"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -152,28 +204,71 @@ export default function LoginScreen({ navigation }: Props) {
 
             {/* OR Divider */}
             <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
+              <View
+                style={[
+                  styles.dividerLine,
+                  isDarkMode && { backgroundColor: colors.cardBorder },
+                ]}
+              />
+              <Text
+                style={[
+                  styles.dividerText,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                or
+              </Text>
+              <View
+                style={[
+                  styles.dividerLine,
+                  isDarkMode && { backgroundColor: colors.cardBorder },
+                ]}
+              />
             </View>
 
             {/* Continue with Google */}
             <TouchableOpacity
-              style={styles.googleButton}
+              style={[
+                styles.googleButton,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
               onPress={handleGoogleLogin}
               activeOpacity={0.85}
             >
-              <View style={styles.googleIconContainer}>
+              <View
+                style={[
+                  styles.googleIconContainer,
+                  isDarkMode && {
+                    backgroundColor: colors.subtleBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
                 {/* Google multi-colored G badge representation */}
                 <Text style={styles.googleLetter}>G</Text>
               </View>
-              <Text style={styles.googleButtonText}>Continue with Google</Text>
+              <Text
+                style={[
+                  styles.googleButtonText,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Continue with Google
+              </Text>
             </TouchableOpacity>
           </View>
 
           {/* Footer Navigation */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>
+            <Text
+              style={[
+                styles.footerText,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
               Don't have an account?{" "}
               <Text
                 style={styles.footerLink}
@@ -200,9 +295,15 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingTop: 8,
     paddingBottom: 28,
     justifyContent: "center",
+  },
+  topRightBar: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    marginBottom: 4,
   },
   logoWrapper: {
     alignItems: "center",

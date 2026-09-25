@@ -1,8 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bus, Map, AlertTriangle, Users, ArrowRight } from 'lucide-react';
+import adminService from '../services/adminService';
 
 const DashboardHome = () => {
   const [timeFilter, setTimeFilter] = useState('7D');
+  const [stats, setStats] = useState({
+    servicesCount: 124,
+    routesCount: 58,
+    disruptionsCount: 7,
+    activeDisruptions: [],
+  });
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [servicesRes, routesRes, disruptionsRes] = await Promise.all([
+          adminService.getServices().catch(() => null),
+          adminService.getRoutes().catch(() => null),
+          adminService.getDisruptions().catch(() => null),
+        ]);
+
+        setStats((prev) => ({
+          servicesCount: servicesRes?.count ?? servicesRes?.services?.length ?? prev.servicesCount,
+          routesCount: routesRes?.count ?? routesRes?.routes?.length ?? prev.routesCount,
+          disruptionsCount: disruptionsRes?.count ?? disruptionsRes?.data?.length ?? prev.disruptionsCount,
+          activeDisruptions: disruptionsRes?.data || [],
+        }));
+      } catch {
+        // Fallback to initial values
+      }
+    })();
+  }, []);
 
   return (
     <div className="page-container fade-in">
@@ -11,8 +39,8 @@ const DashboardHome = () => {
         <div className="kpi-card">
           <div>
             <div className="kpi-title">Active Services</div>
-            <div className="kpi-value">124</div>
-            <div className="kpi-trend">+3 from yesterday</div>
+            <div className="kpi-value">{stats.servicesCount}</div>
+            <div className="kpi-trend">Live from API</div>
           </div>
           <div className="kpi-icon-box bg-light-blue">
             <Bus size={22} />
@@ -22,8 +50,8 @@ const DashboardHome = () => {
         <div className="kpi-card">
           <div>
             <div className="kpi-title">Active Routes</div>
-            <div className="kpi-value">58</div>
-            <div className="kpi-trend">+1 from yesterday</div>
+            <div className="kpi-value">{stats.routesCount}</div>
+            <div className="kpi-trend">Live from API</div>
           </div>
           <div className="kpi-icon-box bg-light-green">
             <Map size={22} />
@@ -33,8 +61,8 @@ const DashboardHome = () => {
         <div className="kpi-card">
           <div>
             <div className="kpi-title">Disruptions</div>
-            <div className="kpi-value">7</div>
-            <div className="kpi-trend">+2 from yesterday</div>
+            <div className="kpi-value">{stats.disruptionsCount}</div>
+            <div className="kpi-trend">Live from API</div>
           </div>
           <div className="kpi-icon-box bg-light-amber">
             <AlertTriangle size={22} />

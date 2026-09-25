@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
+import BottomNavigationBar from "../components/BottomNavigationBar";
+import api from "../services/api";
 
 type NotificationsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -40,6 +44,7 @@ export interface NotificationItem {
 }
 
 export default function NotificationsScreen({ navigation }: Props) {
+  const { isDarkMode, colors } = useTheme();
   const [notifications, setNotifications] = useState<NotificationItem[]>([
     // TODAY
     {
@@ -117,15 +122,55 @@ export default function NotificationsScreen({ navigation }: Props) {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const handleMarkAllAsRead = () => {
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.getNotifications();
+        if (res.success && Array.isArray(res.data?.notifications) && res.data.notifications.length > 0) {
+          const apiNotifs: NotificationItem[] = res.data.notifications.map((n: any, idx: number) => ({
+            id: n._id || `api-notif-${idx}`,
+            type: n.type || "info",
+            title: n.title || "Transit Update",
+            message: n.message || "",
+            time: "Just now",
+            section: "TODAY" as const,
+            read: !!n.read,
+          }));
+          setNotifications((prev) => {
+            // Merge unique
+            const existingIds = new Set(apiNotifs.map((an) => an.id));
+            const filteredPrev = prev.filter((p) => !existingIds.has(p.id));
+            return [...apiNotifs, ...filteredPrev];
+          });
+        }
+      } catch {
+        // Fallback to local default notifications
+      }
+    })();
+  }, []);
+
+  const handleMarkAllAsRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await api.markAllNotificationsRead();
+    } catch {
+      // ignore
+    }
   };
 
-  const handleItemPress = (item: NotificationItem) => {
+  const handleItemPress = async (item: NotificationItem) => {
     // Mark as read
     setNotifications((prev) =>
       prev.map((n) => (n.id === item.id ? { ...n, read: true } : n))
     );
+
+    try {
+      if (item.id && !item.id.startsWith("notif-")) {
+        await api.markNotificationRead(item.id);
+      }
+    } catch {
+      // ignore
+    }
 
     if (item.type === "disruption") {
       setSelectedDisruption(item);
@@ -156,45 +201,45 @@ export default function NotificationsScreen({ navigation }: Props) {
       case "disruption":
         return {
           emoji: "⚠️",
-          titleColor: "#DC2626",
-          bgColor: "#FEF2F2",
-          borderColor: "#FEE2E2",
+          titleColor: isDarkMode ? "#F87171" : "#DC2626",
+          bgColor: isDarkMode ? "rgba(220, 38, 38, 0.18)" : "#FEF2F2",
+          borderColor: isDarkMode ? "rgba(220, 38, 38, 0.35)" : "#FEE2E2",
         };
       case "reroute":
         return {
           emoji: "🔄",
-          titleColor: "#2563EB",
-          bgColor: "#EFF6FF",
-          borderColor: "#DBEAFE",
+          titleColor: isDarkMode ? "#60A5FA" : "#2563EB",
+          bgColor: isDarkMode ? "rgba(37, 99, 235, 0.18)" : "#EFF6FF",
+          borderColor: isDarkMode ? "rgba(37, 99, 235, 0.35)" : "#DBEAFE",
         };
       case "transfer":
         return {
           emoji: "🔔",
-          titleColor: "#7C3AED",
-          bgColor: "#F5F3FF",
-          borderColor: "#EDE9FE",
+          titleColor: isDarkMode ? "#C084FC" : "#7C3AED",
+          bgColor: isDarkMode ? "rgba(124, 58, 237, 0.18)" : "#F5F3FF",
+          borderColor: isDarkMode ? "rgba(124, 58, 237, 0.35)" : "#EDE9FE",
         };
       case "completed":
         return {
           emoji: "✓",
-          titleColor: "#16A34A",
-          bgColor: "#F0FDF4",
-          borderColor: "#DCFCE7",
+          titleColor: isDarkMode ? "#4ADE80" : "#16A34A",
+          bgColor: isDarkMode ? "rgba(22, 163, 74, 0.18)" : "#F0FDF4",
+          borderColor: isDarkMode ? "rgba(22, 163, 74, 0.35)" : "#DCFCE7",
         };
       case "saved":
         return {
           emoji: "⭐",
-          titleColor: "#D97706",
-          bgColor: "#FEFCE8",
-          borderColor: "#FEF08A",
+          titleColor: isDarkMode ? "#FBBF24" : "#D97706",
+          bgColor: isDarkMode ? "rgba(217, 119, 6, 0.18)" : "#FEFCE8",
+          borderColor: isDarkMode ? "rgba(217, 119, 6, 0.35)" : "#FEF08A",
         };
       case "info":
       default:
         return {
           emoji: "ℹ️",
-          titleColor: "#0284C7",
-          bgColor: "#F0F9FF",
-          borderColor: "#E0F2FE",
+          titleColor: isDarkMode ? "#38BDF8" : "#0284C7",
+          bgColor: isDarkMode ? "rgba(2, 132, 199, 0.18)" : "#F0F9FF",
+          borderColor: isDarkMode ? "rgba(2, 132, 199, 0.35)" : "#E0F2FE",
         };
     }
   };
@@ -208,13 +253,27 @@ export default function NotificationsScreen({ navigation }: Props) {
     if (list.length === 0) return null;
     return (
       <View style={styles.sectionWrap} key={title}>
-        <Text style={styles.sectionHeading}>{title}</Text>
+        <Text
+          style={[
+            styles.sectionHeading,
+            isDarkMode && { color: colors.textSecondary },
+          ]}
+        >
+          {title}
+        </Text>
         {list.map((item) => {
           const config = getIconConfig(item.type);
           return (
             <TouchableOpacity
               key={item.id}
-              style={[styles.card, !item.read && styles.cardUnread]}
+              style={[
+                styles.card,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: item.read ? colors.cardBorder : "#3B82F6",
+                },
+                !item.read && !isDarkMode && styles.cardUnread,
+              ]}
               onPress={() => handleItemPress(item)}
               activeOpacity={0.7}
             >
@@ -240,9 +299,22 @@ export default function NotificationsScreen({ navigation }: Props) {
                   >
                     {item.title}
                   </Text>
-                  <Text style={styles.cardTimestamp}>{item.time}</Text>
+                  <Text
+                    style={[
+                      styles.cardTimestamp,
+                      isDarkMode && { color: colors.textMuted },
+                    ]}
+                  >
+                    {item.time}
+                  </Text>
                 </View>
-                <Text style={styles.cardMessage} numberOfLines={2}>
+                <Text
+                  style={[
+                    styles.cardMessage,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                  numberOfLines={2}
+                >
                   {item.message}
                 </Text>
               </View>
@@ -257,24 +329,52 @@ export default function NotificationsScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <StatusBar style="dark" />
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.screenBg }]}
+      edges={["top"]}
+    >
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
 
       {/* Screen Header - Safe distance below dynamic island / notch */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Notifications</Text>
-        <TouchableOpacity
-          onPress={handleMarkAllAsRead}
-          activeOpacity={0.7}
-          style={styles.markAllReadBtn}
+      <View
+        style={[
+          styles.header,
+          isDarkMode && { backgroundColor: colors.headerBg },
+        ]}
+      >
+        <Text
+          style={[
+            styles.headerTitle,
+            isDarkMode && { color: colors.textPrimary },
+          ]}
         >
-          <Text style={styles.markAllReadText}>Mark all read</Text>
-        </TouchableOpacity>
+          Notifications
+        </Text>
+        <View style={styles.headerRightActions}>
+          <TouchableOpacity
+            onPress={handleMarkAllAsRead}
+            activeOpacity={0.7}
+            style={[
+              styles.markAllReadBtn,
+              isDarkMode && {
+                backgroundColor: colors.cardSecondaryBg,
+                borderColor: colors.cardBorder,
+              },
+            ]}
+          >
+            <Text style={styles.markAllReadText}>Mark all read</Text>
+          </TouchableOpacity>
+          {/* Dark Mode Change Button Displayed in Top Right Corner */}
+          <ThemeToggle variant="solid" size={38} />
+        </View>
       </View>
 
       {/* Notifications List */}
       <ScrollView
-        style={styles.scrollList}
+        style={[
+          styles.scrollList,
+          isDarkMode && { backgroundColor: colors.screenBg },
+        ]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -285,8 +385,20 @@ export default function NotificationsScreen({ navigation }: Props) {
         {notifications.length === 0 && (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyEmoji}>🔔</Text>
-            <Text style={styles.emptyTitle}>No Notifications</Text>
-            <Text style={styles.emptySubtitle}>
+            <Text
+              style={[
+                styles.emptyTitle,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
+              No Notifications
+            </Text>
+            <Text
+              style={[
+                styles.emptySubtitle,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
               You're all caught up! Important journey disruptions and transit
               updates will appear here.
             </Text>
@@ -294,52 +406,12 @@ export default function NotificationsScreen({ navigation }: Props) {
         )}
       </ScrollView>
 
-      {/* Bottom Navigation Bar */}
-      <View style={styles.bottomNav}>
-        {/* Home Tab */}
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate("Home")}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.navIcon, styles.navIconInactive]}>🏠</Text>
-          <Text style={[styles.navLabel, styles.navLabelInactive]}>Home</Text>
-        </TouchableOpacity>
-
-        {/* Journeys Tab */}
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate("Journeys")}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.navIcon, styles.navIconInactive]}>🗺️</Text>
-          <Text style={[styles.navLabel, styles.navLabelInactive]}>Journeys</Text>
-        </TouchableOpacity>
-
-        {/* Alerts Tab (Active) */}
-        <TouchableOpacity style={styles.navItem} activeOpacity={0.8}>
-          <View style={styles.alertIconWrapper}>
-            <Text style={[styles.navIcon, styles.navIconActive]}>🔔</Text>
-            {unreadCount > 0 && (
-              <View style={styles.badgeContainer}>
-                <Text style={styles.badgeText}>{unreadCount}</Text>
-              </View>
-            )}
-          </View>
-          <Text style={[styles.navLabel, styles.navLabelActive]}>Alerts</Text>
-          <View style={styles.activeTabIndicator} />
-        </TouchableOpacity>
-
-        {/* Profile Tab */}
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate("Profile")}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.navIcon, styles.navIconInactive]}>👤</Text>
-          <Text style={[styles.navLabel, styles.navLabelInactive]}>Profile</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Unified Fixed-Position Bottom Navigation Bar */}
+      <BottomNavigationBar
+        activeTab="alerts"
+        navigation={navigation}
+        unreadAlertsCount={unreadCount}
+      />
 
       {/* ================= DISRUPTION DETAIL MODAL ================= */}
       <Modal
@@ -348,43 +420,136 @@ export default function NotificationsScreen({ navigation }: Props) {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsDisruptionModalVisible(false)}
       >
-        <SafeAreaView style={styles.modalSafeArea} edges={["top", "bottom"]}>
-          <View style={styles.modalHeader}>
+        <SafeAreaView
+          style={[
+            styles.modalSafeArea,
+            isDarkMode && { backgroundColor: colors.modalBg },
+          ]}
+          edges={["top", "bottom"]}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              isDarkMode && { borderBottomColor: colors.cardBorder },
+            ]}
+          >
             <TouchableOpacity
-              style={styles.modalCloseButton}
+              style={[
+                styles.modalCloseButton,
+                isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+              ]}
               onPress={() => setIsDisruptionModalVisible(false)}
             >
-              <Text style={styles.modalCloseText}>✕</Text>
+              <Text
+                style={[
+                  styles.modalCloseText,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                ✕
+              </Text>
             </TouchableOpacity>
-            <Text style={styles.modalHeaderTitle}>Transit Alert</Text>
+            <Text
+              style={[
+                styles.modalHeaderTitle,
+                isDarkMode && { color: colors.textPrimary },
+              ]}
+            >
+              Transit Alert
+            </Text>
             <View style={{ width: 32 }} />
           </View>
 
           {selectedDisruption && (
             <View style={styles.modalContent}>
-              <View style={styles.modalAlertIconBox}>
+              <View
+                style={[
+                  styles.modalAlertIconBox,
+                  isDarkMode && {
+                    backgroundColor: "rgba(239, 68, 68, 0.18)",
+                    borderColor: "rgba(239, 68, 68, 0.35)",
+                  },
+                ]}
+              >
                 <Text style={styles.modalBigEmoji}>⚠️</Text>
               </View>
 
-              <Text style={styles.modalAlertHeading}>Main Line Train Delay</Text>
-              <Text style={styles.modalAlertSub}>
+              <Text
+                style={[
+                  styles.modalAlertHeading,
+                  isDarkMode && { color: colors.textPrimary },
+                ]}
+              >
+                Main Line Train Delay
+              </Text>
+              <Text
+                style={[
+                  styles.modalAlertSub,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
                 Train #1008 from Kandy to Colombo Fort is experiencing a 15-minute
                 delay due to track maintenance near Polgahawela Junction.
               </Text>
 
-              <View style={styles.impactCard}>
-                <Text style={styles.impactCardTitle}>Affected Route</Text>
-                <Text style={styles.impactCardDetail}>
+              <View
+                style={[
+                  styles.impactCard,
+                  isDarkMode && {
+                    backgroundColor: colors.cardBg,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.impactCardTitle,
+                    isDarkMode && { color: colors.textMuted },
+                  ]}
+                >
+                  Affected Route
+                </Text>
+                <Text
+                  style={[
+                    styles.impactCardDetail,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
                   Kandy → Colombo Fort (Scheduled 08:30 AM)
                 </Text>
-                <Text style={styles.impactEstimatedArrival}>
+                <Text
+                  style={[
+                    styles.impactEstimatedArrival,
+                    isDarkMode && { color: "#F87171" },
+                  ]}
+                >
                   New Estimated Arrival: 10:20 AM (+15 min)
                 </Text>
               </View>
 
-              <View style={styles.alternativeSuggestionBox}>
-                <Text style={styles.altBadge}>RECOMMENDED ALTERNATIVE</Text>
-                <Text style={styles.altText}>
+              <View
+                style={[
+                  styles.alternativeSuggestionBox,
+                  isDarkMode && {
+                    backgroundColor: "rgba(37, 99, 235, 0.15)",
+                    borderColor: "rgba(59, 130, 246, 0.35)",
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.altBadge,
+                    isDarkMode && { color: colors.primaryLight },
+                  ]}
+                >
+                  RECOMMENDED ALTERNATIVE
+                </Text>
+                <Text
+                  style={[
+                    styles.altText,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
                   Direct AC Express Bus 01 departs in 12 mins from Kandy Goodshed
                   Bus Stand with no delays reported.
                 </Text>
@@ -409,11 +574,24 @@ export default function NotificationsScreen({ navigation }: Props) {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.modalDismissBtn}
+                  style={[
+                    styles.modalDismissBtn,
+                    isDarkMode && {
+                      backgroundColor: colors.cardSecondaryBg,
+                      borderColor: colors.cardBorder,
+                    },
+                  ]}
                   onPress={() => setIsDisruptionModalVisible(false)}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.modalDismissBtnText}>Keep Current Route</Text>
+                  <Text
+                    style={[
+                      styles.modalDismissBtnText,
+                      isDarkMode && { color: colors.textSecondary },
+                    ]}
+                  >
+                    Keep Current Route
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -444,9 +622,16 @@ const styles = StyleSheet.create({
     color: "#0F172A",
     letterSpacing: -0.5,
   },
+  headerRightActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
   markAllReadBtn: {
     paddingVertical: 6,
-    paddingHorizontal: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: "#F1F5F9",
   },
   markAllReadText: {
     fontSize: 14,
@@ -460,7 +645,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 14,
-    paddingBottom: 28,
+    paddingBottom: 95,
   },
   // Section Headers
   sectionWrap: {

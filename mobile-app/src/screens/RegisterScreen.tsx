@@ -16,6 +16,8 @@ import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
 import authService from "../services/authService";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 type RegisterScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -27,6 +29,7 @@ interface Props {
 }
 
 export default function RegisterScreen({ navigation }: Props) {
+  const { isDarkMode, colors } = useTheme();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -94,13 +97,15 @@ export default function RegisterScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.screenBg }]}
+    >
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.container}
       >
-        {/* Top Header with Back Navigation */}
+        {/* Top Header with Back Navigation and Theme Toggle */}
         <View style={styles.headerBar}>
           <TouchableOpacity
             style={styles.backButton}
@@ -108,8 +113,17 @@ export default function RegisterScreen({ navigation }: Props) {
             activeOpacity={0.7}
           >
             <Text style={styles.backChevron}>‹</Text>
-            <Text style={styles.backText}>Back</Text>
+            <Text
+              style={[
+                styles.backText,
+                isDarkMode && { color: colors.primaryLight },
+              ]}
+            >
+              Back
+            </Text>
           </TouchableOpacity>
+          {/* Dark Mode Change Button Displayed in Top Right Corner */}
+          <ThemeToggle variant="solid" size={38} />
         </View>
 
         <ScrollView
@@ -118,18 +132,46 @@ export default function RegisterScreen({ navigation }: Props) {
           keyboardShouldPersistTaps="handled"
         >
           {/* Titles */}
-          <Text style={styles.title}>Create your account</Text>
-          <Text style={styles.subtitle}>Start planning smarter journeys</Text>
+          <Text
+            style={[
+              styles.title,
+              isDarkMode && { color: colors.textPrimary },
+            ]}
+          >
+            Create your account
+          </Text>
+          <Text
+            style={[
+              styles.subtitle,
+              isDarkMode && { color: colors.textSecondary },
+            ]}
+          >
+            Start planning smarter journeys
+          </Text>
 
           {/* Form */}
           <View style={styles.form}>
             {/* FULL NAME */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>FULL NAME</Text>
+              <Text
+                style={[
+                  styles.label,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                FULL NAME
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 placeholder="Alex Fernando"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 value={fullName}
                 onChangeText={setFullName}
                 autoCapitalize="words"
@@ -138,11 +180,25 @@ export default function RegisterScreen({ navigation }: Props) {
 
             {/* EMAIL */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>EMAIL</Text>
+              <Text
+                style={[
+                  styles.label,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                EMAIL
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 placeholder="your@email.com"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -153,11 +209,25 @@ export default function RegisterScreen({ navigation }: Props) {
 
             {/* PASSWORD */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>PASSWORD</Text>
+              <Text
+                style={[
+                  styles.label,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                PASSWORD
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 placeholder="••••••••"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -167,11 +237,25 @@ export default function RegisterScreen({ navigation }: Props) {
 
             {/* CONFIRM PASSWORD */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>CONFIRM PASSWORD</Text>
+              <Text
+                style={[
+                  styles.label,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                CONFIRM PASSWORD
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 placeholder="••••••••"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
@@ -188,12 +272,21 @@ export default function RegisterScreen({ navigation }: Props) {
               <View
                 style={[
                   styles.checkbox,
+                  isDarkMode && {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.cardBorder,
+                  },
                   agreedToTerms && styles.checkboxSelected,
                 ]}
               >
                 {agreedToTerms && <Text style={styles.checkmark}>✓</Text>}
               </View>
-              <Text style={styles.termsText}>
+              <Text
+                style={[
+                  styles.termsText,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
                 I agree to the{" "}
                 <Text
                   style={styles.linkText}
@@ -243,7 +336,12 @@ export default function RegisterScreen({ navigation }: Props) {
 
           {/* Footer Navigation */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>
+            <Text
+              style={[
+                styles.footerText,
+                isDarkMode && { color: colors.textSecondary },
+              ]}
+            >
               Already have an account?{" "}
               <Text
                 style={styles.footerLink}
@@ -271,6 +369,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   backButton: {
     flexDirection: "row",

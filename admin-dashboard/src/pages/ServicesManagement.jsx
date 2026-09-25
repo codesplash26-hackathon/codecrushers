@@ -1,17 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
+import adminService from '../services/adminService';
 
 const ServicesManagement = () => {
   const [filter, setFilter] = useState('All');
-
-  const servicesData = [
+  const [servicesData, setServicesData] = useState([
     { id: 'S001', icon: '🚍', name: 'SLTB Kandy Express', mode: 'Bus', modeColor: '#2563EB', operator: 'SLTB', routes: '8', vehicles: '24', status: 'Active' },
     { id: 'S002', icon: '🚆', name: 'Sri Lanka Railways', mode: 'Train', modeColor: '#16A34A', operator: 'SLR', routes: '5', vehicles: '12', status: 'Active' },
     { id: 'S003', icon: '🚍', name: 'Kandy Private Bus', mode: 'Bus', modeColor: '#2563EB', operator: 'Private', routes: '14', vehicles: '38', status: 'Active' },
     { id: 'S004', icon: '🚖', name: 'PickMe Taxi', mode: 'Taxi', modeColor: '#D97706', operator: 'PickMe', routes: '-', vehicles: '142', status: 'Active' },
     { id: 'S005', icon: '🛺', name: 'Tuk Alliance LK', mode: 'Tuk-tuk', modeColor: '#DC2626', operator: 'Alliance', routes: '-', vehicles: '89', status: 'Active' },
     { id: 'S006', icon: '🚆', name: 'Night Mail Service', mode: 'Train', modeColor: '#16A34A', operator: 'SLR', routes: '2', vehicles: '3', status: 'Inactive' },
-  ];
+  ]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await adminService.getServices();
+        if (res.success && Array.isArray(res.services) && res.services.length > 0) {
+          const apiList = res.services.map((s, idx) => ({
+            id: s._id || `S00${idx + 1}`,
+            icon: s.type === 'train' ? '🚆' : s.type === 'tuk' ? '🛺' : s.type === 'taxi' ? '🚖' : '🚍',
+            name: s.name || s.driverName || 'Transport Service',
+            mode: s.type === 'train' ? 'Train' : s.type === 'tuk' ? 'Tuk-tuk' : s.type === 'taxi' ? 'Taxi' : 'Bus',
+            modeColor: s.type === 'train' ? '#16A34A' : s.type === 'tuk' ? '#DC2626' : s.type === 'taxi' ? '#D97706' : '#2563EB',
+            operator: s.operator || 'Official Operator',
+            routes: '12',
+            vehicles: '24',
+            status: s.status === 'inactive' ? 'Inactive' : 'Active',
+          }));
+          setServicesData(apiList);
+        }
+      } catch {
+        // Fallback
+      }
+    })();
+  }, []);
 
   const filteredData = servicesData.filter(s => {
     if (filter === 'All') return true;
