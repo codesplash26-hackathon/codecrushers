@@ -1,15 +1,82 @@
-import React from 'react';
-import { RefreshCw } from 'lucide-react';
+import React, { useState } from 'react';
+import { RefreshCw, Activity, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import Modal from '../components/Modal';
+import { useToast } from '../context/ToastContext';
 
 const MonitoringPage = () => {
-  const feeds = [
-    { name: 'SLTB Bus Feed', mode: 'Bus', status: 'Live', statusColor: '#16A34A', lastUpdate: '12s ago', coverage: 94, coverageColor: '#16A34A', issues: '✓ Clean', issuesColor: '#16A34A', actions: ['Inspect'] },
-    { name: 'SLR Train GTFS', mode: 'Train', status: 'Live', statusColor: '#16A34A', lastUpdate: '2m ago', coverage: 88, coverageColor: '#16A34A', issues: '2 issues', issuesColor: '#DC2626', actions: ['Inspect'] },
-    { name: 'PickMe Taxi API', mode: 'Taxi', status: 'Live', statusColor: '#16A34A', lastUpdate: '5s ago', coverage: 100, coverageColor: '#16A34A', issues: '✓ Clean', issuesColor: '#16A34A', actions: ['Inspect'] },
-    { name: 'Private Bus Network', mode: 'Bus', status: 'Stale', statusColor: '#D97706', lastUpdate: '18m ago', coverage: 71, coverageColor: '#D97706', issues: '5 issues', issuesColor: '#DC2626', actions: ['Inspect', 'Reconnect'] },
-    { name: 'Tuk Alliance Feed', mode: 'Tuk-tuk', status: 'Live', statusColor: '#16A34A', lastUpdate: '1m ago', coverage: 83, coverageColor: '#D97706', issues: '1 issues', issuesColor: '#DC2626', actions: ['Inspect'] },
-    { name: 'Night Schedule Feed', mode: 'Train', status: 'Offline', statusColor: '#DC2626', lastUpdate: '3h ago', coverage: 0, coverageColor: '#CBD5E1', issues: '8 issues', issuesColor: '#DC2626', actions: ['Inspect', 'Reconnect'] },
-  ];
+  const { addToast } = useToast();
+
+  const [feeds, setFeeds] = useState([
+    { name: 'SLTB Bus Feed', mode: 'Bus', status: 'Live', statusColor: '#16A34A', lastUpdate: '12s ago', coverage: 94, coverageColor: '#16A34A', issues: '✓ Clean', issuesColor: '#16A34A', actions: ['Inspect'], latency: '42 ms', packets: '14,208 / sec', protocol: 'GTFS Realtime (Protobuf)' },
+    { name: 'SLR Train GTFS', mode: 'Train', status: 'Live', statusColor: '#16A34A', lastUpdate: '2m ago', coverage: 88, coverageColor: '#16A34A', issues: '2 issues', issuesColor: '#DC2626', actions: ['Inspect'], latency: '128 ms', packets: '3,850 / sec', protocol: 'GTFS-RT VehiclePositions' },
+    { name: 'PickMe Taxi API', mode: 'Taxi', status: 'Live', statusColor: '#16A34A', lastUpdate: '5s ago', coverage: 100, coverageColor: '#16A34A', issues: '✓ Clean', issuesColor: '#16A34A', actions: ['Inspect'], latency: '18 ms', packets: '28,100 / sec', protocol: 'REST Websocket API v2' },
+    { name: 'Private Bus Network', mode: 'Bus', status: 'Stale', statusColor: '#D97706', lastUpdate: '18m ago', coverage: 71, coverageColor: '#D97706', issues: '5 issues', issuesColor: '#DC2626', actions: ['Inspect', 'Reconnect'], latency: '480 ms', packets: '210 / sec', protocol: 'MQTT Telemetry Stream' },
+    { name: 'Tuk Alliance Feed', mode: 'Tuk-tuk', status: 'Live', statusColor: '#16A34A', lastUpdate: '1m ago', coverage: 83, coverageColor: '#D97706', issues: '1 issues', issuesColor: '#DC2626', actions: ['Inspect'], latency: '85 ms', packets: '5,420 / sec', protocol: 'JSON Polling Endpoint' },
+    { name: 'Night Schedule Feed', mode: 'Train', status: 'Offline', statusColor: '#DC2626', lastUpdate: '3h ago', coverage: 0, coverageColor: '#CBD5E1', issues: '8 issues', issuesColor: '#DC2626', actions: ['Inspect', 'Reconnect'], latency: 'Timeout (>5000ms)', packets: '0 / sec', protocol: 'GTFS Static Scheduler' },
+  ]);
+
+  // Inspect Modal State
+  const [isInspectModalOpen, setIsInspectModalOpen] = useState(false);
+  const [selectedFeed, setSelectedFeed] = useState(null);
+
+  const handleOpenInspect = (feed) => {
+    setSelectedFeed(feed);
+    setIsInspectModalOpen(true);
+  };
+
+  const handleForceSyncFeed = (feedName) => {
+    setFeeds(prev => prev.map(f => {
+      if (f.name === feedName) {
+        return {
+          ...f,
+          status: 'Live',
+          statusColor: '#16A34A',
+          lastUpdate: 'Just now',
+          issues: '✓ Clean',
+          issuesColor: '#16A34A',
+          coverage: 98,
+          coverageColor: '#16A34A',
+        };
+      }
+      return f;
+    }));
+
+    addToast(`Force sync initiated for "${feedName}". Stream live!`, 'success');
+    setIsInspectModalOpen(false);
+  };
+
+  const handleReconnectFeed = (feedName) => {
+    setFeeds(prev => prev.map(f => {
+      if (f.name === feedName) {
+        return {
+          ...f,
+          status: 'Live',
+          statusColor: '#16A34A',
+          lastUpdate: 'Just now',
+          coverage: 100,
+          coverageColor: '#16A34A',
+          issues: '✓ Clean',
+          issuesColor: '#16A34A',
+          actions: ['Inspect'],
+        };
+      }
+      return f;
+    }));
+
+    addToast(`Feed "${feedName}" reconnected successfully!`, 'success');
+  };
+
+  const handleRefreshAllFeeds = () => {
+    setFeeds(prev => prev.map(f => ({
+      ...f,
+      lastUpdate: 'Just now',
+    })));
+    addToast('Telemetry data feeds refreshed!', 'info');
+  };
+
+  const liveFeedsCount = feeds.filter(f => f.status === 'Live').length;
+  const staleFeedsCount = feeds.filter(f => f.status === 'Stale').length;
+  const offlineFeedsCount = feeds.filter(f => f.status === 'Offline').length;
 
   return (
     <div className="page-container fade-in">
@@ -19,7 +86,7 @@ const MonitoringPage = () => {
           <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#16A34A' }}></span>
           <div>
             <div style={{ fontWeight: '800', color: '#166534', fontSize: '14px' }}>Transportation data system operational</div>
-            <div style={{ fontSize: '12px', color: '#15803D' }}>5 of 6 data feeds live - Last full sync 2 min ago</div>
+            <div style={{ fontSize: '12px', color: '#15803D' }}>{liveFeedsCount} of {feeds.length} data feeds live - Last full sync 2 min ago</div>
           </div>
         </div>
         <div style={{ fontWeight: '800', color: '#166534', fontSize: '14px' }}>99.2% uptime</div>
@@ -30,7 +97,7 @@ const MonitoringPage = () => {
         <div className="kpi-card" style={{ padding: '18px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#16A34A' }}></span>
-            <span style={{ fontSize: '24px', fontWeight: '800', color: '#0F172A' }}>4</span>
+            <span style={{ fontSize: '24px', fontWeight: '800', color: '#0F172A' }}>{liveFeedsCount}</span>
           </div>
           <div style={{ fontSize: '12px', color: '#94A3B8', fontWeight: '600', marginTop: '4px' }}>Live feeds</div>
         </div>
@@ -38,7 +105,7 @@ const MonitoringPage = () => {
         <div className="kpi-card" style={{ padding: '18px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#F59E0B' }}></span>
-            <span style={{ fontSize: '24px', fontWeight: '800', color: '#0F172A' }}>1</span>
+            <span style={{ fontSize: '24px', fontWeight: '800', color: '#0F172A' }}>{staleFeedsCount}</span>
           </div>
           <div style={{ fontSize: '12px', color: '#94A3B8', fontWeight: '600', marginTop: '4px' }}>Stale feeds</div>
         </div>
@@ -46,7 +113,7 @@ const MonitoringPage = () => {
         <div className="kpi-card" style={{ padding: '18px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#EF4444' }}></span>
-            <span style={{ fontSize: '24px', fontWeight: '800', color: '#0F172A' }}>1</span>
+            <span style={{ fontSize: '24px', fontWeight: '800', color: '#0F172A' }}>{offlineFeedsCount}</span>
           </div>
           <div style={{ fontSize: '12px', color: '#94A3B8', fontWeight: '600', marginTop: '4px' }}>Offline feeds</div>
         </div>
@@ -64,7 +131,10 @@ const MonitoringPage = () => {
       <div className="table-container" style={{ marginBottom: '24px' }}>
         <div className="table-header-box">
           <div style={{ fontWeight: '700', fontSize: '13px', color: '#64748B', letterSpacing: '0.5px' }}>DATA FEED STATUS</div>
-          <button style={{ background: 'transparent', color: '#2563EB', fontWeight: '700', fontSize: '13px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <button 
+            onClick={handleRefreshAllFeeds}
+            style={{ background: 'transparent', color: '#2563EB', fontWeight: '700', fontSize: '13px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+          >
             <RefreshCw size={12} />
             <span>Refresh all</span>
           </button>
@@ -104,7 +174,15 @@ const MonitoringPage = () => {
                 <td>
                   <div className="table-action-btns">
                     {feed.actions.map((act, i) => (
-                      <button key={i} className="action-btn-sm" style={act === 'Reconnect' ? { color: '#2563EB', borderColor: '#BFDBFE' } : {}}>
+                      <button 
+                        key={i} 
+                        className="action-btn-sm" 
+                        style={act === 'Reconnect' ? { color: '#2563EB', borderColor: '#BFDBFE' } : {}}
+                        onClick={() => {
+                          if (act === 'Inspect') handleOpenInspect(feed);
+                          else if (act === 'Reconnect') handleReconnectFeed(feed.name);
+                        }}
+                      >
                         {act}
                       </button>
                     ))}
@@ -176,8 +254,70 @@ const MonitoringPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Inspect Feed Modal */}
+      <Modal isOpen={isInspectModalOpen} onClose={() => setIsInspectModalOpen(false)} title="Data Feed Diagnostics">
+        {selectedFeed && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #E2E8F0' }}>
+              <div>
+                <h4 style={{ fontSize: '18px', fontWeight: '800', color: '#0F172A', margin: 0 }}>{selectedFeed.name}</h4>
+                <span style={{ fontSize: '13px', color: '#64748B', fontWeight: '500' }}>Protocol: <strong>{selectedFeed.protocol}</strong></span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '800', color: selectedFeed.statusColor }}>
+                <Activity size={16} />
+                <span>{selectedFeed.status}</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ backgroundColor: '#F8FAFC', padding: '12px 16px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '700', textTransform: 'uppercase' }}>Network Latency</div>
+                <div style={{ fontSize: '15px', fontWeight: '800', color: '#0F172A', marginTop: '4px' }}>{selectedFeed.latency}</div>
+              </div>
+
+              <div style={{ backgroundColor: '#F8FAFC', padding: '12px 16px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '700', textTransform: 'uppercase' }}>Throughput (Packets)</div>
+                <div style={{ fontSize: '15px', fontWeight: '800', color: '#0F172A', marginTop: '4px' }}>{selectedFeed.packets}</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ backgroundColor: '#F8FAFC', padding: '12px 16px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '700', textTransform: 'uppercase' }}>Feed Coverage</div>
+                <div style={{ fontSize: '15px', fontWeight: '800', color: selectedFeed.coverageColor, marginTop: '4px' }}>{selectedFeed.coverage}%</div>
+              </div>
+
+              <div style={{ backgroundColor: '#F8FAFC', padding: '12px 16px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '700', textTransform: 'uppercase' }}>Reported Issues</div>
+                <div style={{ fontSize: '15px', fontWeight: '800', color: selectedFeed.issuesColor, marginTop: '4px' }}>{selectedFeed.issues}</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button 
+                type="button" 
+                className="action-btn-sm" 
+                style={{ padding: '8px 16px' }} 
+                onClick={() => setIsInspectModalOpen(false)}
+              >
+                Close
+              </button>
+              <button 
+                type="button" 
+                className="btn-blue-action" 
+                style={{ borderRadius: '10px', padding: '8px 20px' }} 
+                onClick={() => handleForceSyncFeed(selectedFeed.name)}
+              >
+                Force Sync Feed
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
 
 export default MonitoringPage;
+

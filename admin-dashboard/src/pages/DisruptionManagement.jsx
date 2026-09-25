@@ -9,6 +9,19 @@ const DisruptionManagement = () => {
   const [filter, setFilter] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // View Modal State
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewingDisruption, setViewingDisruption] = useState(null);
+
+  // Edit Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editService, setEditService] = useState('');
+  const [editMode, setEditMode] = useState('Bus');
+  const [editLocation, setEditLocation] = useState('');
+  const [editStatus, setEditStatus] = useState('Delayed');
+  const [editImpact, setEditImpact] = useState('High');
+
   const [disruptionsData, setDisruptionsData] = useState([
     { id: '1', service: 'Kandy Express', mode: 'Train', location: 'Peradeniya', status: 'Delayed', impact: 'High', updated: '2 min ago' },
     { id: '2', service: 'Route 654', mode: 'Bus', location: 'Kandy Rd', status: 'Diverted', impact: 'Medium', updated: '8 min ago' },
@@ -17,7 +30,7 @@ const DisruptionManagement = () => {
     { id: '5', service: 'Night Mail', mode: 'Train', location: 'Galle', status: 'On Time', impact: 'None', updated: '1h ago' },
   ]);
 
-  // Modal Form State
+  // Modal Form State (Add)
   const [service, setService] = useState('');
   const [mode, setMode] = useState('Bus');
   const [location, setLocation] = useState('');
@@ -92,6 +105,42 @@ const DisruptionManagement = () => {
     } catch (err) {
       addToast(`Failed to save disruption: ${err.message}`, 'error');
     }
+  };
+
+  const handleOpenViewModal = (disruption) => {
+    setViewingDisruption(disruption);
+    setIsViewModalOpen(true);
+  };
+
+  const handleOpenEditModal = (disruption) => {
+    setEditingId(disruption.id);
+    setEditService(disruption.service);
+    setEditMode(disruption.mode);
+    setEditLocation(disruption.location);
+    setEditStatus(disruption.status);
+    setEditImpact(disruption.impact);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = (e) => {
+    e.preventDefault();
+    setDisruptionsData(prev => prev.map(d => {
+      if (d.id === editingId) {
+        return {
+          ...d,
+          service: editService,
+          mode: editMode,
+          location: editLocation,
+          status: editStatus,
+          impact: editImpact,
+          updated: 'Just now',
+        };
+      }
+      return d;
+    }));
+
+    addToast(`Disruption updated for ${editService}`, 'success');
+    setIsEditModalOpen(false);
   };
 
   const handleResolve = async (id, serviceName) => {
@@ -179,8 +228,8 @@ const DisruptionManagement = () => {
                 <td style={{ color: '#94A3B8', fontSize: '13px' }}>{row.updated}</td>
                 <td>
                   <div className="table-action-btns">
-                    <button className="action-btn-sm" onClick={() => addToast(`Inspecting ${row.service}`, 'info')}>View</button>
-                    <button className="action-btn-sm" onClick={() => addToast(`Editing ${row.service}`, 'info')}>Edit</button>
+                    <button className="action-btn-sm" onClick={() => handleOpenViewModal(row)}>View</button>
+                    <button className="action-btn-sm" onClick={() => handleOpenEditModal(row)}>Edit</button>
                     {row.status !== 'On Time' && (
                       <button className="action-btn-sm" style={{ color: '#16A34A' }} onClick={() => handleResolve(row.id, row.service)}>Resolve</button>
                     )}
@@ -255,8 +304,129 @@ const DisruptionManagement = () => {
           </div>
         </form>
       </Modal>
+
+      {/* View Disruption Modal */}
+      <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Disruption Details">
+        {viewingDisruption && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #E2E8F0' }}>
+              <div>
+                <h4 style={{ fontSize: '18px', fontWeight: '800', color: '#0F172A', margin: 0 }}>{viewingDisruption.service}</h4>
+                <span style={{ fontSize: '13px', color: '#64748B', fontWeight: '500' }}>Transport Mode: <strong>{viewingDisruption.mode}</strong></span>
+              </div>
+              <div>{getStatusBadge(viewingDisruption.status)}</div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ backgroundColor: '#F8FAFC', padding: '12px 16px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '700', textTransform: 'uppercase' }}>Affected Location</div>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: '#0F172A', marginTop: '4px' }}>{viewingDisruption.location}</div>
+              </div>
+
+              <div style={{ backgroundColor: '#F8FAFC', padding: '12px 16px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '700', textTransform: 'uppercase' }}>Impact Severity</div>
+                <div style={{ marginTop: '4px' }}>
+                  <span className={getImpactStyle(viewingDisruption.impact)}>{viewingDisruption.impact}</span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ backgroundColor: '#F8FAFC', padding: '12px 16px', borderRadius: '10px', border: '1px solid #E2E8F0', marginBottom: '24px' }}>
+              <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '700', textTransform: 'uppercase' }}>Last Updated</div>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#475569', marginTop: '4px' }}>{viewingDisruption.updated}</div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button 
+                type="button" 
+                className="action-btn-sm" 
+                style={{ padding: '8px 16px' }} 
+                onClick={() => {
+                  setIsViewModalOpen(false);
+                  handleOpenEditModal(viewingDisruption);
+                }}
+              >
+                Edit Details
+              </button>
+              <button 
+                type="button" 
+                className="btn-blue-action" 
+                style={{ borderRadius: '10px', padding: '8px 20px' }} 
+                onClick={() => setIsViewModalOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Edit Disruption Modal */}
+      <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Service Disruption">
+        <form onSubmit={handleSaveEdit}>
+          <div style={{ marginBottom: '16px' }}>
+            <label className="form-label">SERVICE NAME</label>
+            <input
+              type="text"
+              className="form-input"
+              value={editService}
+              onChange={(e) => setEditService(e.target.value)}
+              required
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div>
+              <label className="form-label">MODE</label>
+              <select className="form-input" value={editMode} onChange={(e) => setEditMode(e.target.value)}>
+                <option value="Bus">Bus</option>
+                <option value="Train">Train</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="form-label">STATUS</label>
+              <select className="form-input" value={editStatus} onChange={(e) => setEditStatus(e.target.value)}>
+                <option value="Delayed">Delayed</option>
+                <option value="Diverted">Diverted</option>
+                <option value="Cancelled">Cancelled</option>
+                <option value="On Time">On Time</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+            <div>
+              <label className="form-label">LOCATION</label>
+              <input
+                type="text"
+                className="form-input"
+                value={editLocation}
+                onChange={(e) => setEditLocation(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="form-label">IMPACT LEVEL</label>
+              <select className="form-input" value={editImpact} onChange={(e) => setEditImpact(e.target.value)}>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+                <option value="None">None</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <button type="button" className="action-btn-sm" style={{ padding: '10px 18px' }} onClick={() => setIsEditModalOpen(false)}>Cancel</button>
+            <button type="submit" className="btn-blue-action" style={{ borderRadius: '10px' }}>Save Changes</button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };
 
 export default DisruptionManagement;
+

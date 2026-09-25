@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2, MapPin, Clock } from 'lucide-react';
 import Modal from '../components/Modal';
 import { useToast } from '../context/ToastContext';
 import adminService from '../services/adminService';
@@ -16,13 +16,38 @@ const RouteScheduleManagement = () => {
     { id: 'R004', name: 'Colombo Metro 5', mode: 'Bus', stops: 18, departure: '6:00 AM', arrival: 'Frequent', fare: 'Rs.50', status: 'Active' },
   ]);
 
-  // Modal State
+  // Add Route Modal State
   const [routeName, setRouteName] = useState('');
   const [mode, setMode] = useState('Bus');
   const [stopsCount, setStopsCount] = useState(10);
   const [departure, setDeparture] = useState('6:30 AM');
   const [arrival, setArrival] = useState('8:30 AM');
   const [fare, setFare] = useState(150);
+
+  // Edit Route Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingRouteId, setEditingRouteId] = useState(null);
+  const [editRouteName, setEditRouteName] = useState('');
+  const [editMode, setEditMode] = useState('Bus');
+  const [editStops, setEditStops] = useState(10);
+  const [editDeparture, setEditDeparture] = useState('');
+  const [editArrival, setEditArrival] = useState('');
+  const [editFare, setEditFare] = useState(150);
+  const [editStatus, setEditStatus] = useState('Active');
+
+  // Stops Modal State
+  const [isStopsModalOpen, setIsStopsModalOpen] = useState(false);
+  const [selectedRouteForStops, setSelectedRouteForStops] = useState(null);
+  const [stopsList, setStopsList] = useState([]);
+  const [newStopName, setNewStopName] = useState('');
+
+  // Schedule Modal State
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [selectedRouteForSchedule, setSelectedRouteForSchedule] = useState(null);
+  const [scheduleDeparture, setScheduleDeparture] = useState('');
+  const [scheduleArrival, setScheduleArrival] = useState('');
+  const [scheduleDays, setScheduleDays] = useState('Mon-Sun (Daily)');
+  const [scheduleFrequency, setScheduleFrequency] = useState('Every 20 mins');
 
   useEffect(() => {
     (async () => {
@@ -79,6 +104,111 @@ const RouteScheduleManagement = () => {
 
     setIsModalOpen(false);
     setRouteName('');
+  };
+
+  // Open Edit Modal
+  const handleOpenEditModal = (route) => {
+    setEditingRouteId(route.id);
+    setEditRouteName(route.name);
+    setEditMode(route.mode);
+    setEditStops(route.stops);
+    setEditDeparture(route.departure);
+    setEditArrival(route.arrival);
+    setEditFare(route.fare.replace(/[^0-9]/g, '') || 150);
+    setEditStatus(route.status);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = (e) => {
+    e.preventDefault();
+    setRoutesData(prev => prev.map(r => {
+      if (r.id === editingRouteId) {
+        return {
+          ...r,
+          name: editRouteName,
+          mode: editMode,
+          stops: Number(editStops),
+          departure: editDeparture,
+          arrival: editArrival,
+          fare: `Rs.${editFare}`,
+          status: editStatus,
+        };
+      }
+      return r;
+    }));
+
+    addToast(`Route ${editRouteName} updated successfully!`, 'success');
+    setIsEditModalOpen(false);
+  };
+
+  // Open Stops Modal
+  const handleOpenStopsModal = (route) => {
+    setSelectedRouteForStops(route);
+    
+    const initialStops = route.name.includes('Kandy') && route.name.includes('Colombo')
+      ? ['Kandy Central Station', 'Peradeniya Junction', 'Kadugannawa', 'Rambukkana', 'Polgahawela', 'Gampaha', 'Ragama', 'Colombo Fort']
+      : route.name.includes('Galle')
+      ? ['Colombo Fort', 'Mount Lavinia', 'Panadura', 'Kalutara South', 'Bentota', 'Ambalangoda', 'Hikkaduwa', 'Galle Station']
+      : ['Origin Terminal', 'Main Stop A', 'Junction B', 'Commercial Hub C', 'Destination Terminal'];
+
+    setStopsList(initialStops);
+    setNewStopName('');
+    setIsStopsModalOpen(true);
+  };
+
+  const handleAddStopToSequence = (e) => {
+    e.preventDefault();
+    if (!newStopName.trim()) return;
+
+    const updatedList = [...stopsList, newStopName.trim()];
+    setStopsList(updatedList);
+
+    if (selectedRouteForStops) {
+      setRoutesData(prev => prev.map(r => r.id === selectedRouteForStops.id ? { ...r, stops: updatedList.length } : r));
+    }
+
+    addToast(`Added stop "${newStopName.trim()}" to route sequence`, 'success');
+    setNewStopName('');
+  };
+
+  const handleRemoveStopFromSequence = (indexToRemove) => {
+    const updatedList = stopsList.filter((_, idx) => idx !== indexToRemove);
+    setStopsList(updatedList);
+
+    if (selectedRouteForStops) {
+      setRoutesData(prev => prev.map(r => r.id === selectedRouteForStops.id ? { ...r, stops: updatedList.length } : r));
+    }
+
+    addToast(`Stop removed from route sequence`, 'info');
+  };
+
+  // Open Schedule Modal
+  const handleOpenScheduleModal = (route) => {
+    setSelectedRouteForSchedule(route);
+    setScheduleDeparture(route.departure);
+    setScheduleArrival(route.arrival);
+    setScheduleDays('Mon-Sun (Daily)');
+    setScheduleFrequency(route.mode === 'Bus' ? 'Every 15-20 mins' : 'Fixed Daily Schedule');
+    setIsScheduleModalOpen(true);
+  };
+
+  const handleSaveSchedule = (e) => {
+    e.preventDefault();
+    if (selectedRouteForSchedule) {
+      setRoutesData(prev => prev.map(r => {
+        if (r.id === selectedRouteForSchedule.id) {
+          return {
+            ...r,
+            departure: scheduleDeparture,
+            arrival: scheduleArrival,
+          };
+        }
+        return r;
+      }));
+    }
+
+    addToast(`Schedule updated for ${selectedRouteForSchedule?.name}`, 'success');
+    setIsScheduleModalOpen(false);
   };
 
   const filteredData = routesData.filter(r => {
@@ -147,9 +277,9 @@ const RouteScheduleManagement = () => {
                 </td>
                 <td>
                   <div className="table-action-btns">
-                    <button className="action-btn-sm" onClick={() => addToast(`Editing ${row.name}`, 'info')}>Edit</button>
-                    <button className="action-btn-sm" onClick={() => addToast(`Viewing ${row.stops} stops for ${row.id}`, 'info')}>Stops</button>
-                    <button className="action-btn-sm" onClick={() => addToast(`Schedule timetable for ${row.name}`, 'info')}>Schedule</button>
+                    <button className="action-btn-sm" onClick={() => handleOpenEditModal(row)}>Edit</button>
+                    <button className="action-btn-sm" onClick={() => handleOpenStopsModal(row)}>Stops</button>
+                    <button className="action-btn-sm" onClick={() => handleOpenScheduleModal(row)}>Schedule</button>
                   </div>
                 </td>
               </tr>
@@ -235,8 +365,247 @@ const RouteScheduleManagement = () => {
           </div>
         </form>
       </Modal>
+
+      {/* Edit Route Modal */}
+      <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Transit Route">
+        <form onSubmit={handleSaveEdit}>
+          <div style={{ marginBottom: '16px' }}>
+            <label className="form-label">ROUTE NAME</label>
+            <input
+              type="text"
+              className="form-input"
+              value={editRouteName}
+              onChange={(e) => setEditRouteName(e.target.value)}
+              required
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div>
+              <label className="form-label">MODE</label>
+              <select className="form-input" value={editMode} onChange={(e) => setEditMode(e.target.value)}>
+                <option value="Bus">Bus</option>
+                <option value="Train">Train</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="form-label">STOPS COUNT</label>
+              <input
+                type="number"
+                className="form-input"
+                value={editStops}
+                onChange={(e) => setEditStops(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+            <div>
+              <label className="form-label">DEPARTURE</label>
+              <input
+                type="text"
+                className="form-input"
+                value={editDeparture}
+                onChange={(e) => setEditDeparture(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="form-label">ARRIVAL</label>
+              <input
+                type="text"
+                className="form-input"
+                value={editArrival}
+                onChange={(e) => setEditArrival(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="form-label">FARE (LKR)</label>
+              <input
+                type="number"
+                className="form-input"
+                value={editFare}
+                onChange={(e) => setEditFare(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '24px' }}>
+            <label className="form-label">STATUS</label>
+            <select className="form-input" value={editStatus} onChange={(e) => setEditStatus(e.target.value)}>
+              <option value="Active">Active</option>
+              <option value="Delayed">Delayed</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <button type="button" className="action-btn-sm" style={{ padding: '10px 18px' }} onClick={() => setIsEditModalOpen(false)}>Cancel</button>
+            <button type="submit" className="btn-blue-action" style={{ borderRadius: '10px' }}>Save Changes</button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Route Stops Sequence Modal */}
+      <Modal isOpen={isStopsModalOpen} onClose={() => setIsStopsModalOpen(false)} title={`Route Stops Sequence: ${selectedRouteForStops?.name || ''}`}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: '#64748B', fontSize: '13px', fontWeight: '600' }}>
+            <MapPin size={16} color="#2563EB" />
+            <span>Total Stations & Intermediate Stops: <strong>{stopsList.length}</strong></span>
+          </div>
+
+          {/* Form to Add New Stop */}
+          <form onSubmit={handleAddStopToSequence} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Enter new stop / station name..."
+              value={newStopName}
+              onChange={(e) => setNewStopName(e.target.value)}
+              style={{ flex: 1 }}
+            />
+            <button type="submit" className="btn-blue-action" style={{ borderRadius: '10px', padding: '0 16px', fontSize: '13px', whiteSpace: 'nowrap' }}>
+              <Plus size={14} /> Add Stop
+            </button>
+          </form>
+
+          {/* Stops List Timeline */}
+          <div style={{ maxHeight: '280px', overflowY: 'auto', paddingRight: '4px' }}>
+            {stopsList.map((stop, idx) => (
+              <div 
+                key={idx}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  padding: '10px 14px',
+                  backgroundColor: idx === 0 || idx === stopsList.length - 1 ? '#EFF6FF' : '#F8FAFC',
+                  borderRadius: '10px',
+                  marginBottom: '8px',
+                  border: idx === 0 || idx === stopsList.length - 1 ? '1px solid #BFDBFE' : '1px solid #E2E8F0',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ 
+                    width: '24px', 
+                    height: '24px', 
+                    borderRadius: '50%', 
+                    backgroundColor: idx === 0 || idx === stopsList.length - 1 ? '#2563EB' : '#94A3B8',
+                    color: '#FFF', 
+                    fontSize: '11px', 
+                    fontWeight: '800',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    {idx + 1}
+                  </span>
+                  <div>
+                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#0F172A' }}>{stop}</span>
+                    {idx === 0 && <span style={{ fontSize: '11px', color: '#2563EB', fontWeight: '700', marginLeft: '8px' }}>(Origin)</span>}
+                    {idx === stopsList.length - 1 && <span style={{ fontSize: '11px', color: '#16A34A', fontWeight: '700', marginLeft: '8px' }}>(Destination)</span>}
+                  </div>
+                </div>
+
+                {stopsList.length > 2 && (
+                  <button 
+                    type="button" 
+                    onClick={() => handleRemoveStopFromSequence(idx)}
+                    style={{ background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer', padding: '4px' }}
+                    title="Remove stop"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+            <button 
+              type="button" 
+              className="btn-blue-action" 
+              style={{ borderRadius: '10px', padding: '8px 24px' }} 
+              onClick={() => setIsStopsModalOpen(false)}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Route Schedule & Timetable Modal */}
+      <Modal isOpen={isScheduleModalOpen} onClose={() => setIsScheduleModalOpen(false)} title={`Route Timetable: ${selectedRouteForSchedule?.name || ''}`}>
+        <form onSubmit={handleSaveSchedule}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div>
+              <label className="form-label">DEPARTURE TIME</label>
+              <input
+                type="text"
+                className="form-input"
+                value={scheduleDeparture}
+                onChange={(e) => setScheduleDeparture(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="form-label">ARRIVAL TIME</label>
+              <input
+                type="text"
+                className="form-input"
+                value={scheduleArrival}
+                onChange={(e) => setScheduleArrival(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+            <div>
+              <label className="form-label">OPERATING DAYS</label>
+              <select className="form-input" value={scheduleDays} onChange={(e) => setScheduleDays(e.target.value)}>
+                <option value="Mon-Sun (Daily)">Mon-Sun (Daily)</option>
+                <option value="Mon-Fri (Weekdays)">Mon-Fri (Weekdays)</option>
+                <option value="Sat-Sun (Weekends)">Sat-Sun (Weekends)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="form-label">SERVICE FREQUENCY</label>
+              <input
+                type="text"
+                className="form-input"
+                value={scheduleFrequency}
+                onChange={(e) => setScheduleFrequency(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={{ backgroundColor: '#F8FAFC', padding: '14px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#0F172A', fontWeight: '700', fontSize: '13px', marginBottom: '4px' }}>
+              <Clock size={16} color="#2563EB" /> Timetable Summary
+            </div>
+            <div style={{ fontSize: '13px', color: '#64748B' }}>
+              Departs at <strong>{scheduleDeparture}</strong>, arrives by <strong>{scheduleArrival}</strong> running <strong>{scheduleDays}</strong>.
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <button type="button" className="action-btn-sm" style={{ padding: '10px 18px' }} onClick={() => setIsScheduleModalOpen(false)}>Cancel</button>
+            <button type="submit" className="btn-blue-action" style={{ borderRadius: '10px' }}>Save Schedule</button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };
 
 export default RouteScheduleManagement;
+

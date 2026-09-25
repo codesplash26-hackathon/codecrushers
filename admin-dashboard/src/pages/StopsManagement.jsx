@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2, Route } from 'lucide-react';
+import Modal from '../components/Modal';
+import { useToast } from '../context/ToastContext';
 import adminService from '../services/adminService';
 
 const StopsManagement = () => {
+  const { addToast } = useToast();
   const [filter, setFilter] = useState('All');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const [stopsData, setStopsData] = useState([
     { id: 'KBS-001', name: 'Kandy Bus Stand', type: 'Bus Terminal', routes: '12', latlng: '7.2905, 80.6337', status: 'Active' },
     { id: 'KRS-001', name: 'Kandy Railway Station', type: 'Train Station', routes: '5', latlng: '7.2961, 80.6350', status: 'Active' },
@@ -11,6 +16,30 @@ const StopsManagement = () => {
     { id: 'COF-001', name: 'Colombo Fort Station', type: 'Bus + Train', routes: '24', latlng: '6.9344, 79.8428', status: 'Active' },
     { id: 'NUG-002', name: 'Nugegoda Stand', type: 'Bus Terminal', routes: '8', latlng: '6.8720, 79.8898', status: 'Maintenance' },
   ]);
+
+  // Modal Form State (Add)
+  const [name, setName] = useState('');
+  const [type, setType] = useState('Bus Terminal');
+  const [routes, setRoutes] = useState('8');
+  const [lat, setLat] = useState('7.2905');
+  const [lng, setLng] = useState('80.6337');
+  const [status, setStatus] = useState('Active');
+
+  // Modal Form State (Edit)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingStopId, setEditingStopId] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editType, setEditType] = useState('Bus Terminal');
+  const [editRoutes, setEditRoutes] = useState('8');
+  const [editLat, setEditLat] = useState('');
+  const [editLng, setEditLng] = useState('');
+  const [editStatus, setEditStatus] = useState('Active');
+
+  // Modal State (Routes Manager)
+  const [isRoutesModalOpen, setIsRoutesModalOpen] = useState(false);
+  const [selectedStopForRoutes, setSelectedStopForRoutes] = useState(null);
+  const [stopRoutesList, setStopRoutesList] = useState([]);
+  const [newRouteInput, setNewRouteInput] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -33,6 +62,136 @@ const StopsManagement = () => {
     })();
   }, []);
 
+  const handleAddStop = async (e) => {
+    e.preventDefault();
+    if (!name) return;
+
+    const newId = `STP-00${stopsData.length + 1}`;
+    const formattedLatLng = lat && lng ? `${lat}, ${lng}` : '7.2905, 80.6337';
+
+    const newStop = {
+      id: newId,
+      name,
+      type,
+      routes: routes || '0',
+      latlng: formattedLatLng,
+      status,
+    };
+
+    setStopsData([newStop, ...stopsData]);
+
+    try {
+      const stopType = type === 'Train Station' ? 'train' : type === 'Bus + Train' ? 'both' : 'bus';
+      await adminService.createStop({
+        name,
+        type: stopType,
+        location: {
+          type: 'Point',
+          coordinates: [Number(lng) || 80.6337, Number(lat) || 7.2905],
+        },
+      });
+      addToast(`New stop "${name}" added successfully!`, 'success');
+    } catch {
+      addToast(`New stop "${name}" added locally`, 'success');
+    }
+
+    setIsModalOpen(false);
+    setName('');
+    setType('Bus Terminal');
+    setRoutes('8');
+    setLat('7.2905');
+    setLng('80.6337');
+    setStatus('Active');
+  };
+
+  // Open Edit Modal
+  const handleOpenEditModal = (stop) => {
+    setEditingStopId(stop.id);
+    setEditName(stop.name);
+    setEditType(stop.type);
+    setEditRoutes(stop.routes);
+    const coords = stop.latlng.split(',').map(c => c.trim());
+    setEditLat(coords[0] || '7.2905');
+    setEditLng(coords[1] || '80.6337');
+    setEditStatus(stop.status);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = (e) => {
+    e.preventDefault();
+    const formattedLatLng = editLat && editLng ? `${editLat}, ${editLng}` : '7.2905, 80.6337';
+
+    setStopsData(prev => prev.map(s => {
+      if (s.id === editingStopId) {
+        return {
+          ...s,
+          name: editName,
+          type: editType,
+          routes: editRoutes,
+          latlng: formattedLatLng,
+          status: editStatus,
+        };
+      }
+      return s;
+    }));
+
+    addToast(`Stop "${editName}" updated successfully!`, 'success');
+    setIsEditModalOpen(false);
+  };
+
+  // Open Routes Modal for Stop
+  const handleOpenRoutesModal = (stop) => {
+    setSelectedStopForRoutes(stop);
+    
+    const sampleRoutes = stop.name.includes('Kandy')
+      ? ['Route 654: Kandy ➔ Colombo Fort', 'Route 780: Kandy ➔ Matale', 'Intercity Train: Kandy ➔ Colombo']
+      : stop.name.includes('Peradeniya')
+      ? ['Route 681: Kandy ➔ Peradeniya', 'Express Train: Kandy ➔ Colombo Fort']
+      : ['Route 120: Colombo ➔ Horana', 'Route 100: Colombo ➔ Moratuwa', 'Coastal Line Express Train'];
+
+    setStopRoutesList(sampleRoutes);
+    setNewRouteInput('');
+    setIsRoutesModalOpen(true);
+  };
+
+  const handleAddRouteToStop = (e) => {
+    e.preventDefault();
+    if (!newRouteInput.trim()) return;
+
+    const updatedList = [...stopRoutesList, newRouteInput.trim()];
+    setStopRoutesList(updatedList);
+
+    if (selectedStopForRoutes) {
+      setStopsData(prev => prev.map(s => s.id === selectedStopForRoutes.id ? { ...s, routes: String(updatedList.length) } : s));
+    }
+
+    addToast(`Associated route "${newRouteInput.trim()}" with stop`, 'success');
+    setNewRouteInput('');
+  };
+
+  const handleRemoveRouteFromStop = (indexToRemove) => {
+    const updatedList = stopRoutesList.filter((_, idx) => idx !== indexToRemove);
+    setStopRoutesList(updatedList);
+
+    if (selectedStopForRoutes) {
+      setStopsData(prev => prev.map(s => s.id === selectedStopForRoutes.id ? { ...s, routes: String(updatedList.length) } : s));
+    }
+
+    addToast(`Route association removed from stop`, 'info');
+  };
+
+  const handleDeleteStop = async (id, stopName) => {
+    setStopsData(prev => prev.filter(s => s.id !== id));
+    try {
+      if (id && !id.startsWith('K') && !id.startsWith('P') && !id.startsWith('C') && !id.startsWith('N')) {
+        await adminService.deleteStop(id);
+      }
+      addToast(`Stop "${stopName}" removed`, 'info');
+    } catch {
+      addToast(`Stop "${stopName}" removed locally`, 'info');
+    }
+  };
+
   const filteredData = stopsData.filter(s => {
     if (filter === 'All') return true;
     if (filter === 'Bus Terminal') return s.type === 'Bus Terminal';
@@ -52,7 +211,7 @@ const StopsManagement = () => {
           <button className={`pill-btn ${filter === 'Bus + Train' ? 'active' : ''}`} onClick={() => setFilter('Bus + Train')}>Bus + Train</button>
         </div>
 
-        <button className="btn-blue-action">
+        <button className="btn-blue-action" onClick={() => setIsModalOpen(true)}>
           <Plus size={16} />
           <span>Add Stop</span>
         </button>
@@ -89,9 +248,15 @@ const StopsManagement = () => {
                 </td>
                 <td>
                   <div className="table-action-btns">
-                    <button className="action-btn-sm">Edit</button>
-                    <button className="action-btn-sm">Routes</button>
-                    <button className="action-btn-sm" style={{ color: '#DC2626', borderColor: '#FCA5A5' }}>Remove</button>
+                    <button className="action-btn-sm" onClick={() => handleOpenEditModal(row)}>Edit</button>
+                    <button className="action-btn-sm" onClick={() => handleOpenRoutesModal(row)}>Routes</button>
+                    <button 
+                      className="action-btn-sm" 
+                      style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
+                      onClick={() => handleDeleteStop(row.id, row.name)}
+                    >
+                      Remove
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -99,8 +264,232 @@ const StopsManagement = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Add Stop Modal */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Transit Stop / Station">
+        <form onSubmit={handleAddStop}>
+          <div style={{ marginBottom: '16px' }}>
+            <label className="form-label">STOP / STATION NAME</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="e.g. Galle Railway Station"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div>
+              <label className="form-label">STATION TYPE</label>
+              <select className="form-input" value={type} onChange={(e) => setType(e.target.value)}>
+                <option value="Bus Terminal">Bus Terminal</option>
+                <option value="Train Station">Train Station</option>
+                <option value="Bus + Train">Bus + Train</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="form-label">CONNECTED ROUTES</label>
+              <input
+                type="number"
+                className="form-input"
+                value={routes}
+                onChange={(e) => setRoutes(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+            <div>
+              <label className="form-label">LATITUDE</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="e.g. 7.2905"
+                value={lat}
+                onChange={(e) => setLat(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="form-label">LONGITUDE</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="e.g. 80.6337"
+                value={lng}
+                onChange={(e) => setLng(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="form-label">STATUS</label>
+              <select className="form-input" value={status} onChange={(e) => setStatus(e.target.value)}>
+                <option value="Active">Active</option>
+                <option value="Maintenance">Maintenance</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <button type="button" className="action-btn-sm" style={{ padding: '10px 18px' }} onClick={() => setIsModalOpen(false)}>Cancel</button>
+            <button type="submit" className="btn-blue-action" style={{ borderRadius: '10px' }}>Create Stop</button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Stop Modal */}
+      <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Transit Stop / Station">
+        <form onSubmit={handleSaveEdit}>
+          <div style={{ marginBottom: '16px' }}>
+            <label className="form-label">STOP / STATION NAME</label>
+            <input
+              type="text"
+              className="form-input"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              required
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div>
+              <label className="form-label">STATION TYPE</label>
+              <select className="form-input" value={editType} onChange={(e) => setEditType(e.target.value)}>
+                <option value="Bus Terminal">Bus Terminal</option>
+                <option value="Train Station">Train Station</option>
+                <option value="Bus + Train">Bus + Train</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="form-label">CONNECTED ROUTES</label>
+              <input
+                type="number"
+                className="form-input"
+                value={editRoutes}
+                onChange={(e) => setEditRoutes(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+            <div>
+              <label className="form-label">LATITUDE</label>
+              <input
+                type="text"
+                className="form-input"
+                value={editLat}
+                onChange={(e) => setEditLat(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="form-label">LONGITUDE</label>
+              <input
+                type="text"
+                className="form-input"
+                value={editLng}
+                onChange={(e) => setEditLng(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="form-label">STATUS</label>
+              <select className="form-input" value={editStatus} onChange={(e) => setEditStatus(e.target.value)}>
+                <option value="Active">Active</option>
+                <option value="Maintenance">Maintenance</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <button type="button" className="action-btn-sm" style={{ padding: '10px 18px' }} onClick={() => setIsEditModalOpen(false)}>Cancel</button>
+            <button type="submit" className="btn-blue-action" style={{ borderRadius: '10px' }}>Save Changes</button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Routes Passing Through Stop Modal */}
+      <Modal isOpen={isRoutesModalOpen} onClose={() => setIsRoutesModalOpen(false)} title={`Routes Passing Through: ${selectedStopForRoutes?.name || ''}`}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: '#64748B', fontSize: '13px', fontWeight: '600' }}>
+            <Route size={16} color="#2563EB" />
+            <span>Connected Routes: <strong>{stopRoutesList.length}</strong></span>
+          </div>
+
+          {/* Add Route Form */}
+          <form onSubmit={handleAddRouteToStop} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Enter route to associate..."
+              value={newRouteInput}
+              onChange={(e) => setNewRouteInput(e.target.value)}
+              style={{ flex: 1 }}
+            />
+            <button type="submit" className="btn-blue-action" style={{ borderRadius: '10px', padding: '0 16px', fontSize: '13px', whiteSpace: 'nowrap' }}>
+              <Plus size={14} /> Add Route
+            </button>
+          </form>
+
+          {/* Routes List */}
+          <div style={{ maxHeight: '260px', overflowY: 'auto', paddingRight: '4px' }}>
+            {stopRoutesList.map((routeItem, idx) => (
+              <div 
+                key={idx}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  padding: '10px 14px',
+                  backgroundColor: '#F8FAFC',
+                  borderRadius: '10px',
+                  marginBottom: '8px',
+                  border: '1px solid #E2E8F0',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#2563EB' }}>#{idx + 1}</span>
+                  <span style={{ fontSize: '14px', fontWeight: '700', color: '#0F172A' }}>{routeItem}</span>
+                </div>
+
+                <button 
+                  type="button" 
+                  onClick={() => handleRemoveRouteFromStop(idx)}
+                  style={{ background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer', padding: '4px' }}
+                  title="Remove route association"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+            <button 
+              type="button" 
+              className="btn-blue-action" 
+              style={{ borderRadius: '10px', padding: '8px 24px' }} 
+              onClick={() => setIsRoutesModalOpen(false)}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
 
 export default StopsManagement;
+
+
