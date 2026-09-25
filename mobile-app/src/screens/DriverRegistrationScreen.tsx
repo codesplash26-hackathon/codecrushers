@@ -13,6 +13,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
+import api, { apiRequest } from "../services/api";
 
 type DriverRegistrationScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -42,6 +43,32 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
   const [model, setModel] = useState("Toyota Prius");
   const [color, setColor] = useState("Silver");
   const [vehicleDocsUploaded, setVehicleDocsUploaded] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmitApplication = async () => {
+    setIsSubmitting(true);
+    try {
+      await apiRequest("/services", {
+        method: "POST",
+        body: {
+          name: fullName,
+          phone,
+          nic,
+          licenseNumber,
+          type: vehicleType === "Tuk-tuk" ? "tuk" : "taxi",
+          plateNumber: registration,
+          vehicleModel: model,
+          color,
+          status: "pending",
+        },
+      });
+    } catch {
+      // Proceed to status screen regardless
+    } finally {
+      setIsSubmitting(false);
+      setCurrentStep(3);
+    }
+  };
 
   // STEP 3: APPLICATION STATUS SCREEN
   if (currentStep === 3) {
@@ -758,7 +785,7 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
 
               <TouchableOpacity
                 style={styles.step2SubmitBtn}
-                onPress={() => setCurrentStep(3)}
+                onPress={handleSubmitApplication}
                 activeOpacity={0.85}
               >
                 <Text style={styles.step2SubmitBtnText}>Submit Application</Text>

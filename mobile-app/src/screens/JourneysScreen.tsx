@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { RootStackParamList } from "../navigations/AppNavigator";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
 import BottomNavigationBar from "../components/BottomNavigationBar";
+import api from "../services/api";
 
 type JourneysScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -308,6 +309,35 @@ export default function JourneysScreen({ navigation, route }: Props) {
       },
     },
   ];
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const routesRes = await api.getRoutes();
+        if (routesRes.success && Array.isArray(routesRes.data?.routes) && routesRes.data.routes.length > 0) {
+          const apiJourneys: JourneyItem[] = routesRes.data.routes.map((r: any, idx: number) => ({
+            id: r._id || `api-route-${idx}`,
+            origin: r.startLocation?.name || r.name || "Kandy",
+            destination: r.endLocation?.name || "Colombo Fort",
+            subtitle: `${r.type || "Transit"} Route · ${r.distance || "115 km"}`,
+            status: "Saved" as const,
+            modes: [
+              {
+                type: (r.type?.toLowerCase().includes("train") ? "train" : "bus") as "train" | "bus",
+                label: r.type || "Express",
+                icon: r.type?.toLowerCase().includes("train") ? "🚆" : "🚌",
+              },
+            ],
+            duration: `${r.estimatedDurationMinutes || 180} min`,
+            cost: `Rs. ${r.baseFare || 450}`,
+          }));
+          setSavedJourneys((prev) => [...apiJourneys, ...prev]);
+        }
+      } catch {
+        // Fallback
+      }
+    })();
+  }, []);
 
   // Upcoming journeys
   const upcomingJourneys: JourneyItem[] = [

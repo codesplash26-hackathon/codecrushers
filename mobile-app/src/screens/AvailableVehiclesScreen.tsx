@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../navigations/AppNavigator";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
+import api from "../services/api";
 
 type AvailableVehiclesScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -138,9 +139,39 @@ export default function AvailableVehiclesScreen({ navigation, route }: Props) {
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"Cash" | "Card" | "Wallet">("Cash");
 
+  const [vehiclesList, setVehiclesList] = useState<VehicleItem[]>(VEHICLES_DATA);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.getTransportServices();
+        if (res.success && Array.isArray(res.data?.services) && res.data.services.length > 0) {
+          const apiVehicles: VehicleItem[] = res.data.services.map((s: any, idx: number) => ({
+            id: s._id || `api-veh-${idx}`,
+            initials: (s.name || "D").split(" ").map((n: string) => n[0]).join("").toUpperCase(),
+            name: s.name || s.driverName || "Driver",
+            type: s.type === "tuk" || s.type === "Tuk-tuk" ? "Tuk-tuk" : "Taxi",
+            typeIcon: s.type === "tuk" || s.type === "Tuk-tuk" ? "🛺" : "🚕",
+            rating: s.rating || 4.8,
+            model: s.vehicleModel || s.model || "Standard Vehicle",
+            plate: s.plateNumber || s.plate || "WP CAB-0000",
+            etaMinutes: s.etaMinutes || 5,
+            fare: s.baseFare || s.fare || 800,
+            status: "Available",
+            distanceKm: s.distanceKm || 1.5,
+            trips: s.trips || 120,
+          }));
+          setVehiclesList(apiVehicles);
+        }
+      } catch {
+        // Fallback
+      }
+    })();
+  }, []);
+
   // Filtering & Sorting
   const displayedVehicles = useMemo(() => {
-    let list = VEHICLES_DATA.filter((v) => {
+    let list = vehiclesList.filter((v) => {
       if (filterType === "All") return true;
       return v.type === filterType;
     });
