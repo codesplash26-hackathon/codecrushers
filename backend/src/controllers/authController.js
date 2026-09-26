@@ -65,12 +65,25 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const query = (email || "").trim();
 
-    const user = await User.findOne({ email });
+    if (!query || !password) {
+      return res.status(400).json({
+        message: "Email/username and password are required",
+      });
+    }
+
+    const user = await User.findOne({
+      $or: [
+        { email: query.toLowerCase() },
+        { name: query },
+        ...(query.toLowerCase() === "admin" ? [{ role: "admin" }] : []),
+      ],
+    });
 
     if (!user) {
       return res.status(401).json({
-        message: "Invalid email or password",
+        message: "Invalid credentials",
       });
     }
 
@@ -78,7 +91,7 @@ const login = async (req, res) => {
 
     if (!isMatch) {
       return res.status(401).json({
-        message: "Invalid email or password",
+        message: "Invalid credentials",
       });
     }
 
