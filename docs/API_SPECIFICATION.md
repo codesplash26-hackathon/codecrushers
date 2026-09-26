@@ -17,4 +17,9 @@
 - `POST /api/disruptions/report` - Broadcast new disruption (Admin).
 
 ## Admin & Analytics Endpoints (`/api/admin`)
-- `GET /api/admin/stats` - Fetch administrative metrics & usage insights.
+- `GET /api/admin/dashboard-stats` - Fetch comprehensive overview metrics, mode splits & disruptions.
+- `GET /api/admin/settings` - Retrieve multimodal journey weights, fares, policies & database configuration.
+- `PUT /api/admin/settings` - Persist updated system settings to MongoDB.
+- `POST /api/admin/settings/reset` - Restore system parameters to factory defaults.
+- `POST /api/admin/settings/reseed` - Re-populate MongoDB with fresh transit demo data & accounts.
+

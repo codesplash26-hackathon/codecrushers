@@ -2,6 +2,8 @@ const TransportService = require("../models/TransportService");
 const Route = require("../models/Route");
 const Disruption = require("../models/Disruption");
 const Journey = require("../models/Journey");
+const Setting = require("../models/Setting");
+const seedDatabase = require("../seed");
 
 /**
  * Get comprehensive dashboard overview metrics directly from MongoDB
@@ -146,6 +148,148 @@ const getDashboardStats = async (req, res, next) => {
   }
 };
 
+/**
+ * Get current system settings
+ * GET /api/admin/settings
+ */
+const getSettings = async (req, res, next) => {
+  try {
+    let settings = await Setting.findOne();
+    if (!settings) {
+      settings = await Setting.create({});
+    }
+    return res.json({
+      success: true,
+      data: settings,
+    });
+  } catch (error) {
+    if (next) return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch settings",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Update system settings
+ * PUT /api/admin/settings
+ */
+const updateSettings = async (req, res, next) => {
+  try {
+    let settings = await Setting.findOne();
+    if (!settings) {
+      settings = new Setting();
+    }
+
+    const payload = req.body || {};
+
+    // General & Platform
+    if (payload.systemName !== undefined) settings.systemName = payload.systemName;
+    if (payload.operationalRegion !== undefined) settings.operationalRegion = payload.operationalRegion;
+    if (payload.timezone !== undefined) settings.timezone = payload.timezone;
+    if (payload.currency !== undefined) settings.currency = payload.currency;
+    if (payload.maintenanceMode !== undefined) settings.maintenanceMode = Boolean(payload.maintenanceMode);
+    if (payload.allowUserRegistration !== undefined) settings.allowUserRegistration = Boolean(payload.allowUserRegistration);
+    if (payload.gpsRefreshIntervalSeconds !== undefined) settings.gpsRefreshIntervalSeconds = Number(payload.gpsRefreshIntervalSeconds);
+
+    // Algorithm Weights
+    if (payload.algorithmWeights) {
+      settings.algorithmWeights = {
+        ...settings.algorithmWeights.toObject(),
+        ...payload.algorithmWeights,
+      };
+    }
+
+    // Disruption Settings
+    if (payload.disruptionSettings) {
+      settings.disruptionSettings = {
+        ...settings.disruptionSettings.toObject(),
+        ...payload.disruptionSettings,
+      };
+    }
+
+    // Fare Settings
+    if (payload.fareSettings) {
+      settings.fareSettings = {
+        ...settings.fareSettings.toObject(),
+        ...payload.fareSettings,
+      };
+    }
+
+    // System Settings
+    if (payload.systemSettings) {
+      settings.systemSettings = {
+        ...settings.systemSettings.toObject(),
+        ...payload.systemSettings,
+      };
+    }
+
+    const saved = await settings.save();
+    return res.json({
+      success: true,
+      message: "System settings updated successfully",
+      data: saved,
+    });
+  } catch (error) {
+    if (next) return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update settings",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Reset settings back to factory defaults
+ * POST /api/admin/settings/reset
+ */
+const resetSettings = async (req, res, next) => {
+  try {
+    await Setting.deleteMany({});
+    const defaultSettings = await Setting.create({});
+    return res.json({
+      success: true,
+      message: "System settings restored to factory defaults",
+      data: defaultSettings,
+    });
+  } catch (error) {
+    if (next) return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to reset settings",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Re-seed Database with demo data
+ * POST /api/admin/settings/reseed
+ */
+const reseedDatabase = async (req, res, next) => {
+  try {
+    await seedDatabase(true);
+    return res.json({
+      success: true,
+      message: "Database has been successfully re-seeded with fresh transit stops, routes, schedules, disruptions, and users.",
+    });
+  } catch (error) {
+    if (next) return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to re-seed database",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getDashboardStats,
+  getSettings,
+  updateSettings,
+  resetSettings,
+  reseedDatabase,
 };

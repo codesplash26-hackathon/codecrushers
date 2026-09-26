@@ -50,6 +50,12 @@ export const adminService = {
 
   // Notifications
   getNotifications: () => fetchApi('/notifications'),
+
+  // System Settings
+  getSettings: () => fetchApi('/admin/settings'),
+  updateSettings: (data) => fetchApi('/admin/settings', { method: 'PUT', body: JSON.stringify(data) }),
+  resetSettings: () => fetchApi('/admin/settings/reset', { method: 'POST' }),
+  reseedDatabase: () => fetchApi('/admin/settings/reseed', { method: 'POST' }),
 };
 
 export default adminService;
