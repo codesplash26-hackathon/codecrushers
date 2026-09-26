@@ -29,9 +29,10 @@ type ProfileScreenNavigationProp = NativeStackNavigationProp<
 
 interface Props {
   navigation: ProfileScreenNavigationProp;
+  hideBottomBar?: boolean;
 }
 
-export default function ProfileScreen({ navigation }: Props) {
+export default function ProfileScreen({ navigation, hideBottomBar }: Props) {
   const { isDarkMode, toggleTheme, colors } = useTheme();
 
   // Modal states
@@ -639,7 +640,9 @@ export default function ProfileScreen({ navigation }: Props) {
       </ScrollView>
 
       {/* Unified Fixed-Position Bottom Navigation Bar */}
-      <BottomNavigationBar activeTab="profile" navigation={navigation} />
+      {!hideBottomBar && (
+        <BottomNavigationBar activeTab="profile" navigation={navigation} />
+      )}
 
       {/* ================= TRAVEL PREFERENCES MODAL ================= */}
       <Modal
@@ -2021,6 +2024,7 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     flex: 1,
+    marginRight: 8,
   },
   userName: {
     fontSize: 22,
@@ -2093,23 +2097,27 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#2563EB",
     marginBottom: 3,
+    textAlign: "center",
   },
   statNumberGreen: {
     fontSize: 22,
     fontWeight: "800",
     color: "#16A34A",
     marginBottom: 3,
+    textAlign: "center",
   },
   statNumberAmber: {
     fontSize: 22,
     fontWeight: "800",
     color: "#D97706",
     marginBottom: 3,
+    textAlign: "center",
   },
   statLabel: {
     fontSize: 12,
     fontWeight: "600",
     color: "#64748B",
+    textAlign: "center",
   },
   statDivider: {
     width: 1,
@@ -2730,6 +2738,7 @@ const styles = StyleSheet.create({
   tpPillText: {
     fontSize: 14,
     fontWeight: "700",
+    textAlign: "center",
   },
   tpPillTextActive: {
     color: "#FFFFFF",
@@ -2784,5 +2793,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "700",
+    textAlign: "center",
   },
 });
