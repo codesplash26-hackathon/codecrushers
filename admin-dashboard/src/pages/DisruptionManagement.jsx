@@ -37,43 +37,50 @@ const DisruptionManagement = () => {
   const [status, setStatus] = useState('Delayed');
   const [impact, setImpact] = useState('High');
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await adminService.getDisruptions();
-        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-          const apiData = res.data.map((d, idx) => ({
+  const fetchDisruptions = async () => {
+    try {
+      const res = await adminService.getDisruptions();
+      if (res && Array.isArray(res.data) && res.data.length > 0) {
+        const apiData = res.data.map((d, idx) => {
+          let statusLabel = 'Delayed';
+          if (d.status === 'RESOLVED') statusLabel = 'On Time';
+          else if (d.disruptionType === 'CANCELLATION') statusLabel = 'Cancelled';
+          else if (d.disruptionType === 'ROAD_CLOSURE') statusLabel = 'Diverted';
+          else if (d.disruptionType === 'DELAY') statusLabel = 'Delayed';
+          else if (d.disruptionType) statusLabel = d.disruptionType;
+
+          let impactLabel = 'High';
+          if (d.severity === 'LOW') impactLabel = 'Low';
+          else if (d.severity === 'MEDIUM') impactLabel = 'Medium';
+          else if (d.severity === 'HIGH' || d.severity === 'CRITICAL') impactLabel = 'High';
+          else if (d.severity) impactLabel = d.severity;
+
+          const isTrain = (d.affectedService?.type === 'train') || (d.affectedTrip?.toLowerCase().includes('train')) || (d.title?.toLowerCase().includes('train') || d.title?.toLowerCase().includes('rail') || d.title?.toLowerCase().includes('express'));
+
+          return {
             id: d._id || `api-dis-${idx}`,
             service: d.title || d.affectedService?.name || 'Service Disruption',
-            mode: d.affectedService?.type === 'train' ? 'Train' : 'Bus',
+            mode: isTrain ? 'Train' : 'Bus',
             location: d.description || 'Active Section',
-            status: d.status === 'RESOLVED' ? 'On Time' : d.disruptionType || 'Delayed',
-            impact: d.severity || 'High',
-            updated: 'Just now',
-          }));
-          setDisruptionsData(apiData);
-        }
-      } catch {
-        // Fallback to default
+            status: statusLabel,
+            impact: impactLabel,
+            updated: d.createdAt ? new Date(d.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now',
+          };
+        });
+        setDisruptionsData(apiData);
       }
-    })();
+    } catch (err) {
+      console.error('Failed to fetch disruptions:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchDisruptions();
   }, []);
 
   const handleAddDisruption = async (e) => {
     e.preventDefault();
     if (!service || !location) return;
-
-    const newEntry = {
-      id: Date.now().toString(),
-      service,
-      mode,
-      location,
-      status,
-      impact,
-      updated: 'Just now',
-    };
-
-    setDisruptionsData([newEntry, ...disruptionsData]);
 
     try {
       await adminService.createDisruption({
@@ -81,15 +88,17 @@ const DisruptionManagement = () => {
         description: location,
         disruptionType: status,
         severity: impact,
+        mode: mode,
       });
-      addToast(`Disruption broadcasted for ${service}!`, 'success');
-    } catch {
-      addToast(`Disruption created locally for ${service}`, 'success');
-    }
 
-    setIsModalOpen(false);
-    setService('');
-    setLocation('');
+      addToast(`Disruption broadcasted for ${service}!`, 'success');
+      setIsModalOpen(false);
+      setService('');
+      setLocation('');
+      await fetchDisruptions();
+    } catch (err) {
+      addToast(`Failed to save disruption: ${err.message}`, 'error');
+    }
   };
 
   const handleOpenViewModal = (disruption) => {
@@ -107,37 +116,36 @@ const DisruptionManagement = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveEdit = (e) => {
+  const handleSaveEdit = async (e) => {
     e.preventDefault();
-    setDisruptionsData(prev => prev.map(d => {
-      if (d.id === editingId) {
-        return {
-          ...d,
-          service: editService,
-          mode: editMode,
-          location: editLocation,
-          status: editStatus,
-          impact: editImpact,
-          updated: 'Just now',
-        };
+    try {
+      if (editingId && !editingId.startsWith('1') && !editingId.startsWith('2') && !editingId.startsWith('3') && !editingId.startsWith('4') && !editingId.startsWith('5')) {
+        await adminService.updateDisruption(editingId, {
+          title: editService,
+          description: editLocation,
+          disruptionType: editStatus,
+          severity: editImpact,
+          status: editStatus === 'On Time' ? 'RESOLVED' : 'ACTIVE',
+        });
       }
-      return d;
-    }));
-
-    addToast(`Disruption updated for ${editService}`, 'success');
-    setIsEditModalOpen(false);
+      addToast(`Disruption updated for ${editService}`, 'success');
+      setIsEditModalOpen(false);
+      await fetchDisruptions();
+    } catch (err) {
+      addToast(`Update failed: ${err.message}`, 'error');
+    }
   };
 
   const handleResolve = async (id, serviceName) => {
-    setDisruptionsData(disruptionsData.map(d => d.id === id ? { ...d, status: 'On Time', impact: 'None', updated: 'Just now' } : d));
     try {
-      if (id && !id.startsWith('1') && !id.startsWith('2')) {
+      if (id && !id.startsWith('1') && !id.startsWith('2') && !id.startsWith('3') && !id.startsWith('4') && !id.startsWith('5')) {
         await adminService.resolveDisruption(id);
       }
-    } catch {
-      // ignore
+      addToast(`Disruption resolved for ${serviceName}`, 'success');
+      await fetchDisruptions();
+    } catch (err) {
+      addToast(`Resolve failed: ${err.message}`, 'error');
     }
-    addToast(`Disruption resolved for ${serviceName}`, 'success');
   };
 
   const filteredData = disruptionsData.filter(d => {
