@@ -264,7 +264,7 @@ To verify API responsiveness:
 curl http://localhost:5000/api/health
 # Expected Response: {"success":true,"message":"BestRoute API is healthy"}
 ```
-
+---
 ### 9.2 Viewing Logs
 To stream live logs from all services:
 ```bash
@@ -276,7 +276,7 @@ docker compose logs -f backend
 docker compose logs -f admin-dashboard
 docker compose logs -f mobile-app
 ```
-
+---
 ### 9.3 Stopping and Resetting the Containers
 * **To stop all services:**
   ```bash
@@ -286,7 +286,7 @@ docker compose logs -f mobile-app
   ```bash
   docker compose down -v
   ```
-  *(Upon the next `docker compose up --build`, the database will automatically re-seed from scratch.)*
+ 
 
 ---
 
