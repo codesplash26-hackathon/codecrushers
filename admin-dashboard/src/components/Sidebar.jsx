@@ -19,12 +19,32 @@ import {
 import { useAuth } from '../context/AuthContext';
 import logoImg from '../assets/logo.png';
 
+import { adminService } from '../services/adminService';
+
 const Sidebar = ({ activeTab, setActiveTab }) => {
   const { user, logout } = useAuth();
+  const [disruptionCount, setDisruptionCount] = React.useState('5');
+
+  React.useEffect(() => {
+    const fetchBadgeCount = async () => {
+      try {
+        const res = await adminService.getDisruptions();
+        if (res && Array.isArray(res.data) && res.data.length > 0) {
+          const active = res.data.filter(d => d.status !== 'RESOLVED');
+          setDisruptionCount(String(active.length));
+        } else {
+          setDisruptionCount('5');
+        }
+      } catch (e) {
+        setDisruptionCount('5');
+      }
+    };
+    fetchBadgeCount();
+  }, [activeTab]);
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'disruptions', label: 'Disruptions', icon: AlertTriangle, badge: '7' },
+    { id: 'disruptions', label: 'Disruptions', icon: AlertTriangle, badge: disruptionCount },
     { id: 'routes', label: 'Routes', icon: Map },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'services', label: 'Services', icon: Bus },
@@ -73,10 +93,15 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       </div>
 
       <div className="sidebar-footer">
-        <div className="user-pill">
+        <div
+          className="user-pill"
+          onClick={() => setActiveTab('security')}
+          style={{ cursor: 'pointer' }}
+          title="Open Admin Profile"
+        >
           <div className="avatar-blue">AD</div>
           <div className="user-info">
-            <div className="user-name">{user?.name || 'Admin User'}</div>
+            <div className="user-name">{user?.name || 'BestRoute Admin'}</div>
             <div className="user-role">{user?.email || 'admin@bestroute.lk'}</div>
           </div>
         </div>
