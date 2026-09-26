@@ -143,6 +143,7 @@ Evaluators can clone the repository and launch the complete multi-service system
 Open your terminal or command prompt and clone the repository:
 ```bash
 git clone https://github.com/codesplash26-hackathon/codecrushers
+cd codecrushers
 ```
 
 ### Step 2: Build and Start All Services
