@@ -29,9 +29,10 @@ type ProfileScreenNavigationProp = NativeStackNavigationProp<
 
 interface Props {
   navigation: ProfileScreenNavigationProp;
+  hideBottomBar?: boolean;
 }
 
-export default function ProfileScreen({ navigation }: Props) {
+export default function ProfileScreen({ navigation, hideBottomBar }: Props) {
   const { isDarkMode, toggleTheme, colors } = useTheme();
 
   // Modal states
@@ -639,7 +640,9 @@ export default function ProfileScreen({ navigation }: Props) {
       </ScrollView>
 
       {/* Unified Fixed-Position Bottom Navigation Bar */}
-      <BottomNavigationBar activeTab="profile" navigation={navigation} />
+      {!hideBottomBar && (
+        <BottomNavigationBar activeTab="profile" navigation={navigation} />
+      )}
 
       {/* ================= TRAVEL PREFERENCES MODAL ================= */}
       <Modal

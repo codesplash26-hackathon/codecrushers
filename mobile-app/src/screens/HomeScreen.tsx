@@ -28,6 +28,7 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<
 
 interface Props {
   navigation: HomeScreenNavigationProp;
+  hideBottomBar?: boolean;
 }
 
 interface QuickAccessItem {
@@ -47,7 +48,7 @@ interface NearbyStopItem {
   type: "bus" | "train";
 }
 
-export default function HomeScreen({ navigation }: Props) {
+export default function HomeScreen({ navigation, hideBottomBar }: Props) {
   const { isDarkMode, toggleTheme, colors } = useTheme();
 
   // Main screen states
@@ -990,7 +991,9 @@ export default function HomeScreen({ navigation }: Props) {
       </ScrollView>
 
       {/* Unified Fixed-Position Bottom Navigation Bar */}
-      <BottomNavigationBar activeTab="home" navigation={navigation} />
+      {!hideBottomBar && (
+        <BottomNavigationBar activeTab="home" navigation={navigation} />
+      )}
 
       {/* ================= LOCATION SEARCH MODAL ================= */}
       <Modal

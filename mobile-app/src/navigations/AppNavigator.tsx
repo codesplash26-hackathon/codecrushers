@@ -8,10 +8,7 @@ import OnboardingScreen from "../screens/OnboardingScreen";
 import LoginScreen from "../screens/loginscreen";
 import RegisterScreen from "../screens/RegisterScreen";
 import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
-import HomeScreen from "../screens/HomeScreen";
-import JourneysScreen from "../screens/JourneysScreen";
-import NotificationsScreen from "../screens/NotificationsScreen";
-import ProfileScreen from "../screens/ProfileScreen";
+import MainTabsScreen from "../screens/MainTabsScreen";
 import RouteResultsScreen from "../screens/RouteResultsScreen";
 import RouteDetailScreen from "../screens/RouteDetailScreen";
 import LiveTrackingScreen from "../screens/LiveTrackingScreen";
@@ -26,7 +23,12 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
-  Home: undefined;
+  Home:
+    | {
+        tab?: "home" | "journeys" | "alerts" | "profile";
+        initialTab?: "upcoming" | "completed" | "saved";
+      }
+    | undefined;
   Journeys:
     | { initialTab?: "upcoming" | "completed" | "saved" }
     | undefined;
@@ -111,10 +113,16 @@ export default function AppNavigator() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Journeys" component={JourneysScreen} />
-        <Stack.Screen name="Notifications" component={NotificationsScreen} />
-        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="Home" component={MainTabsScreen} />
+        <Stack.Screen name="Journeys">
+          {(props) => <MainTabsScreen {...props} initialTab="journeys" />}
+        </Stack.Screen>
+        <Stack.Screen name="Notifications">
+          {(props) => <MainTabsScreen {...props} initialTab="alerts" />}
+        </Stack.Screen>
+        <Stack.Screen name="Profile">
+          {(props) => <MainTabsScreen {...props} initialTab="profile" />}
+        </Stack.Screen>
         <Stack.Screen name="RouteResults" component={RouteResultsScreen} />
         <Stack.Screen name="RouteDetail" component={RouteDetailScreen} />
         <Stack.Screen name="LiveTracking" component={LiveTrackingScreen} />
