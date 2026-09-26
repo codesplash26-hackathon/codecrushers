@@ -3,25 +3,61 @@ const Stop = require("../models/Stop");
 // Create a stop
 const createStop = async (req, res) => {
   try {
-    const { name, type, location, address } = req.body;
+    const { name, type, location, address, lat, lng, latitude, longitude, routes, status } = req.body;
 
-    if (
-      !name ||
-      !type ||
-      !location ||
-      location.latitude === undefined ||
-      location.longitude === undefined
-    ) {
+    const stopName = name || req.body.stopName;
+    if (!stopName) {
       return res.status(400).json({
-        message: "Name, type, latitude and longitude are required",
+        message: "Stop name is required",
       });
     }
 
+    // Determine latitude and longitude flexibly
+    let latVal = 7.2905;
+    let lngVal = 80.6337;
+
+    if (location && location.latitude !== undefined && location.longitude !== undefined) {
+      latVal = Number(location.latitude);
+      lngVal = Number(location.longitude);
+    } else if (location && Array.isArray(location.coordinates) && location.coordinates.length >= 2) {
+      lngVal = Number(location.coordinates[0]);
+      latVal = Number(location.coordinates[1]);
+    } else if (lat !== undefined && lng !== undefined) {
+      latVal = Number(lat);
+      lngVal = Number(lng);
+    } else if (latitude !== undefined && longitude !== undefined) {
+      latVal = Number(latitude);
+      lngVal = Number(longitude);
+    } else if (typeof req.body.latlng === "string") {
+      const parts = req.body.latlng.split(",");
+      if (parts.length >= 2) {
+        latVal = Number(parts[0].trim());
+        lngVal = Number(parts[1].trim());
+      }
+    }
+
+    // Map type to valid Stop enum
+    let stopType = "bus_stop";
+    const rawType = (type || "").toLowerCase();
+    if (rawType.includes("train") || rawType.includes("railway")) {
+      stopType = "railway_station";
+    } else if (rawType.includes("both") || rawType.includes("terminal")) {
+      stopType = "terminal";
+    } else if (rawType.includes("bus")) {
+      stopType = "bus_stop";
+    }
+
     const stop = await Stop.create({
-      name,
-      type,
-      location,
-      address,
+      name: stopName,
+      type: stopType,
+      location: {
+        latitude: latVal,
+        longitude: lngVal,
+      },
+      coordinates: [lngVal, latVal],
+      address: address || `${stopName}, Sri Lanka`,
+      routesCount: Number(routes) || 8,
+      status: status || "Active",
     });
 
     res.status(201).json({
