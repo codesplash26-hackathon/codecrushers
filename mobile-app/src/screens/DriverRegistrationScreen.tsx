@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,17 +7,20 @@ import {
   ScrollView,
   TextInput,
   Platform,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
-import api, { apiRequest } from "../services/api";
+import api from "../services/api";
+import authService, { AuthUser } from "../services/authService";
 
 type DriverRegistrationScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  "DriverRegistration"
+  any
 >;
 
 interface Props {
@@ -26,57 +29,345 @@ interface Props {
 
 export default function DriverRegistrationScreen({ navigation }: Props) {
   const { isDarkMode, colors } = useTheme();
-  // Step 1: Personal Info, Step 2: Vehicle Info, Step 3: Application Status Pending
+  // Step 1: Personal Info, Step 2: Vehicle Info, Step 3: Application Status
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
 
-  // Form State: Step 1 (Personal Info)
-  const [fullName, setFullName] = useState("Kasun Perera");
-  const [phone, setPhone] = useState("+94 77 123 4567");
-  const [nic, setNic] = useState("982345678V");
-  const [licenseNumber, setLicenseNumber] = useState("B 1234567");
+  // User Profile
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [applicationStatus, setApplicationStatus] = useState<
+    "Pending" | "Approved" | "Rejected" | null
+  >(null);
+  const [isCheckingLive, setIsCheckingLive] = useState(false);
+
+  // Form State: Step 1 (Personal Info) - default blank for new applicant
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [nic, setNic] = useState("");
+  const [licenseNumber, setLicenseNumber] = useState("");
   const [licenseUploaded, setLicenseUploaded] = useState(false);
   const [photoUploaded, setPhotoUploaded] = useState(false);
 
   // Form State: Step 2 (Vehicle Info)
   const [vehicleType, setVehicleType] = useState<"Taxi" | "Tuk-tuk">("Taxi");
-  const [registration, setRegistration] = useState("WP CAB-1234");
-  const [model, setModel] = useState("Toyota Prius");
-  const [color, setColor] = useState("Silver");
+  const [registration, setRegistration] = useState("");
+  const [model, setModel] = useState("");
+  const [color, setColor] = useState("");
   const [vehicleDocsUploaded, setVehicleDocsUploaded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmitApplication = async () => {
-    setIsSubmitting(true);
-    try {
-      await apiRequest("/services", {
-        method: "POST",
-        body: {
-          name: fullName,
+  // Check initial application status on mount
+  useEffect(() => {
+    const fetchCurrentStatus = async () => {
+      try {
+        const user = await authService.getCurrentUser();
+        setCurrentUser(user);
+        if (user?.name) setFullName(user.name);
+        if (user?.driverDetails?.phone) setPhone(user.driverDetails.phone);
+        if (user?.driverDetails?.vehicleNo) setRegistration(user.driverDetails.vehicleNo);
+        if (user?.driverDetails?.vehicleModel) setModel(user.driverDetails.vehicleModel);
+        if (user?.driverDetails?.vehicleType) {
+          setVehicleType(user.driverDetails.vehicleType as any);
+        }
+
+        // Only query application if user is logged in
+        if (user && (user.driverStatus === "pending" || user.driverStatus === "approved" || user.role === "driver")) {
+          const res = await api.getMyDriverApplicationStatus({
+            phone: user.driverDetails?.phone,
+            email: user.email,
+            userId: user.id,
+          });
+
+          if (
+            res &&
+            res.success &&
+            res.data &&
+            res.data.hasApplication &&
+            (res.data._id || res.data.applicationId)
+          ) {
+            const app = (res.data as any)?.data || res.data;
+            const rawStatus = app?.status || (res.data as any)?.driverStatus || "";
+            const isApproved =
+              rawStatus.toLowerCase() === "approved" ||
+              (res.data as any)?.userRole === "driver" ||
+              user?.role === "driver";
+            const isPending = rawStatus.toLowerCase() === "pending";
+
+            if (isApproved) {
+              setApplicationStatus("Approved");
+              setCurrentStep(3);
+              await authService.updateUserSession({
+                role: "driver",
+                driverStatus: "approved",
+                driverDetails: {
+                  vehicleType: app?.vehicleType || vehicleType,
+                  vehicleNo: app?.vehicleNo || registration,
+                  vehicleModel: app?.vehicleModel || model,
+                  phone: app?.phone || phone,
+                  isOnline: true,
+                },
+              });
+            } else if (isPending) {
+              setApplicationStatus("Pending");
+              setCurrentStep(3);
+            }
+          } else {
+            // No real application found for user in DB -> stay on Step 1
+            setCurrentStep(1);
+            setApplicationStatus(null);
+          }
+        } else {
+          // New user / not yet applied -> ALWAYS stay on Step 1
+          setCurrentStep(1);
+          setApplicationStatus(null);
+        }
+      } catch {
+        // stay on Step 1
+        setCurrentStep(1);
+      }
+    };
+
+    fetchCurrentStatus();
+  }, []);
+
+  // Poll status while on Step 3 until approved or rejected
+  useEffect(() => {
+    if (currentStep !== 3 || applicationStatus === "Approved") return;
+
+    let isMounted = true;
+    const interval = setInterval(async () => {
+      // 1. Check local storage sync (cross-tab in browser)
+      try {
+        if (Platform.OS === "web" && typeof localStorage !== "undefined") {
+          const localSub = localStorage.getItem("bestroute_latest_driver_app");
+          if (localSub) {
+            const parsed = JSON.parse(localSub);
+            if (parsed.status === "Approved") {
+              if (isMounted) {
+                setApplicationStatus("Approved");
+                await authService.updateUserSession({
+                  role: "driver",
+                  driverStatus: "approved",
+                  driverDetails: {
+                    vehicleType,
+                    vehicleNo: registration,
+                    vehicleModel: model,
+                    phone,
+                    isOnline: true,
+                  },
+                });
+                return;
+              }
+            }
+          }
+        }
+      } catch {
+        // ignore
+      }
+
+      // 2. Check backend API
+      try {
+        const res = await api.getMyDriverApplicationStatus({
           phone,
-          nic,
-          licenseNumber,
-          type: vehicleType === "Tuk-tuk" ? "tuk" : "taxi",
-          plateNumber: registration,
-          vehicleModel: model,
-          color,
-          status: "pending",
+          email: currentUser?.email,
+          userId: currentUser?.id,
+        });
+        if (isMounted && res && res.success && res.data) {
+          const app = (res.data as any)?.data || res.data;
+          const rawStatus = app?.status || (res.data as any)?.driverStatus || "";
+          const isApproved =
+            rawStatus.toLowerCase() === "approved" ||
+            (res.data as any)?.userRole === "driver";
+
+          if (isApproved) {
+            setApplicationStatus("Approved");
+            await authService.updateUserSession({
+              role: "driver",
+              driverStatus: "approved",
+              driverDetails: {
+                vehicleType: app?.vehicleType || vehicleType,
+                vehicleNo: app?.vehicleNo || registration,
+                vehicleModel: app?.vehicleModel || model,
+                phone: app?.phone || phone,
+                isOnline: true,
+              },
+            });
+          } else if (rawStatus.toLowerCase() === "pending") {
+            setApplicationStatus("Pending");
+          } else if (rawStatus.toLowerCase() === "rejected") {
+            setApplicationStatus("Rejected");
+          }
+        }
+      } catch {
+        // silent
+      }
+    }, 2500);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [currentStep, applicationStatus, phone, currentUser]);
+
+  const handleManualRefresh = async () => {
+    setIsCheckingLive(true);
+    // Check localStorage
+    try {
+      if (Platform.OS === "web" && typeof localStorage !== "undefined") {
+        const localSub = localStorage.getItem("bestroute_latest_driver_app");
+        if (localSub) {
+          const parsed = JSON.parse(localSub);
+          if (parsed.status === "Approved") {
+            setApplicationStatus("Approved");
+            await authService.updateUserSession({
+              role: "driver",
+              driverStatus: "approved",
+              driverDetails: {
+                vehicleType,
+                vehicleNo: registration,
+                vehicleModel: model,
+                phone,
+                isOnline: true,
+              },
+            });
+            setIsCheckingLive(false);
+            return;
+          }
+        }
+      }
+    } catch {}
+
+    try {
+      const res = await api.getMyDriverApplicationStatus({
+        phone,
+        email: currentUser?.email,
+        userId: currentUser?.id,
+      });
+      if (res && res.success && res.data) {
+        const app = (res.data as any)?.data || res.data;
+        const rawStatus = app?.status || (res.data as any)?.driverStatus || "";
+        const isApproved =
+          rawStatus.toLowerCase() === "approved" ||
+          (res.data as any)?.userRole === "driver";
+
+        if (isApproved) {
+          setApplicationStatus("Approved");
+          await authService.updateUserSession({
+            role: "driver",
+            driverStatus: "approved",
+            driverDetails: {
+              vehicleType: app?.vehicleType || vehicleType,
+              vehicleNo: app?.vehicleNo || registration,
+              vehicleModel: app?.vehicleModel || model,
+              phone: app?.phone || phone,
+              isOnline: true,
+            },
+          });
+        } else if (rawStatus.toLowerCase() === "pending") {
+          setApplicationStatus("Pending");
+        } else if (rawStatus.toLowerCase() === "rejected") {
+          setApplicationStatus("Rejected");
+        }
+      }
+    } finally {
+      setIsCheckingLive(false);
+    }
+  };
+
+  const handleSubmitApplication = async () => {
+    if (!fullName.trim()) {
+      Alert.alert("Missing Name", "Please enter your Full Name.");
+      return;
+    }
+    if (!phone.trim()) {
+      Alert.alert("Missing Phone", "Please enter your Phone Number.");
+      return;
+    }
+    if (!registration.trim()) {
+      Alert.alert(
+        "Missing Vehicle Number",
+        "Please enter your Vehicle Registration Number (e.g., WP CAB-1234)."
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const newAppData = {
+      _id: `dar_${Date.now()}`,
+      applicationId: `DAR0${Math.floor(Math.random() * 5) + 5}`,
+      fullName: fullName.trim(),
+      phone: phone.trim(),
+      nic: nic.trim() || "N/A",
+      licenseNumber: licenseNumber.trim() || "N/A",
+      vehicleType,
+      vehicleNo: registration.trim(),
+      vehicleModel: model.trim() || "Standard",
+      color: color.trim() || "Silver",
+      status: "Pending",
+      submitted: new Date().toISOString().split("T")[0],
+    };
+
+    // Instant local storage sync for cross-tab web preview
+    try {
+      if (Platform.OS === "web" && typeof localStorage !== "undefined") {
+        localStorage.setItem("bestroute_latest_driver_app", JSON.stringify(newAppData));
+      }
+    } catch {
+      // ignore
+    }
+
+    try {
+      const res = await api.submitDriverApplication({
+        fullName: fullName.trim(),
+        phone: phone.trim(),
+        nic: nic.trim(),
+        licenseNumber: licenseNumber.trim(),
+        vehicleType,
+        vehicleNo: registration.trim(),
+        vehicleModel: model.trim() || "Standard",
+        color: color.trim() || "Silver",
+        email: currentUser?.email,
+        userId: currentUser?.id,
+      });
+
+      if (res && res.success && res.data) {
+        if (Platform.OS === "web" && typeof localStorage !== "undefined") {
+          localStorage.setItem("bestroute_latest_driver_app", JSON.stringify(res.data));
+        }
+      }
+    } catch (err: any) {
+      console.warn("Driver application submit fallback:", err?.message);
+    } finally {
+      setApplicationStatus("Pending");
+      await authService.updateUserSession({
+        driverStatus: "pending",
+        driverDetails: {
+          vehicleType,
+          vehicleNo: registration.trim(),
+          vehicleModel: model.trim() || "Standard",
+          phone: phone.trim(),
         },
       });
-    } catch {
-      // Proceed to status screen regardless
-    } finally {
       setIsSubmitting(false);
       setCurrentStep(3);
     }
   };
 
-  // STEP 3: APPLICATION STATUS SCREEN
+  // STEP 3: APPLICATION STATUS SCREEN (Photos 2 & 3)
   if (currentStep === 3) {
+    const isApproved = applicationStatus === "Approved";
+    const isRejected = applicationStatus === "Rejected";
+
     return (
-      <View style={[styles.statusScreenContainer, { backgroundColor: colors.screenBg }]}>
+      <View
+        style={[
+          styles.statusScreenContainer,
+          { backgroundColor: colors.screenBg },
+        ]}
+      >
         <StatusBar style={isDarkMode ? "light" : "dark"} />
 
-        {/* Minimal White Top Bar */}
+        {/* Minimal Top Bar */}
         <View
           style={[
             styles.statusTopBar,
@@ -91,7 +382,13 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
               styles.statusBackButton,
               isDarkMode && { backgroundColor: colors.cardSecondaryBg },
             ]}
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              if (isApproved) {
+                navigation.goBack();
+              } else {
+                setCurrentStep(1);
+              }
+            }}
             activeOpacity={0.7}
           >
             <Text
@@ -123,19 +420,35 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
           contentContainerStyle={styles.statusContentContainer}
           showsVerticalScrollIndicator={false}
         >
-          {/* Hourglass Icon Container */}
+          {/* Status Icon Container */}
           <View style={styles.hourglassWrapper}>
             <View
               style={[
                 styles.hourglassCard,
-                isDarkMode && {
-                  backgroundColor: "rgba(245, 158, 11, 0.18)",
-                  borderColor: "rgba(245, 158, 11, 0.35)",
-                  borderWidth: 1,
-                },
+                isApproved
+                  ? {
+                      backgroundColor: isDarkMode
+                        ? "rgba(16, 185, 129, 0.2)"
+                        : "#DCFCE7",
+                      borderColor: "#16A34A",
+                    }
+                  : isRejected
+                  ? {
+                      backgroundColor: isDarkMode
+                        ? "rgba(239, 68, 68, 0.2)"
+                        : "#FEE2E2",
+                      borderColor: "#DC2626",
+                    }
+                  : isDarkMode && {
+                      backgroundColor: "rgba(245, 158, 11, 0.18)",
+                      borderColor: "rgba(245, 158, 11, 0.35)",
+                      borderWidth: 1,
+                    },
               ]}
             >
-              <Text style={styles.hourglassEmoji}>⏳</Text>
+              <Text style={styles.hourglassEmoji}>
+                {isApproved ? "✅" : isRejected ? "❌" : "⏳"}
+              </Text>
             </View>
           </View>
 
@@ -143,10 +456,18 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
           <Text
             style={[
               styles.pendingTitle,
-              isDarkMode && { color: "#FBBF24" },
+              isApproved
+                ? { color: "#16A34A" }
+                : isRejected
+                ? { color: "#DC2626" }
+                : isDarkMode && { color: "#FBBF24" },
             ]}
           >
-            Application Pending
+            {isApproved
+              ? "Application Approved!"
+              : isRejected
+              ? "Application Rejected"
+              : "Application Pending"}
           </Text>
           <Text
             style={[
@@ -154,9 +475,45 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
               isDarkMode && { color: colors.textSecondary },
             ]}
           >
-            Your driver application is waiting for admin review.{"\n"}
-            This usually takes 1–2 business days.
+            {isApproved
+              ? "Congratulations! You are officially verified as a BestRoute driver partner. You can now accept passenger ride requests."
+              : isRejected
+              ? "Your driver application was not approved. Please review your documents or contact admin."
+              : "Your driver application is waiting for admin review.\nThis usually takes 1–2 business days."}
           </Text>
+
+          {/* Real-time Status Sync Banner */}
+          {!isApproved && !isRejected && (
+            <TouchableOpacity
+              style={[
+                styles.liveSyncBanner,
+                {
+                  backgroundColor: isDarkMode
+                    ? "rgba(37, 99, 235, 0.15)"
+                    : "#EFF6FF",
+                  borderColor: isDarkMode
+                    ? "rgba(37, 99, 235, 0.3)"
+                    : "#BFDBFE",
+                },
+              ]}
+              onPress={handleManualRefresh}
+              activeOpacity={0.7}
+            >
+              {isCheckingLive ? (
+                <ActivityIndicator size="small" color="#2563EB" />
+              ) : (
+                <Text style={styles.livePulseDot}>🔵</Text>
+              )}
+              <Text
+                style={[
+                  styles.liveSyncText,
+                  { color: isDarkMode ? "#93C5FD" : "#1D4ED8" },
+                ]}
+              >
+                Checking for live admin approval... Tap to refresh
+              </Text>
+            </TouchableOpacity>
+          )}
 
           {/* Application Progress Card */}
           <View
@@ -210,19 +567,32 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
             {/* Step 3: Background check */}
             <View style={styles.progressItemRow}>
               <View
-                style={[
-                  styles.grayEmptyCircle,
-                  isDarkMode && {
-                    borderColor: colors.cardBorder,
-                    backgroundColor: colors.cardSecondaryBg,
-                  },
-                ]}
-              />
+                style={
+                  isApproved
+                    ? styles.greenCheckCircle
+                    : [
+                        styles.grayEmptyCircle,
+                        isDarkMode && {
+                          borderColor: colors.cardBorder,
+                          backgroundColor: colors.cardSecondaryBg,
+                        },
+                      ]
+                }
+              >
+                {isApproved && <Text style={styles.greenCheckText}>✓</Text>}
+              </View>
               <Text
-                style={[
-                  styles.progressItemTextInactive,
-                  isDarkMode && { color: colors.textMuted },
-                ]}
+                style={
+                  isApproved
+                    ? [
+                        styles.progressItemTextActive,
+                        isDarkMode && { color: colors.textPrimary },
+                      ]
+                    : [
+                        styles.progressItemTextInactive,
+                        isDarkMode && { color: colors.textMuted },
+                      ]
+                }
               >
                 Background check
               </Text>
@@ -231,19 +601,32 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
             {/* Step 4: Admin approval */}
             <View style={styles.progressItemRow}>
               <View
-                style={[
-                  styles.grayEmptyCircle,
-                  isDarkMode && {
-                    borderColor: colors.cardBorder,
-                    backgroundColor: colors.cardSecondaryBg,
-                  },
-                ]}
-              />
+                style={
+                  isApproved
+                    ? styles.greenCheckCircle
+                    : [
+                        styles.grayEmptyCircle,
+                        isDarkMode && {
+                          borderColor: colors.cardBorder,
+                          backgroundColor: colors.cardSecondaryBg,
+                        },
+                      ]
+                }
+              >
+                {isApproved && <Text style={styles.greenCheckText}>✓</Text>}
+              </View>
               <Text
-                style={[
-                  styles.progressItemTextInactive,
-                  isDarkMode && { color: colors.textMuted },
-                ]}
+                style={
+                  isApproved
+                    ? [
+                        styles.progressItemTextActive,
+                        isDarkMode && { color: colors.textPrimary },
+                      ]
+                    : [
+                        styles.progressItemTextInactive,
+                        isDarkMode && { color: colors.textMuted },
+                      ]
+                }
               >
                 Admin approval
               </Text>
@@ -251,7 +634,7 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
           </View>
         </ScrollView>
 
-        {/* Bottom Back Button */}
+        {/* Bottom Actions Bar */}
         <View
           style={[
             styles.statusBottomBar,
@@ -261,6 +644,41 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
             },
           ]}
         >
+          {isApproved ? (
+            /* Open Driver Console Button */
+            <TouchableOpacity
+              style={styles.openDriverConsoleBtn}
+              onPress={() => navigation.navigate("DriverDashboard")}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.openDriverConsoleBtnText}>
+                Open Driver Console 🚖
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            /* Edit / Fill Form Button */
+            <TouchableOpacity
+              style={[
+                styles.editFormBtn,
+                isDarkMode && {
+                  backgroundColor: "rgba(59, 130, 246, 0.15)",
+                  borderColor: "#3B82F6",
+                },
+              ]}
+              onPress={() => setCurrentStep(1)}
+              activeOpacity={0.85}
+            >
+              <Text
+                style={[
+                  styles.editFormBtnText,
+                  isDarkMode && { color: "#60A5FA" },
+                ]}
+              >
+                ✎ {isRejected ? "Re-submit Application ➔" : "Edit / Change Application Details"}
+              </Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             style={[
               styles.backPassengerBtn,
@@ -269,7 +687,7 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
                 borderColor: colors.cardBorder,
               },
             ]}
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.navigate("Home")}
             activeOpacity={0.8}
           >
             <Text
@@ -349,14 +767,34 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
         {currentStep === 1 ? (
           /* STEP 1: PERSONAL INFORMATION */
           <View>
-            <Text
-              style={[
-                styles.sectionHeading,
-                isDarkMode && { color: colors.textSecondary },
-              ]}
-            >
-              PERSONAL INFORMATION
-            </Text>
+            <View style={styles.sectionHeaderRow}>
+              <Text
+                style={[
+                  styles.sectionHeading,
+                  isDarkMode && { color: colors.textSecondary },
+                ]}
+              >
+                PERSONAL INFORMATION
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setFullName("Kasun Perera");
+                  setPhone("+94 77 123 4567");
+                  setNic("982345678V");
+                  setLicenseNumber("B 1234567");
+                  setLicenseUploaded(true);
+                  setPhotoUploaded(true);
+                  setRegistration("WP CAB-1234");
+                  setModel("Toyota Prius");
+                  setColor("Silver");
+                  setVehicleDocsUploaded(true);
+                }}
+                style={styles.sampleDataBtn}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.sampleDataBtnText}>⚡ Fill Demo</Text>
+              </TouchableOpacity>
+            </View>
 
             {/* Full Name */}
             <View style={styles.inputGroup}>
@@ -379,7 +817,7 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
                 ]}
                 value={fullName}
                 onChangeText={setFullName}
-                placeholder="Kasun Perera"
+                placeholder="e.g. Kasun Perera"
                 placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
               />
             </View>
@@ -405,7 +843,7 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
                 ]}
                 value={phone}
                 onChangeText={setPhone}
-                placeholder="+94 77 123 4567"
+                placeholder="e.g. +94 77 123 4567"
                 placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 keyboardType="phone-pad"
               />
@@ -432,7 +870,7 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
                 ]}
                 value={nic}
                 onChangeText={setNic}
-                placeholder="982345678V"
+                placeholder="e.g. 982345678V"
                 placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 autoCapitalize="characters"
               />
@@ -459,7 +897,7 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
                 ]}
                 value={licenseNumber}
                 onChangeText={setLicenseNumber}
-                placeholder="B 1234567"
+                placeholder="e.g. B 1234567"
                 placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 autoCapitalize="characters"
               />
@@ -506,7 +944,7 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
                 ]}
               >
                 {licenseUploaded
-                  ? "Driving_License_Kasun.pdf"
+                  ? "Driving_License_Verified.pdf"
                   : "Upload Driving License"}
               </Text>
             </TouchableOpacity>
@@ -549,10 +987,19 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
             {/* Next: Vehicle Info Button */}
             <TouchableOpacity
               style={styles.nextButton}
-              onPress={() => setCurrentStep(2)}
+              onPress={() => {
+                if (!fullName.trim() || !phone.trim()) {
+                  Alert.alert(
+                    "Required Information",
+                    "Please enter your Full Name and Phone Number to continue."
+                  );
+                  return;
+                }
+                setCurrentStep(2);
+              }}
               activeOpacity={0.85}
             >
-              <Text style={styles.nextButtonText}>Next: Vehicle Info</Text>
+              <Text style={styles.nextButtonText}>Next: Vehicle Info ➔</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -665,7 +1112,7 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
                 ]}
                 value={registration}
                 onChangeText={setRegistration}
-                placeholder="WP CAB-1234"
+                placeholder="e.g. WP CAB-1234"
                 placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
                 autoCapitalize="characters"
               />
@@ -692,7 +1139,7 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
                 ]}
                 value={model}
                 onChangeText={setModel}
-                placeholder="Toyota Prius"
+                placeholder="e.g. Toyota Prius or Bajaj RE"
                 placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
               />
             </View>
@@ -718,7 +1165,7 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
                 ]}
                 value={color}
                 onChangeText={setColor}
-                placeholder="Silver"
+                placeholder="e.g. Silver, White, Red"
                 placeholderTextColor={isDarkMode ? "#64748B" : "#94A3B8"}
               />
             </View>
@@ -1151,6 +1598,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: Platform.OS === "ios" ? 34 : 20,
     paddingTop: 10,
+    gap: 10,
+  },
+  openDriverConsoleBtn: {
+    width: "100%",
+    backgroundColor: "#16A34A",
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+    ...Platform.select({
+      web: { boxShadow: "0 4px 14px rgba(22, 163, 74, 0.35)" },
+      default: { elevation: 3 },
+    }),
+  },
+  openDriverConsoleBtnText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "800",
   },
   backPassengerBtn: {
     width: "100%",
@@ -1165,5 +1629,55 @@ const styles = StyleSheet.create({
     color: "#334155",
     fontSize: 13.5,
     fontWeight: "700",
+  },
+  editFormBtn: {
+    width: "100%",
+    backgroundColor: "#EFF6FF",
+    borderWidth: 1.5,
+    borderColor: "#3B82F6",
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  editFormBtnText: {
+    color: "#1D4ED8",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  sectionHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  sampleDataBtn: {
+    backgroundColor: "#EFF6FF",
+    borderColor: "#93C5FD",
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  sampleDataBtnText: {
+    color: "#2563EB",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  liveSyncBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 20,
+    gap: 8,
+  },
+  livePulseDot: {
+    fontSize: 10,
+  },
+  liveSyncText: {
+    fontSize: 12,
+    fontWeight: "600",
   },
 });

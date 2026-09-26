@@ -12,6 +12,14 @@ export interface AuthUser {
   name: string;
   email: string;
   role?: string;
+  driverStatus?: string;
+  driverDetails?: {
+    vehicleType?: string;
+    vehicleNo?: string;
+    vehicleModel?: string;
+    phone?: string;
+    isOnline?: boolean;
+  };
   preferences?: string;
 }
 
@@ -268,6 +276,20 @@ export const authService = {
     try {
       const data = await AsyncStorage.getItem(STORAGE_KEYS.USER);
       return data ? JSON.parse(data) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * Update cached user profile in AsyncStorage (e.g. role change to driver)
+   */
+  async updateUserSession(updates: Partial<AuthUser>): Promise<AuthUser | null> {
+    try {
+      const current = await this.getCurrentUser();
+      const updated = { ...(current || { id: "user_active", name: "User", email: "user@bestroute.lk" }), ...updates };
+      await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(updated));
+      return updated;
     } catch {
       return null;
     }

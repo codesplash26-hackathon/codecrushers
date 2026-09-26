@@ -15,6 +15,7 @@ const connectionRiskRoutes = require("./routes/connectionRiskRoutes");
 const disruptionRoutes = require("./routes/disruptionRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const driverApplicationRoutes = require("./routes/driverApplicationRoutes");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
@@ -56,6 +57,7 @@ app.use("/api/connection-risk", connectionRiskRoutes);
 app.use("/api/disruptions", disruptionRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/driver-applications", driverApplicationRoutes);
 
 // Centralized error handler
 app.use(errorHandler);

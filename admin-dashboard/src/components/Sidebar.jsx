@@ -29,14 +29,14 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     const fetchBadgeCount = async () => {
       try {
         const res = await adminService.getDisruptions();
-        if (res && Array.isArray(res.data) && res.data.length > 0) {
-          const active = res.data.filter(d => d.status !== 'RESOLVED');
+        if (res && Array.isArray(res.data)) {
+          const active = res.data.filter(d => (d.status || '').toUpperCase() !== 'RESOLVED');
           setDisruptionCount(String(active.length));
         } else {
-          setDisruptionCount('5');
+          setDisruptionCount('0');
         }
       } catch (e) {
-        setDisruptionCount('5');
+        setDisruptionCount('0');
       }
     };
     fetchBadgeCount();

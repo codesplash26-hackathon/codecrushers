@@ -9,6 +9,8 @@ const Route = require("./models/Route");
 const Schedule = require("./models/Schedule");
 const TransportService = require("./models/TransportService");
 const Disruption = require("./models/Disruption");
+const Journey = require("./models/Journey");
+const DriverApplication = require("./models/DriverApplication");
 const { DISRUPTION_TYPES, DISRUPTION_SEVERITY, DISRUPTION_STATUS } = require("./config/constants");
 
 const MONGO_URI =
@@ -23,12 +25,16 @@ async function seedDatabase(force = false) {
   }
 
   if (!force) {
-    const userCount = await User.countDocuments();
-    if (userCount > 0) {
-      console.log(`Database already contains ${userCount} users. Auto-seed skipped.`);
+    const [userCount, serviceCount, routeCount] = await Promise.all([
+      User.countDocuments(),
+      TransportService.countDocuments(),
+      Route.countDocuments(),
+    ]);
+    if (userCount > 0 && serviceCount > 0 && routeCount > 0) {
+      console.log(`Database already contains ${userCount} users, ${serviceCount} services, ${routeCount} routes. Auto-seed skipped.`);
       return;
     }
-    console.log("Database is empty. Running initial database seed...");
+    console.log("Database missing collections. Running initial database population...");
   }
 
   // 1. Seed Users
@@ -144,28 +150,50 @@ async function seedDatabase(force = false) {
 
   const services = await TransportService.insertMany([
     {
-      name: "Route 138 Pettah - Maharagama",
+      name: "SLTB Kandy Express",
       type: "bus",
       operator: "SLTB / Private Transit",
+      routes: 8,
+      vehicles: 24,
       status: "active",
     },
     {
-      name: "Route 100 Fort - Moratuwa",
-      type: "bus",
-      operator: "Western Transport",
-      status: "active",
-    },
-    {
-      name: "Main Line Intercity Express",
+      name: "Sri Lanka Railways",
       type: "train",
       operator: "Sri Lanka Railways",
+      routes: 5,
+      vehicles: 12,
       status: "active",
     },
     {
-      name: "BestRoute Smart Shuttle",
+      name: "Kandy Private Bus Alliance",
       type: "bus",
-      operator: "BestRoute On-Demand",
+      operator: "Private Bus Association",
+      routes: 14,
+      vehicles: 38,
       status: "active",
+    },
+    {
+      name: "PickMe Taxi Network",
+      type: "taxi",
+      operator: "PickMe LK",
+      vehicles: 142,
+      status: "active",
+    },
+    {
+      name: "Tuk Alliance Colombo",
+      type: "three_wheeler",
+      operator: "Colombo Tuk Federation",
+      vehicles: 89,
+      status: "active",
+    },
+    {
+      name: "Night Mail Coastal Line",
+      type: "train",
+      operator: "Sri Lanka Railways",
+      routes: 2,
+      vehicles: 3,
+      status: "inactive",
     },
   ]);
   console.log(`Created ${services.length} transport services`);
@@ -200,7 +228,7 @@ async function seedDatabase(force = false) {
   });
 
   const mainTrainLine = await Route.create({
-    service: services[2]._id,
+    service: services[1]._id,
     routeNumber: "MAIN-01",
     name: "Colombo Fort to Kandy Express",
     stops: [
@@ -210,7 +238,30 @@ async function seedDatabase(force = false) {
     ],
     active: true,
   });
-  console.log("Created 3 active transit routes");
+
+  const route654 = await Route.create({
+    service: services[2]._id,
+    routeNumber: "654",
+    name: "Kandy Road Express 654",
+    stops: [
+      stopMap["Pettah Central Bus Stand"],
+      stopMap["Maradana Junction"],
+      stopMap["Kandy Central Station"],
+    ],
+    active: true,
+  });
+
+  const peradeniyaTrain = await Route.create({
+    service: services[1]._id,
+    routeNumber: "R003",
+    name: "Peradeniya Commuter Express",
+    stops: [
+      stopMap["Colombo Fort Station"],
+      stopMap["Maradana Junction"],
+    ],
+    active: true,
+  });
+  console.log("Created 5 active transit routes");
 
   // 5. Seed Schedules
   console.log("Seeding Schedules...");
@@ -253,6 +304,15 @@ async function seedDatabase(force = false) {
       fare: 350,
       travelTime: 150,
     },
+    {
+      route: route654._id,
+      departureStop: stopMap["Pettah Central Bus Stand"],
+      arrivalStop: stopMap["Kandy Central Station"],
+      departureTime: "08:30 AM",
+      arrivalTime: "11:45 AM",
+      fare: 420,
+      travelTime: 195,
+    },
   ]);
   console.log("Created schedules");
 
@@ -276,10 +336,10 @@ async function seedDatabase(force = false) {
       createdBy: adminUser._id,
     },
     {
-      affectedService: services[2]._id,
+      affectedService: services[1]._id,
       affectedRoute: mainTrainLine._id,
       affectedTrip: "Kandy-Express-0700",
-      disruptionType: DISRUPTION_TYPES.MAINTENANCE,
+      disruptionType: DISRUPTION_TYPES.DELAY,
       title: "Main Line Track Maintenance",
       description: "Speed restriction in effect between Ragama and Veyangoda. Expect 20-30 min delay.",
       delayMinutes: 25,
@@ -289,8 +349,108 @@ async function seedDatabase(force = false) {
       affectedStops: [stopMap["Colombo Fort Station"], stopMap["Maradana Junction"]],
       createdBy: adminUser._id,
     },
+    {
+      affectedService: services[2]._id,
+      affectedRoute: route654._id,
+      affectedTrip: "Route-654-Trip",
+      disruptionType: DISRUPTION_TYPES.ROAD_CLOSURE,
+      title: "Route 654 Kandy Road Diversion",
+      description: "Road resurfacing work on Kandy Road section. Buses diverted through bypass.",
+      delayMinutes: 10,
+      startTime: new Date(),
+      status: DISRUPTION_STATUS.ACTIVE,
+      severity: DISRUPTION_SEVERITY.MEDIUM,
+      affectedStops: [stopMap["Pettah Central Bus Stand"]],
+      createdBy: adminUser._id,
+    },
   ]);
-  console.log("Created sample disruptions");
+  console.log("Created sample active disruptions");
+
+  // 7. Seed Journeys
+  console.log("Seeding Passenger Journeys...");
+  await Journey.deleteMany({});
+
+  const sampleJourneys = [];
+  for (let i = 0; i < 24; i++) {
+    sampleJourneys.push({
+      user: passengerUser._id,
+      origin: { latitude: 6.9344, longitude: 79.8509 },
+      destination: { latitude: 6.8483, longitude: 79.9267 },
+      departureTime: "08:15 AM",
+      arrivalTime: "09:10 AM",
+      totalTravelTime: 55,
+      totalFare: 85,
+      transfers: i % 2,
+      status: i % 4 === 0 ? "active" : "completed",
+      isAffectedByDisruption: i % 3 === 0,
+      connectionRiskLevel: i % 3 === 0 ? "MEDIUM" : "LOW",
+      connectionRiskScore: 10,
+      createdAt: new Date(),
+    });
+  }
+  await Journey.insertMany(sampleJourneys);
+  console.log("Created 24 sample commuter journeys");
+
+  // 8. Seed Driver Applications
+  console.log("Seeding Driver Applications...");
+  await DriverApplication.deleteMany({});
+
+  await DriverApplication.insertMany([
+    {
+      applicationId: "DAR01",
+      user: passengerUser._id,
+      fullName: "Kasun Perera",
+      phone: "+94 77 123 4567",
+      nic: "982345678V",
+      licenseNumber: "B 1234567",
+      vehicleType: "Taxi",
+      vehicleNo: "WP CAB-1234",
+      vehicleModel: "Toyota Prius",
+      color: "Silver",
+      status: "Pending",
+      submitted: "2024-01-15",
+    },
+    {
+      applicationId: "DAR02",
+      fullName: "Nimal Silva",
+      phone: "+94 71 234 5678",
+      nic: "871234567V",
+      licenseNumber: "B 7654321",
+      vehicleType: "Tuk-tuk",
+      vehicleNo: "WP TUK-3321",
+      vehicleModel: "Bajaj RE 4S",
+      color: "Red",
+      status: "Approved",
+      submitted: "2024-01-14",
+    },
+    {
+      applicationId: "DAR03",
+      fullName: "Priya Fernando",
+      phone: "+94 76 345 6789",
+      nic: "951234567V",
+      licenseNumber: "B 5432167",
+      vehicleType: "Taxi",
+      vehicleNo: "WP CAB-5512",
+      vehicleModel: "Suzuki Alto",
+      color: "White",
+      status: "Rejected",
+      submitted: "2024-01-13",
+    },
+    {
+      applicationId: "DAR04",
+      fullName: "Roshan Jayawardena",
+      phone: "+94 77 456 7890",
+      nic: "921234567V",
+      licenseNumber: "B 9876543",
+      vehicleType: "Tuk-tuk",
+      vehicleNo: "CP TUK-0098",
+      vehicleModel: "TVS King",
+      color: "Blue",
+      status: "Pending",
+      submitted: "2024-01-12",
+    },
+  ]);
+  console.log("Created 4 sample driver applications");
 
   console.log("\n===========================================");
   console.log(" DATABASE SEEDING COMPLETED SUCCESSFULLY!");

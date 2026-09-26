@@ -16,6 +16,32 @@ const Navbar = ({ activeTabTitle, setActiveTab }) => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
+  // Dynamic Date State
+  const [currentDateFormatted, setCurrentDateFormatted] = useState(() => {
+    return new Date().toLocaleDateString('en-GB', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  });
+
+  useEffect(() => {
+    const updateDate = () => {
+      setCurrentDateFormatted(
+        new Date().toLocaleDateString('en-GB', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        })
+      );
+    };
+    updateDate();
+    const timer = setInterval(updateDate, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   // 2. Notifications State
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState([
@@ -122,7 +148,7 @@ const Navbar = ({ activeTabTitle, setActiveTab }) => {
           {activeTabTitle || 'Transportation Overview'}
         </div>
         <div className="navbar-subtitle">
-          Monday, 15 September 2026 · Colombo, Sri Lanka
+          {currentDateFormatted} · Colombo, Sri Lanka
         </div>
       </div>
 

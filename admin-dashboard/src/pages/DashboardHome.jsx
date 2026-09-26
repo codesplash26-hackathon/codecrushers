@@ -6,14 +6,14 @@ const DashboardHome = ({ setActiveTab }) => {
   const [timeFilter, setTimeFilter] = useState('7D');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    servicesCount: 124,
-    servicesTrend: '+3 from yesterday',
-    routesCount: 58,
-    routesTrend: '+1 from yesterday',
-    disruptionsCount: 7,
-    disruptionsTrend: '+2 from yesterday',
-    journeysToday: '2,438',
-    journeysTrend: '+12% from yesterday',
+    servicesCount: 0,
+    servicesTrend: 'Fetching live data...',
+    routesCount: 0,
+    routesTrend: 'Fetching live data...',
+    disruptionsCount: 0,
+    disruptionsTrend: 'Fetching live data...',
+    journeysToday: '0',
+    journeysTrend: 'Fetching live data...',
     modeSplit: {
       bus: 42,
       train: 28,
@@ -59,14 +59,14 @@ const DashboardHome = ({ setActiveTab }) => {
       if (statsRes && statsRes.success && statsRes.data) {
         const d = statsRes.data;
         setStats({
-          servicesCount: d.activeServices || 124,
-          servicesTrend: d.servicesTrend || '+3 from yesterday',
-          routesCount: d.activeRoutes || 58,
-          routesTrend: d.routesTrend || '+1 from yesterday',
-          disruptionsCount: d.disruptionsCount ?? 7,
-          disruptionsTrend: d.disruptionsTrend || '+2 from yesterday',
-          journeysToday: d.journeysTodayFormatted || (d.journeysToday ? d.journeysToday.toLocaleString() : '2,438'),
-          journeysTrend: d.journeysTrend || '+12% from yesterday',
+          servicesCount: d.activeServices ?? 0,
+          servicesTrend: d.servicesTrend || `${d.activeServices ?? 0} active`,
+          routesCount: d.activeRoutes ?? 0,
+          routesTrend: d.routesTrend || `${d.activeRoutes ?? 0} active`,
+          disruptionsCount: d.disruptionsCount ?? 0,
+          disruptionsTrend: d.disruptionsTrend || (d.disruptionsCount === 0 ? 'All services on schedule' : `${d.disruptionsCount} active alerts`),
+          journeysToday: d.journeysTodayFormatted || (d.journeysToday !== undefined ? d.journeysToday.toLocaleString() : '0'),
+          journeysTrend: d.journeysTrend || 'Live MongoDB count',
           modeSplit: d.modeSplit || { bus: 42, train: 28, tuktuk: 16, taxiWalk: 14 },
           journeysPerDay: d.journeysPerDay || stats.journeysPerDay,
           activeDisruptions: d.activeDisruptions || [],
@@ -76,20 +76,22 @@ const DashboardHome = ({ setActiveTab }) => {
         const [servicesRes, routesRes, disruptionsRes] = await Promise.all([
           adminService.getServices().catch(() => null),
           adminService.getRoutes().catch(() => null),
-          adminService.getActiveDisruptions().catch(() => null),
+          adminService.getDisruptions().catch(() => null),
         ]);
 
         const rawDisruptions = disruptionsRes?.data || [];
-        const formattedDisruptions = rawDisruptions.map((item) => {
+        const activeDisruptionsList = rawDisruptions.filter(d => (d.status || '').toUpperCase() !== 'RESOLVED');
+        const formattedDisruptions = activeDisruptionsList.map((item) => {
           let statusLabel = 'Delayed';
           let pillClass = 'pill-delayed';
           let dotColor = 'amber';
 
-          if (item.disruptionType === 'CANCELLATION') {
+          const typeUpper = (item.disruptionType || '').toUpperCase();
+          if (typeUpper.includes('CANCEL')) {
             statusLabel = 'Cancelled';
             pillClass = 'pill-cancelled';
             dotColor = 'red';
-          } else if (item.disruptionType === 'ROUTE_INTERRUPTION' || item.disruptionType === 'ROAD_CLOSURE') {
+          } else if (typeUpper.includes('ROAD') || typeUpper.includes('DIVERT') || typeUpper.includes('INTERRUPT')) {
             statusLabel = 'Diverted';
             pillClass = 'pill-diverted';
             dotColor = 'amber';
@@ -97,19 +99,26 @@ const DashboardHome = ({ setActiveTab }) => {
 
           return {
             _id: item._id,
-            title: item.title,
-            description: item.description || 'Active Section',
+            title: item.title || item.service || 'Disruption Alert',
+            description: item.description || item.location || 'Active Section',
             statusLabel,
             pillClass,
             dotColor,
           };
         });
 
+        const activeServicesNum = servicesRes?.services?.length ?? servicesRes?.count ?? 0;
+        const activeRoutesNum = routesRes?.routes?.length ?? routesRes?.count ?? 0;
+        const activeDisruptionsNum = activeDisruptionsList.length;
+
         setStats((prev) => ({
           ...prev,
-          servicesCount: servicesRes?.count ?? servicesRes?.services?.length ?? prev.servicesCount,
-          routesCount: routesRes?.count ?? routesRes?.routes?.length ?? prev.routesCount,
-          disruptionsCount: disruptionsRes?.count ?? rawDisruptions.length ?? prev.disruptionsCount,
+          servicesCount: activeServicesNum,
+          servicesTrend: `${activeServicesNum} active services`,
+          routesCount: activeRoutesNum,
+          routesTrend: `${activeRoutesNum} active routes`,
+          disruptionsCount: activeDisruptionsNum,
+          disruptionsTrend: activeDisruptionsNum === 0 ? 'All services on schedule' : `${activeDisruptionsNum} active alerts`,
           activeDisruptions: formattedDisruptions,
         }));
       }

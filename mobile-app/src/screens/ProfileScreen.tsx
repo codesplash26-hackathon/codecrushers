@@ -347,22 +347,44 @@ export default function ProfileScreen({ navigation, hideBottomBar }: Props) {
             ]}
           />
 
-          {/* Become a Driver */}
+          {/* Become a Driver or Driver Console */}
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => navigation.navigate("DriverRegistration")}
+            onPress={() => {
+              if (currentUser?.role === "driver") {
+                navigation.navigate("DriverDashboard");
+              } else {
+                navigation.navigate("DriverRegistration");
+              }
+            }}
             activeOpacity={0.7}
           >
             <View style={styles.menuLeft}>
               <Text style={styles.menuIcon}>🚖</Text>
-              <Text
-                style={[
-                  styles.menuTitle,
-                  isDarkMode && { color: colors.textPrimary },
-                ]}
-              >
-                Become a Driver
-              </Text>
+              <View>
+                <Text
+                  style={[
+                    styles.menuTitle,
+                    isDarkMode && { color: colors.textPrimary },
+                  ]}
+                >
+                  {currentUser?.role === "driver"
+                    ? "Driver Console & Trips"
+                    : currentUser?.driverStatus === "pending"
+                    ? "Driver Application Status"
+                    : "Become a Driver"}
+                </Text>
+                {currentUser?.role === "driver" && (
+                  <Text style={{ fontSize: 11, color: "#16A34A", fontWeight: "600" }}>
+                    Verified Partner · Open Dispatch
+                  </Text>
+                )}
+                {currentUser?.driverStatus === "pending" && currentUser?.role !== "driver" && (
+                  <Text style={{ fontSize: 11, color: "#D97706", fontWeight: "600" }}>
+                    Application Pending Review
+                  </Text>
+                )}
+              </View>
             </View>
             <Text
               style={[

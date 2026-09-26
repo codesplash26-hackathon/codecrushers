@@ -23,21 +23,35 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["passenger", "admin", "super_admin", "operator", "read_only"],
+      enum: ["passenger", "driver", "admin", "super_admin", "operator", "read_only"],
       default: "passenger",
     },
 
+    driverStatus: {
+      type: String,
+      enum: ["none", "pending", "approved", "rejected"],
+      default: "none",
+    },
+
+    driverDetails: {
+      vehicleType: String,
+      vehicleNo: String,
+      vehicleModel: String,
+      phone: String,
+      isOnline: { type: Boolean, default: false },
+    },
+
     preferences: {
-    type: String,
-    enum: [
-    "fastest",
-    "cheapest",
-    "minimum_walking",
-    "minimum_transfers",
-    "most_reliable"
-    ],
-    default: "fastest"
-    }
+      type: String,
+      enum: [
+        "fastest",
+        "cheapest",
+        "minimum_walking",
+        "minimum_transfers",
+        "most_reliable",
+      ],
+      default: "fastest",
+    },
   },
   {
     timestamps: true,
