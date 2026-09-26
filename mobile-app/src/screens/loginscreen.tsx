@@ -40,6 +40,12 @@ export default function LoginScreen({ navigation }: Props) {
   const [isGoogleModalVisible, setIsGoogleModalVisible] = useState(false);
   const [selectedGoogleAccount, setSelectedGoogleAccount] = useState<string | null>(null);
 
+  React.useEffect(() => {
+    if (Platform.OS === "web" && typeof document !== "undefined") {
+      document.title = "BestRoute | Login";
+    }
+  }, []);
+
   const googleAccounts = [
     { name: "Malith Perera", email: "malith.perera@gmail.com", avatar: "M" },
     { name: "CodeCrushers User", email: "user.codecrushers@gmail.com", avatar: "C" },
