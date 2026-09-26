@@ -36,6 +36,7 @@ export default function LoginScreen({ navigation }: Props) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [isGoogleModalVisible, setIsGoogleModalVisible] = useState(false);
   const [selectedGoogleAccount, setSelectedGoogleAccount] = useState<string | null>(null);
 
@@ -45,8 +46,11 @@ export default function LoginScreen({ navigation }: Props) {
   ];
 
   const handleLogin = async () => {
+    setErrorBanner(null);
     if (!username.trim() || !password.trim()) {
-      Alert.alert("Missing Fields", "Please enter your username and password.");
+      const msg = "Please enter your username/email and password.";
+      setErrorBanner(msg);
+      Alert.alert("Missing Information", msg);
       return;
     }
 
@@ -54,16 +58,21 @@ export default function LoginScreen({ navigation }: Props) {
       setLoading(true);
       const res = await authService.login(username, password);
       if (res.success) {
+        setErrorBanner(null);
         if (navigation) {
           navigation.replace("Home");
         } else {
           Alert.alert("Success", "Logged in successfully!");
         }
       } else {
-        Alert.alert("Login Failed", res.message);
+        const errorMsg = res.message || "Invalid username/email or password. Please check your credentials and try again.";
+        setErrorBanner(errorMsg);
+        Alert.alert("Login Failed ⚠️", errorMsg);
       }
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to log in.");
+      const errorMsg = err.message || "Invalid credentials or network failure. Please try again.";
+      setErrorBanner(errorMsg);
+      Alert.alert("Authentication Error", errorMsg);
     } finally {
       setLoading(false);
     }
@@ -138,6 +147,29 @@ export default function LoginScreen({ navigation }: Props) {
 
           {/* Form */}
           <View style={styles.form}>
+            {/* Invalid Credentials Notification Banner */}
+            {errorBanner ? (
+              <View
+                style={[
+                  styles.errorNotificationBanner,
+                  isDarkMode && {
+                    backgroundColor: "rgba(239, 68, 68, 0.15)",
+                    borderColor: "rgba(239, 68, 68, 0.4)",
+                  },
+                ]}
+              >
+                <Text style={styles.errorNotificationIcon}>⚠️</Text>
+                <Text
+                  style={[
+                    styles.errorNotificationText,
+                    isDarkMode && { color: "#FCA5A5" },
+                  ]}
+                >
+                  {errorBanner}
+                </Text>
+              </View>
+            ) : null}
+
             {/* USERNAME / EMAIL */}
             <View style={styles.inputGroup}>
               <Text
@@ -213,7 +245,7 @@ export default function LoginScreen({ navigation }: Props) {
                   activeOpacity={0.7}
                 >
                   <Text style={[styles.eyeIconText, isDarkMode && { color: colors.textSecondary }]}>
-                    {showPassword ? "👁️" : "🙈"}
+                    {showPassword ? "👁️" : "👁️‍🗨️"}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -232,30 +264,6 @@ export default function LoginScreen({ navigation }: Props) {
                 <Text style={styles.primaryButtonText}>Log In</Text>
               )}
             </TouchableOpacity>
-
-            {/* Quick Demo Fill for Evaluators */}
-            <View style={styles.demoFillContainer}>
-              <TouchableOpacity
-                onPress={() => {
-                  setUsername("passenger@bestroute.lk");
-                  setPassword("password123");
-                }}
-                style={styles.demoChip}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.demoChipText}>⚡ Fill Demo Passenger</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  setUsername("admin");
-                  setPassword("admin123");
-                }}
-                style={styles.demoChip}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.demoChipText}>⚡ Fill Demo Admin</Text>
-              </TouchableOpacity>
-            </View>
 
             {/* OR Divider */}
             <View style={styles.dividerRow}>
@@ -458,6 +466,28 @@ const styles = StyleSheet.create({
   },
   form: {
     width: "100%",
+  },
+  errorNotificationBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FEE2E2",
+    borderWidth: 1.5,
+    borderColor: "#FCA5A5",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 18,
+  },
+  errorNotificationIcon: {
+    fontSize: 16,
+    marginRight: 10,
+  },
+  errorNotificationText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#991B1B",
+    lineHeight: 18,
   },
   inputGroup: {
     marginBottom: 18,

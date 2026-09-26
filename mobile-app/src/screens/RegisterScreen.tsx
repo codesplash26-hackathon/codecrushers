@@ -76,16 +76,14 @@ export default function RegisterScreen({ navigation }: Props) {
       setLoading(true);
       const res = await authService.register(fullName, email, password);
       if (res.success) {
-        Alert.alert(
-          "Account Created!",
-          "Welcome to BestRoute! Your account has been created successfully.",
-          [
-            {
-              text: "Continue to App",
-              onPress: () => navigation.replace("Home"),
-            },
-          ]
-        );
+        if (Platform.OS !== "web") {
+          Alert.alert(
+            "Account Created!",
+            "Welcome to BestRoute! Your account has been created successfully."
+          );
+        }
+        // Direct redirect to App Dashboard for Web, iOS, and Android
+        navigation.replace("Home");
       } else {
         Alert.alert("Registration Failed", res.message);
       }

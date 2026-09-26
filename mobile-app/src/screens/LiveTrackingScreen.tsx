@@ -61,6 +61,29 @@ export default function LiveTrackingScreen({ navigation }: Props) {
     <View style={[styles.screen, { backgroundColor: colors.screenBg }]}>
       <StatusBar style={isDarkMode ? "light" : "dark"} />
 
+      {/* Floating Back Button in Top Left Corner */}
+      <TouchableOpacity
+        style={[
+          styles.floatingBackButton,
+          isDarkMode && {
+            backgroundColor: colors.cardBg,
+            borderColor: colors.cardBorder,
+          },
+        ]}
+        onPress={() => navigation.goBack()}
+        activeOpacity={0.8}
+        accessibilityLabel="Go back"
+      >
+        <Text
+          style={[
+            styles.floatingBackArrow,
+            isDarkMode && { color: colors.textPrimary },
+          ]}
+        >
+          ‹
+        </Text>
+      </TouchableOpacity>
+
       {/* Floating Dark Mode Button in Top Right Corner */}
       <ThemeToggle floating={true} size={38} />
 
@@ -637,13 +660,47 @@ const styles = StyleSheet.create({
     borderColor: "#FFFFFF",
   },
 
+  /* Floating Top Left Back Button */
+  floatingBackButton: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 48 : 14,
+    left: 14,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 60,
+    ...Platform.select({
+      web: {
+        boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+      },
+      default: {
+        elevation: 4,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+      },
+    }),
+  },
+  floatingBackArrow: {
+    fontSize: 26,
+    fontWeight: "500",
+    color: "#0F172A",
+    marginTop: -3,
+  },
+
   /* Top HUD: Live Tracking Card */
   liveTrackingCard: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 50 : 36,
-    left: 16,
+    top: Platform.OS === "ios" ? 48 : 14,
+    left: 60,
     backgroundColor: "rgba(255, 255, 255, 0.96)",
-    paddingVertical: 8,
+    paddingVertical: 7,
     paddingHorizontal: 12,
     borderRadius: 14,
     borderWidth: 1,
@@ -691,8 +748,8 @@ const styles = StyleSheet.create({
   /* Top HUD: Simulate Delay Pill */
   simulateDelayButton: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 52 : 38,
-    right: 64,
+    top: Platform.OS === "ios" ? 48 : 14,
+    right: 60,
     backgroundColor: "#FFFBEB",
     borderWidth: 1,
     borderColor: "#FDE68A",
