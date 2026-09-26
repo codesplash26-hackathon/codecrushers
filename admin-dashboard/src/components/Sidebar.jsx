@@ -24,6 +24,7 @@ import { adminService } from '../services/adminService';
 const Sidebar = ({ activeTab, setActiveTab }) => {
   const { user, logout } = useAuth();
   const [disruptionCount, setDisruptionCount] = React.useState('5');
+  const [driverAppsCount, setDriverAppsCount] = React.useState('2');
 
   React.useEffect(() => {
     const fetchBadgeCount = async () => {
@@ -38,6 +39,16 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       } catch (e) {
         setDisruptionCount('0');
       }
+
+      try {
+        const dRes = await adminService.getDriverApplications('Pending');
+        if (dRes && dRes.success) {
+          const pCount = dRes.pendingCount ?? (Array.isArray(dRes.data) ? dRes.data.length : 0);
+          setDriverAppsCount(pCount > 0 ? String(pCount) : null);
+        }
+      } catch (e) {
+        // fallback
+      }
     };
     fetchBadgeCount();
   }, [activeTab]);
@@ -45,6 +56,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'disruptions', label: 'Disruptions', icon: AlertTriangle, badge: disruptionCount },
+    { id: 'passengers', label: 'Passengers', icon: Users },
     { id: 'routes', label: 'Routes', icon: Map },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'services', label: 'Services', icon: Bus },
@@ -52,10 +64,9 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     { id: 'schedules', label: 'Schedules', icon: Clock },
     { id: 'monitoring', label: 'Monitoring', icon: Radio, badge: '1' },
     { id: 'security', label: 'Admin & Security', icon: ShieldCheck },
-    { id: 'driver_apps', label: 'Driver Applications', icon: FileText, badge: '2' },
+    { id: 'driver_apps', label: 'Driver Applications', icon: FileText, badge: driverAppsCount },
     { id: 'drivers', label: 'Driver Management', icon: UserCheck },
     { id: 'vehicles', label: 'Vehicle Management', icon: Truck },
-    { id: 'passengers', label: 'Passengers', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 

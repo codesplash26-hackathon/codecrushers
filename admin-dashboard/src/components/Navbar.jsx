@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Moon, Sun, Bell, AlertTriangle, CheckCircle, Info, ExternalLink } from 'lucide-react';
+import { adminService } from '../services/adminService';
 
 const Navbar = ({ activeTabTitle, setActiveTab }) => {
   // 1. Dark Mode State
@@ -44,71 +45,90 @@ const Navbar = ({ activeTabTitle, setActiveTab }) => {
 
   // 2. Notifications State
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    {
-      id: 'notif-1',
-      title: 'Kandy Express Delayed',
-      message: 'Signal failure at Peradeniya causing 20-min delay.',
-      time: '2m ago',
-      type: 'delay',
-      dotColor: '#F59E0B',
-      unread: true,
-    },
-    {
-      id: 'notif-2',
-      title: 'Route 654 Diverted',
-      message: 'Road maintenance along Kandy Rd. Buses rerouted.',
-      time: '8m ago',
-      type: 'divert',
-      dotColor: '#F59E0B',
-      unread: true,
-    },
-    {
-      id: 'notif-3',
-      title: 'Intercity 55 Cancelled',
-      message: 'Colombo Fort service cancelled due to locomotive maintenance.',
-      time: '15m ago',
-      type: 'cancel',
-      dotColor: '#EF4444',
-      unread: true,
-    },
-    {
-      id: 'notif-4',
-      title: 'Route 120 Slow Traffic',
-      message: 'Traffic congestion at Nugegoda junction causing 10-min delay.',
-      time: '22m ago',
-      type: 'delay',
-      dotColor: '#F59E0B',
-      unread: true,
-    },
-    {
-      id: 'notif-5',
-      title: 'Coastal Express Delay',
-      message: 'Panadura level-crossing delay of 25 minutes reported.',
-      time: '45m ago',
-      type: 'delay',
-      dotColor: '#F59E0B',
-      unread: true,
-    },
-    {
-      id: 'notif-6',
-      title: 'Galle Shuttle Rerouted',
-      message: 'Temporary detour active around Hikkaduwa station.',
-      time: '1h ago',
-      type: 'divert',
-      dotColor: '#F59E0B',
-      unread: true,
-    },
-    {
-      id: 'notif-7',
-      title: 'Matale Local Delay',
-      message: 'Platform clearance delay of 12 mins at Katugastota.',
-      time: '1h ago',
-      type: 'delay',
-      dotColor: '#10B981',
-      unread: true,
-    },
-  ]);
+  const [notifications, setNotifications] = useState([]);
+
+  const fetchLiveNotifications = async () => {
+    try {
+      const res = await adminService.getNotifications();
+      let list = [];
+      if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+        list = res.data;
+      }
+
+      // Check if there is an offline/local submission from mobile app for driver app
+      try {
+        const localSub = localStorage.getItem('bestroute_latest_driver_app');
+        if (localSub) {
+          const parsed = JSON.parse(localSub);
+          if (parsed && parsed.fullName) {
+            const exists = list.some(
+              (n) =>
+                n.title?.includes(parsed.applicationId || '') ||
+                n.message?.includes(parsed.fullName) ||
+                n._id === `local-${parsed.applicationId}`
+            );
+            if (!exists) {
+              list = [
+                {
+                  _id: `local-${parsed.applicationId || Date.now()}`,
+                  type: 'journey_change',
+                  title: `New Driver Application (${parsed.applicationId || 'Pending'})`,
+                  message: `${parsed.fullName} applied for ${parsed.vehicleType || 'Taxi'} (${parsed.vehicleNo || 'Vehicle'}). Review required.`,
+                  priority: 'HIGH',
+                  isRead: false,
+                  createdAt: new Date().toISOString(),
+                },
+                ...list,
+              ];
+            }
+          }
+        }
+      } catch {
+        // ignore
+      }
+
+      if (list.length > 0) {
+        const formatted = list.map((n) => {
+          let timeAgo = 'Just now';
+          if (n.createdAt) {
+            const diffMin = Math.floor((Date.now() - new Date(n.createdAt).getTime()) / 60000);
+            if (diffMin < 1) timeAgo = 'Just now';
+            else if (diffMin < 60) timeAgo = `${diffMin}m ago`;
+            else if (diffMin < 1440) timeAgo = `${Math.floor(diffMin / 60)}h ago`;
+            else timeAgo = `${Math.floor(diffMin / 1440)}d ago`;
+          }
+
+          let dotColor = '#3B82F6';
+          const p = (n.priority || '').toUpperCase();
+          const t = (n.type || '').toLowerCase();
+          if (p === 'CRITICAL' || t === 'cancel') dotColor = '#EF4444';
+          else if (p === 'HIGH' || t === 'delay') dotColor = '#F59E0B';
+          else if (t === 'journey_change') dotColor = '#8B5CF6';
+          else if (n.isRead) dotColor = '#94A3B8';
+
+          return {
+            id: n._id || n.id,
+            title: n.title,
+            message: n.message,
+            time: timeAgo,
+            unread: !n.isRead,
+            dotColor,
+            type: n.type,
+            raw: n,
+          };
+        });
+        setNotifications(formatted);
+      }
+    } catch (err) {
+      console.warn('Failed to load admin notifications:', err?.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchLiveNotifications();
+    const interval = setInterval(fetchLiveNotifications, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   const notifRef = useRef(null);
 
@@ -125,13 +145,46 @@ const Navbar = ({ activeTabTitle, setActiveTab }) => {
 
   const unreadCount = notifications.filter((n) => n.unread).length;
 
-  const handleMarkAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+  const handleMarkAllRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false, dotColor: '#94A3B8' })));
+    try {
+      await adminService.markAllNotificationsRead();
+      await fetchLiveNotifications();
+    } catch (err) {
+      console.warn('Failed to mark all notifications read:', err);
+    }
   };
 
-  const handleNotificationItemClick = () => {
+  const handleNotificationItemClick = async (notif) => {
+    if (notif && notif.id && !notif.id.startsWith('local-')) {
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notif.id ? { ...n, unread: false, dotColor: '#94A3B8' } : n))
+      );
+      try {
+        await adminService.markNotificationRead(notif.id);
+      } catch {
+        // ignore
+      }
+    } else if (notif && notif.id) {
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notif.id ? { ...n, unread: false, dotColor: '#94A3B8' } : n))
+      );
+    }
+
     setIsNotificationsOpen(false);
-    if (setActiveTab) setActiveTab('disruptions');
+
+    const titleLower = ((notif && notif.title) || '').toLowerCase();
+    const msgLower = ((notif && notif.message) || '').toLowerCase();
+
+    if (titleLower.includes('driver') || msgLower.includes('driver')) {
+      if (setActiveTab) setActiveTab('driver_apps');
+    } else if (titleLower.includes('passenger') || msgLower.includes('passenger')) {
+      if (setActiveTab) setActiveTab('passengers');
+    } else if (titleLower.includes('route') && !titleLower.includes('delay') && !titleLower.includes('traffic')) {
+      if (setActiveTab) setActiveTab('routes');
+    } else {
+      if (setActiveTab) setActiveTab('disruptions');
+    }
   };
 
   // 3. Profile Click Handler
@@ -212,29 +265,40 @@ const Navbar = ({ activeTabTitle, setActiveTab }) => {
               </div>
 
               <div className="notifications-list">
-                {notifications.map((notif) => (
-                  <div
-                    key={notif.id}
-                    className={`notification-item ${notif.unread ? 'unread' : ''}`}
-                    onClick={handleNotificationItemClick}
-                  >
-                    <span
-                      className="notification-icon-dot"
-                      style={{ backgroundColor: notif.dotColor }}
-                    />
-                    <div className="notification-content">
-                      <div className="notification-text">{notif.title}</div>
-                      <div style={{ fontSize: '12px', color: '#64748B', marginTop: '2px' }}>
-                        {notif.message}
-                      </div>
-                      <div className="notification-time">{notif.time}</div>
-                    </div>
+                {notifications.length === 0 ? (
+                  <div style={{ padding: '28px 20px', textAlign: 'center', color: '#94A3B8', fontSize: '13px' }}>
+                    No notifications right now
                   </div>
-                ))}
+                ) : (
+                  notifications.map((notif) => (
+                    <div
+                      key={notif.id}
+                      className={`notification-item ${notif.unread ? 'unread' : ''}`}
+                      onClick={() => handleNotificationItemClick(notif)}
+                    >
+                      <span
+                        className="notification-icon-dot"
+                        style={{ backgroundColor: notif.dotColor }}
+                      />
+                      <div className="notification-content">
+                        <div className="notification-text">{notif.title}</div>
+                        <div style={{ fontSize: '12px', color: '#64748B', marginTop: '2px' }}>
+                          {notif.message}
+                        </div>
+                        <div className="notification-time">{notif.time}</div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
 
               <div className="notifications-footer">
-                <button onClick={handleNotificationItemClick}>
+                <button
+                  onClick={() => {
+                    setIsNotificationsOpen(false);
+                    if (setActiveTab) setActiveTab('disruptions');
+                  }}
+                >
                   View all disruptions →
                 </button>
               </div>

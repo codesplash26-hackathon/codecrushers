@@ -1,6 +1,11 @@
 const DriverApplication = require("../models/DriverApplication");
 const User = require("../models/User");
 const TransportService = require("../models/TransportService");
+const Notification = require("../models/Notification");
+const {
+  NOTIFICATION_TYPES,
+  NOTIFICATION_PRIORITY,
+} = require("../config/constants");
 
 const defaultApplications = [
   {
@@ -167,6 +172,26 @@ const createApplication = async (req, res, next) => {
         isOnline: false,
       };
       await user.save();
+    }
+
+    // Create an Admin Notification so the Admin Dashboard bell reflects the new application
+    try {
+      let adminUser = await User.findOne({ role: { $in: ["admin", "super_admin"] } });
+      if (!adminUser) {
+        adminUser = user || (await User.findOne());
+      }
+      if (adminUser) {
+        await Notification.create({
+          user: adminUser._id,
+          type: NOTIFICATION_TYPES.JOURNEY_CHANGE,
+          title: `New Driver Application (${application.applicationId})`,
+          message: `${application.fullName} applied for ${application.vehicleType} (${application.vehicleNo}). Review pending.`,
+          priority: NOTIFICATION_PRIORITY.HIGH,
+          isRead: false,
+        });
+      }
+    } catch (notifErr) {
+      console.warn("Notification creation error:", notifErr?.message);
     }
 
     return res.status(201).json({
