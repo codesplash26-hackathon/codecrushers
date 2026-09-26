@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,9 @@ import {
   ScrollView,
   Platform,
   Animated,
+  LayoutAnimation,
+  UIManager,
+  DimensionValue,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -15,6 +18,10 @@ import { RootStackParamList } from "../navigations/AppNavigator";
 import RealisticRouteMap from "../components/RealisticRouteMap";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 type RouteResultsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -39,11 +46,154 @@ const CHECKLIST_STEPS = [
   { id: 5, label: "Ranking routes" },
 ];
 
+export interface RouteOption {
+  id: "recommended" | "fastest" | "cheapest" | "reliable";
+  routeType: string;
+  badgeText: string;
+  badgeStyle: "bestMatch" | "fastest" | "cheapest" | "reliable";
+  riskDot: "green" | "orange";
+  riskText: string;
+  departureTime: string;
+  arrivalTime: string;
+  duration: string;
+  durationMinutes: number;
+  fare: string;
+  fareNum: number;
+  priceColor: string;
+  modes: Array<{
+    type: "bus" | "train" | "tuk" | "taxi";
+    label: string;
+  }>;
+  transfers: string;
+  walking: string;
+  waitTime: string;
+  reliabilityPercent: DimensionValue;
+  reliabilityScore: number;
+  reliabilityLabel: string;
+  reliabilityColor: string;
+  priority: number;
+}
+
+const ALL_ROUTES: RouteOption[] = [
+  {
+    id: "recommended",
+    routeType: "BEST MATCH",
+    badgeText: "BEST MATCH",
+    badgeStyle: "bestMatch",
+    riskDot: "green",
+    riskText: "Low Risk",
+    departureTime: "8:30 AM",
+    arrivalTime: "10:05 AM",
+    duration: "1h 35m",
+    durationMinutes: 95,
+    fare: "Rs. 320",
+    fareNum: 320,
+    priceColor: "#1D64EC",
+    modes: [
+      { type: "bus", label: "🚌 Bus" },
+      { type: "train", label: "🚆 Train" },
+      { type: "tuk", label: "🛺 Tuk" },
+    ],
+    transfers: "2 transfers",
+    walking: "8 min",
+    waitTime: "5 min wait",
+    reliabilityPercent: "85%",
+    reliabilityScore: 85,
+    reliabilityLabel: "High",
+    reliabilityColor: "#10B981",
+    priority: 1,
+  },
+  {
+    id: "fastest",
+    routeType: "FASTEST",
+    badgeText: "FASTEST",
+    badgeStyle: "fastest",
+    riskDot: "orange",
+    riskText: "Med Risk",
+    departureTime: "8:45 AM",
+    arrivalTime: "10:05 AM",
+    duration: "1h 20m",
+    durationMinutes: 80,
+    fare: "Rs. 450",
+    fareNum: 450,
+    priceColor: "#0284C7",
+    modes: [
+      { type: "bus", label: "🚌 Bus" },
+      { type: "train", label: "🚆 Train" },
+      { type: "taxi", label: "🚕 Taxi" },
+    ],
+    transfers: "2 transfers",
+    walking: "12 min",
+    waitTime: "3 min wait",
+    reliabilityPercent: "65%",
+    reliabilityScore: 65,
+    reliabilityLabel: "Medium",
+    reliabilityColor: "#D97706",
+    priority: 2,
+  },
+  {
+    id: "cheapest",
+    routeType: "CHEAPEST",
+    badgeText: "CHEAPEST",
+    badgeStyle: "cheapest",
+    riskDot: "green",
+    riskText: "Low Risk",
+    departureTime: "8:30 AM",
+    arrivalTime: "10:35 AM",
+    duration: "2h 05m",
+    durationMinutes: 125,
+    fare: "Rs. 220",
+    fareNum: 220,
+    priceColor: "#10B981",
+    modes: [
+      { type: "bus", label: "🚌 Bus" },
+      { type: "train", label: "🚆 Train" },
+      { type: "bus", label: "🚌 Bus" },
+    ],
+    transfers: "3 transfers",
+    walking: "10 min",
+    waitTime: "15 min wait",
+    reliabilityPercent: "70%",
+    reliabilityScore: 70,
+    reliabilityLabel: "Medium",
+    reliabilityColor: "#10B981",
+    priority: 3,
+  },
+  {
+    id: "reliable",
+    routeType: "MOST RELIABLE",
+    badgeText: "MOST RELIABLE",
+    badgeStyle: "reliable",
+    riskDot: "green",
+    riskText: "Lowest Risk",
+    departureTime: "8:15 AM",
+    arrivalTime: "9:50 AM",
+    duration: "1h 35m",
+    durationMinutes: 95,
+    fare: "Rs. 360",
+    fareNum: 360,
+    priceColor: "#6366F1",
+    modes: [
+      { type: "train", label: "🚆 Express Train" },
+      { type: "tuk", label: "🛺 Tuk" },
+    ],
+    transfers: "1 transfer",
+    walking: "5 min",
+    waitTime: "2 min wait",
+    reliabilityPercent: "96%",
+    reliabilityScore: 96,
+    reliabilityLabel: "High",
+    reliabilityColor: "#10B981",
+    priority: 4,
+  },
+];
+
 export default function RouteResultsScreen({ navigation, route }: Props) {
   const { isDarkMode, colors } = useTheme();
   const fromCity = route.params?.from || "Kandy";
   const toCity = route.params?.to || "Colombo Fort";
   const skipLoading = route.params?.skipLoading ?? false;
+  const initialFilterParam = route.params?.initialFilter;
 
   // Step 1: Loading / Optimizing state
   const [isLoading, setIsLoading] = useState(!skipLoading);
@@ -53,7 +203,13 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
 
   const [activeFilter, setActiveFilter] = useState<
     "recommended" | "fastest" | "cheapest" | "reliable"
-  >("recommended");
+  >(
+    initialFilterParam === "cheapest" ||
+    initialFilterParam === "fastest" ||
+    initialFilterParam === "reliable"
+      ? initialFilterParam
+      : "recommended"
+  );
 
   // Smooth animated progress bar (0 to 1)
   const progressAnim = useRef(new Animated.Value(0.14)).current;
@@ -237,6 +393,37 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
     inputRange: [1, 2.2],
     outputRange: [0.65, 0],
   });
+
+  // Handler for filter change with smooth layout animation
+  const handleFilterChange = (
+    filterId: "recommended" | "fastest" | "cheapest" | "reliable"
+  ) => {
+    try {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    } catch {
+      // ignore
+    }
+    setActiveFilter(filterId);
+  };
+
+  // Sort routes dynamically based on active filter (always called unconditionally)
+  const sortedRoutes = useMemo(() => {
+    const list = [...ALL_ROUTES];
+    if (activeFilter === "cheapest") {
+      // Lowest fare first (Rs. 220 first!)
+      return list.sort((a, b) => a.fareNum - b.fareNum);
+    }
+    if (activeFilter === "fastest") {
+      // Shortest duration first (1h 20m first!)
+      return list.sort((a, b) => a.durationMinutes - b.durationMinutes);
+    }
+    if (activeFilter === "reliable") {
+      // Highest reliability score first (96% first!)
+      return list.sort((a, b) => b.reliabilityScore - a.reliabilityScore);
+    }
+    // "recommended": best match / priority
+    return list.sort((a, b) => a.priority - b.priority);
+  }, [activeFilter]);
 
   // ================= 1. OPTIMIZATION LOADING SCREEN (Matches Provided Photo) =================
   if (isLoading) {
@@ -532,6 +719,8 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
               styles.headerMainTitle,
               isDarkMode && { color: colors.textPrimary },
             ]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
             Routes to {toCity}
           </Text>
@@ -540,8 +729,10 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
               styles.headerSubtitle,
               isDarkMode && { color: colors.textSecondary },
             ]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
-            Today · Departing 8:30 AM · 3 routes found
+            Today · Departing 8:30 AM · {sortedRoutes.length} routes found
           </Text>
         </View>
 
@@ -608,7 +799,7 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
                   },
                   isSelected && styles.resultsFilterPillActive,
                 ]}
-                onPress={() => setActiveFilter(item.id)}
+                onPress={() => handleFilterChange(item.id)}
                 activeOpacity={0.8}
               >
                 <Text
@@ -617,6 +808,8 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
                     isDarkMode && { color: colors.textPrimary },
                     isSelected && styles.resultsFilterPillTextActive,
                   ]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
                 >
                   {item.label}
                 </Text>
@@ -625,316 +818,222 @@ export default function RouteResultsScreen({ navigation, route }: Props) {
           })}
         </View>
 
-        {/* ============ ROUTE CARD 1: BEST MATCH ============ */}
-        <View
-          style={[
-            styles.routeCard,
-            isDarkMode && {
-              backgroundColor: colors.cardBg,
-              borderColor: colors.cardBorder,
-            },
-          ]}
-        >
-          {/* Card Top Row: Badge & Risk */}
-          <View style={styles.cardHeaderRow}>
-            <View style={styles.bestMatchBadge}>
-              <Text style={styles.badgeTextWhite}>BEST MATCH</Text>
-            </View>
+        {/* Dynamic Route Cards Sorted By Active Filter */}
+        {sortedRoutes.map((routeItem, index) => {
+          const isTopChoice = index === 0;
 
-            <View style={styles.riskIndicator}>
-              <View style={[styles.riskDot, styles.riskDotGreen]} />
-              <Text style={styles.riskTextGreen}>Low Risk</Text>
-            </View>
-          </View>
-
-          {/* Time & Price Row */}
-          <View style={styles.timePriceRow}>
-            <View>
-              <Text
-                style={[
-                  styles.timeRangeText,
-                  isDarkMode && { color: colors.textPrimary },
-                ]}
-              >
-                8:30 AM <Text style={styles.arrowLight}>➔</Text> 10:05 AM
-              </Text>
-              <Text style={styles.durationText}>⏱ 1h 35m</Text>
-            </View>
-
-            <View style={styles.priceContainer}>
-              <Text style={styles.priceTextBlue}>Rs. 320</Text>
-              <Text style={styles.priceSubtext}>Estimated</Text>
-            </View>
-          </View>
-
-          {/* Transit Mode Flow Pills */}
-          <View style={styles.transitModeFlowRow}>
-            <View style={[styles.modePill, styles.modePillBus]}>
-              <Text style={styles.modePillTextBus}>🚌 Bus</Text>
-            </View>
-            <Text style={styles.modeFlowArrow}>➔</Text>
-            <View style={[styles.modePill, styles.modePillTrain]}>
-              <Text style={styles.modePillTextTrain}>🚆 Train</Text>
-            </View>
-            <Text style={styles.modeFlowArrow}>➔</Text>
-            <View style={[styles.modePill, styles.modePillTuk]}>
-              <Text style={styles.modePillTextTuk}>🛺 Tuk</Text>
-            </View>
-          </View>
-
-          {/* Transfer and Walking Stats */}
-          <View style={styles.metricsRow}>
-            <Text style={styles.metricText}>🔀 2 transfers</Text>
-            <Text style={styles.metricDivider}>·</Text>
-            <Text style={styles.metricText}>🚶 8 min</Text>
-            <Text style={styles.metricDivider}>·</Text>
-            <Text style={styles.metricText}>⏱ 5 min wait</Text>
-          </View>
-
-          {/* Reliability Bar */}
-          <View style={styles.reliabilityRow}>
-            <Text style={styles.reliabilityLabel}>Reliability</Text>
-            <View style={styles.reliabilityTrack}>
-              <View
-                style={[styles.reliabilityFill, { width: "85%", backgroundColor: "#10B981" }]}
-              />
-            </View>
-            <Text style={[styles.reliabilityStatus, { color: "#10B981" }]}>
-              High
-            </Text>
-          </View>
-
-          {/* Primary View Route Button */}
-          <TouchableOpacity
-            style={styles.viewRouteButtonPrimary}
-            activeOpacity={0.85}
-            onPress={() =>
-              navigation.navigate("RouteDetail", {
-                from: fromCity,
-                to: toCity,
-                routeType: "BEST MATCH",
-                fare: "Rs. 320",
-                duration: "1h 35m",
-                departureTime: "8:30 AM",
-                arrivalTime: "10:05 AM",
-              })
-            }
-          >
-            <Text style={styles.viewRouteButtonTextPrimary}>View Route</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* ============ ROUTE CARD 2: FASTEST ============ */}
-        <View
-          style={[
-            styles.routeCard,
-            isDarkMode && {
-              backgroundColor: colors.cardBg,
-              borderColor: colors.cardBorder,
-            },
-          ]}
-        >
-          <View style={styles.cardHeaderRow}>
-            <View style={[styles.bestMatchBadge, styles.fastestBadge]}>
-              <Text style={styles.badgeTextWhite}>FASTEST</Text>
-            </View>
-
-            <View style={styles.riskIndicator}>
-              <View style={[styles.riskDot, styles.riskDotOrange]} />
-              <Text style={styles.riskTextOrange}>Med Risk</Text>
-            </View>
-          </View>
-
-          <View style={styles.timePriceRow}>
-            <View>
-              <Text
-                style={[
-                  styles.timeRangeText,
-                  isDarkMode && { color: colors.textPrimary },
-                ]}
-              >
-                8:45 AM <Text style={styles.arrowLight}>➔</Text> 10:05 AM
-              </Text>
-              <Text style={styles.durationText}>⏱ 1h 20m</Text>
-            </View>
-
-            <View style={styles.priceContainer}>
-              <Text style={styles.priceTextTeal}>Rs. 450</Text>
-              <Text style={styles.priceSubtext}>Estimated</Text>
-            </View>
-          </View>
-
-          <View style={styles.transitModeFlowRow}>
-            <View style={[styles.modePill, styles.modePillBus]}>
-              <Text style={styles.modePillTextBus}>🚌 Bus</Text>
-            </View>
-            <Text style={styles.modeFlowArrow}>➔</Text>
-            <View style={[styles.modePill, styles.modePillTrain]}>
-              <Text style={styles.modePillTextTrain}>🚆 Train</Text>
-            </View>
-            <Text style={styles.modeFlowArrow}>➔</Text>
-            <View style={[styles.modePill, styles.modePillTaxi]}>
-              <Text style={styles.modePillTextTaxi}>🚕 Taxi</Text>
-            </View>
-          </View>
-
-          <View style={styles.metricsRow}>
-            <Text style={styles.metricText}>🔀 2 transfers</Text>
-            <Text style={styles.metricDivider}>·</Text>
-            <Text style={styles.metricText}>🚶 12 min</Text>
-            <Text style={styles.metricDivider}>·</Text>
-            <Text style={styles.metricText}>⏱ 3 min wait</Text>
-          </View>
-
-          <View style={styles.reliabilityRow}>
-            <Text style={styles.reliabilityLabel}>Reliability</Text>
-            <View style={styles.reliabilityTrack}>
-              <View
-                style={[styles.reliabilityFill, { width: "65%", backgroundColor: "#F59E0B" }]}
-              />
-            </View>
-            <Text style={[styles.reliabilityStatus, { color: "#D97706" }]}>
-              Medium
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            style={[
-              styles.viewRouteButtonSecondary,
-              isDarkMode && {
-                backgroundColor: colors.cardSecondaryBg,
-                borderColor: colors.cardBorder,
-              },
-            ]}
-            activeOpacity={0.85}
-            onPress={() =>
-              navigation.navigate("RouteDetail", {
-                from: fromCity,
-                to: toCity,
-                routeType: "FASTEST",
-                fare: "Rs. 450",
-                duration: "1h 20m",
-                departureTime: "8:45 AM",
-                arrivalTime: "10:05 AM",
-              })
-            }
-          >
-            <Text
+          return (
+            <View
+              key={routeItem.id}
               style={[
-                styles.viewRouteButtonTextSecondary,
-                isDarkMode && { color: colors.primaryLight },
+                styles.routeCard,
+                isDarkMode && {
+                  backgroundColor: colors.cardBg,
+                  borderColor: isTopChoice ? colors.primaryLight : colors.cardBorder,
+                },
+                isTopChoice && styles.routeCardTopChoice,
               ]}
             >
-              View Route
-            </Text>
-          </TouchableOpacity>
-        </View>
+              {/* Card Top Row: Badge & Risk */}
+              <View style={styles.cardHeaderRow}>
+                <View style={styles.cardHeaderBadges}>
+                  <View
+                    style={[
+                      styles.bestMatchBadge,
+                      routeItem.badgeStyle === "fastest" && styles.fastestBadge,
+                      routeItem.badgeStyle === "cheapest" && styles.cheapestBadge,
+                      routeItem.badgeStyle === "reliable" && styles.reliableBadge,
+                    ]}
+                  >
+                    <Text style={styles.badgeTextWhite}>{routeItem.badgeText}</Text>
+                  </View>
+                  {isTopChoice && (
+                    <View
+                      style={[
+                        styles.topChoicePill,
+                        isDarkMode && { backgroundColor: "rgba(29, 100, 236, 0.25)" },
+                      ]}
+                    >
+                      <Text style={styles.topChoicePillText}>
+                        {activeFilter === "cheapest"
+                          ? "💰 LOWEST"
+                          : activeFilter === "fastest"
+                          ? "⚡ FASTEST"
+                          : activeFilter === "reliable"
+                          ? "🛡️ #1 CHOICE"
+                          : "★ TOP PICK"}
+                      </Text>
+                    </View>
+                  )}
+                </View>
 
-        {/* ============ ROUTE CARD 3: CHEAPEST ============ */}
-        <View
-          style={[
-            styles.routeCard,
-            isDarkMode && {
-              backgroundColor: colors.cardBg,
-              borderColor: colors.cardBorder,
-            },
-          ]}
-        >
-          <View style={styles.cardHeaderRow}>
-            <View style={[styles.bestMatchBadge, styles.cheapestBadge]}>
-              <Text style={styles.badgeTextWhite}>CHEAPEST</Text>
-            </View>
+                <View style={styles.riskIndicator}>
+                  <View
+                    style={[
+                      styles.riskDot,
+                      routeItem.riskDot === "green"
+                        ? styles.riskDotGreen
+                        : styles.riskDotOrange,
+                    ]}
+                  />
+                  <Text
+                    style={
+                      routeItem.riskDot === "green"
+                        ? styles.riskTextGreen
+                        : styles.riskTextOrange
+                    }
+                  >
+                    {routeItem.riskText}
+                  </Text>
+                </View>
+              </View>
 
-            <View style={styles.riskIndicator}>
-              <View style={[styles.riskDot, styles.riskDotGreen]} />
-              <Text style={styles.riskTextGreen}>Low Risk</Text>
-            </View>
-          </View>
+              {/* Time & Price Row */}
+              <View style={styles.timePriceRow}>
+                <View style={styles.timeContainer}>
+                  <Text
+                    style={[
+                      styles.timeRangeText,
+                      isDarkMode && { color: colors.textPrimary },
+                    ]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                  >
+                    {routeItem.departureTime}{" "}
+                    <Text style={styles.arrowLight}>➔</Text> {routeItem.arrivalTime}
+                  </Text>
+                  <Text style={styles.durationText}>⏱ {routeItem.duration}</Text>
+                </View>
 
-          <View style={styles.timePriceRow}>
-            <View>
-              <Text
-                style={[
-                  styles.timeRangeText,
-                  isDarkMode && { color: colors.textPrimary },
-                ]}
+                <View style={styles.priceContainer}>
+                  <Text
+                    style={[
+                      styles.priceText,
+                      { color: routeItem.priceColor },
+                    ]}
+                  >
+                    {routeItem.fare}
+                  </Text>
+                  <Text style={styles.priceSubtext}>Estimated</Text>
+                </View>
+              </View>
+
+              {/* Transit Mode Flow Pills */}
+              <View style={styles.transitModeFlowRow}>
+                {routeItem.modes.map((mode, mIdx) => (
+                  <React.Fragment key={mIdx}>
+                    {mIdx > 0 && <Text style={styles.modeFlowArrow}>➔</Text>}
+                    <View
+                      style={[
+                        styles.modePill,
+                        mode.type === "bus" && styles.modePillBus,
+                        mode.type === "train" && styles.modePillTrain,
+                        mode.type === "tuk" && styles.modePillTuk,
+                        mode.type === "taxi" && styles.modePillTaxi,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.modePillTextBus,
+                          mode.type === "train" && styles.modePillTextTrain,
+                          mode.type === "tuk" && styles.modePillTextTuk,
+                          mode.type === "taxi" && styles.modePillTextTaxi,
+                        ]}
+                      >
+                        {mode.label}
+                      </Text>
+                    </View>
+                  </React.Fragment>
+                ))}
+              </View>
+
+              {/* Transfer and Walking Stats */}
+              <View style={styles.metricsRow}>
+                <Text style={styles.metricText}>🔀 {routeItem.transfers}</Text>
+                <Text style={styles.metricDivider}>·</Text>
+                <Text style={styles.metricText}>🚶 {routeItem.walking}</Text>
+                <Text style={styles.metricDivider}>·</Text>
+                <Text style={styles.metricText}>⏱ {routeItem.waitTime}</Text>
+              </View>
+
+              {/* Reliability Bar */}
+              <View style={styles.reliabilityRow}>
+                <Text
+                  style={[
+                    styles.reliabilityLabel,
+                    isDarkMode && { color: colors.textSecondary },
+                  ]}
+                >
+                  Reliability
+                </Text>
+                <View
+                  style={[
+                    styles.reliabilityTrack,
+                    isDarkMode && { backgroundColor: colors.cardSecondaryBg },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.reliabilityFill,
+                      {
+                        width: routeItem.reliabilityPercent,
+                        backgroundColor: routeItem.reliabilityColor,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text
+                  style={[
+                    styles.reliabilityStatus,
+                    { color: routeItem.reliabilityColor },
+                  ]}
+                >
+                  {routeItem.reliabilityLabel}
+                </Text>
+              </View>
+
+              {/* View Route Button */}
+              <TouchableOpacity
+                style={
+                  isTopChoice
+                    ? styles.viewRouteButtonPrimary
+                    : [
+                        styles.viewRouteButtonSecondary,
+                        isDarkMode && {
+                          backgroundColor: colors.cardSecondaryBg,
+                          borderColor: colors.cardBorder,
+                        },
+                      ]
+                }
+                activeOpacity={0.85}
+                onPress={() =>
+                  navigation.navigate("RouteDetail", {
+                    from: fromCity,
+                    to: toCity,
+                    routeType: routeItem.routeType,
+                    fare: routeItem.fare,
+                    duration: routeItem.duration,
+                    departureTime: routeItem.departureTime,
+                    arrivalTime: routeItem.arrivalTime,
+                  })
+                }
               >
-                8:30 AM <Text style={styles.arrowLight}>➔</Text> 10:35 AM
-              </Text>
-              <Text style={styles.durationText}>⏱ 2h 05m</Text>
+                <Text
+                  style={
+                    isTopChoice
+                      ? styles.viewRouteButtonTextPrimary
+                      : [
+                          styles.viewRouteButtonTextSecondary,
+                          isDarkMode && { color: colors.primaryLight },
+                        ]
+                  }
+                >
+                  View Route
+                </Text>
+              </TouchableOpacity>
             </View>
-
-            <View style={styles.priceContainer}>
-              <Text style={styles.priceTextGreen}>Rs. 220</Text>
-              <Text style={styles.priceSubtext}>Estimated</Text>
-            </View>
-          </View>
-
-          <View style={styles.transitModeFlowRow}>
-            <View style={[styles.modePill, styles.modePillBus]}>
-              <Text style={styles.modePillTextBus}>🚌 Bus</Text>
-            </View>
-            <Text style={styles.modeFlowArrow}>➔</Text>
-            <View style={[styles.modePill, styles.modePillTrain]}>
-              <Text style={styles.modePillTextTrain}>🚆 Train</Text>
-            </View>
-            <Text style={styles.modeFlowArrow}>➔</Text>
-            <View style={[styles.modePill, styles.modePillBus]}>
-              <Text style={styles.modePillTextBus}>🚌 Bus</Text>
-            </View>
-          </View>
-
-          <View style={styles.metricsRow}>
-            <Text style={styles.metricText}>🔀 3 transfers</Text>
-            <Text style={styles.metricDivider}>·</Text>
-            <Text style={styles.metricText}>🚶 10 min</Text>
-            <Text style={styles.metricDivider}>·</Text>
-            <Text style={styles.metricText}>⏱ 15 min wait</Text>
-          </View>
-
-          <View style={styles.reliabilityRow}>
-            <Text style={styles.reliabilityLabel}>Reliability</Text>
-            <View style={styles.reliabilityTrack}>
-              <View
-                style={[styles.reliabilityFill, { width: "65%", backgroundColor: "#F59E0B" }]}
-              />
-            </View>
-            <Text style={[styles.reliabilityStatus, { color: "#D97706" }]}>
-              Medium
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            style={[
-              styles.viewRouteButtonSecondary,
-              isDarkMode && {
-                backgroundColor: colors.cardSecondaryBg,
-                borderColor: colors.cardBorder,
-              },
-            ]}
-            activeOpacity={0.85}
-            onPress={() =>
-              navigation.navigate("RouteDetail", {
-                from: fromCity,
-                to: toCity,
-                routeType: "CHEAPEST",
-                fare: "Rs. 220",
-                duration: "2h 05m",
-                departureTime: "8:30 AM",
-                arrivalTime: "10:35 AM",
-              })
-            }
-          >
-            <Text
-              style={[
-                styles.viewRouteButtonTextSecondary,
-                isDarkMode && { color: colors.primaryLight },
-              ]}
-            >
-              View Route
-            </Text>
-          </TouchableOpacity>
-        </View>
+          );
+        })}
 
         {/* Compare All Routes Button */}
         <TouchableOpacity
@@ -1176,12 +1275,14 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14.5,
     fontWeight: "800",
+    textAlign: "center",
   },
   optFloatingSubtitle: {
     color: "#38BDF8",
     fontSize: 11.5,
     fontWeight: "700",
     marginTop: 2,
+    textAlign: "center",
   },
   optCyanBullet: {
     color: "#00E5FF",
@@ -1296,6 +1397,7 @@ const styles = StyleSheet.create({
   stepTextBase: {
     fontSize: 13.5,
     fontWeight: "500",
+    flex: 1,
   },
   stepTextSuccess: {
     fontWeight: "700",
@@ -1316,11 +1418,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: "#64748B",
+    textAlign: "center",
   },
   footerSubText: {
     fontSize: 11,
     color: "#94A3B8",
     marginTop: 3,
+    textAlign: "center",
   },
   replayButton: {
     width: 36,
@@ -1368,6 +1472,8 @@ const styles = StyleSheet.create({
   },
   headerTitles: {
     flex: 1,
+    marginRight: 8,
+    justifyContent: "center",
   },
   headerMainTitle: {
     fontSize: 17,
@@ -1402,17 +1508,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E2E8F0",
     borderRadius: 12,
-    paddingVertical: 8,
+    paddingVertical: 9,
+    paddingHorizontal: 2,
     alignItems: "center",
+    justifyContent: "center",
   },
   resultsFilterPillActive: {
     backgroundColor: "#1D64EC",
     borderColor: "#1D64EC",
   },
   resultsFilterPillText: {
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 11.5,
+    fontWeight: "700",
     color: "#334155",
+    textAlign: "center",
   },
   resultsFilterPillTextActive: {
     color: "#FFFFFF",
@@ -1443,6 +1552,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 10,
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  cardHeaderBadges: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 6,
+    flex: 1,
   },
   bestMatchBadge: {
     backgroundColor: "#1D64EC",
@@ -1456,10 +1574,33 @@ const styles = StyleSheet.create({
   cheapestBadge: {
     backgroundColor: "#10B981",
   },
+  reliableBadge: {
+    backgroundColor: "#6366F1",
+  },
+  topChoicePill: {
+    backgroundColor: "#EFF6FF",
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+  },
+  topChoicePillText: {
+    fontSize: 9.5,
+    fontWeight: "800",
+    color: "#1D64EC",
+    letterSpacing: 0.3,
+    textAlign: "center",
+  },
+  routeCardTopChoice: {
+    borderColor: "#1D64EC",
+    borderWidth: 2,
+  },
   badgeTextWhite: {
     color: "#FFFFFF",
     fontSize: 10,
     fontWeight: "800",
+    textAlign: "center",
   },
   riskIndicator: {
     flexDirection: "row",
@@ -1493,8 +1634,12 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 12,
   },
+  timeContainer: {
+    flex: 1,
+    marginRight: 8,
+  },
   timeRangeText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "800",
     color: "#0F172A",
   },
@@ -1510,35 +1655,48 @@ const styles = StyleSheet.create({
   priceContainer: {
     alignItems: "flex-end",
   },
+  priceText: {
+    fontSize: 18,
+    fontWeight: "800",
+    textAlign: "right",
+  },
   priceTextBlue: {
     fontSize: 18,
     fontWeight: "800",
     color: "#1D64EC",
+    textAlign: "right",
   },
   priceTextTeal: {
     fontSize: 18,
     fontWeight: "800",
     color: "#0284C7",
+    textAlign: "right",
   },
   priceTextGreen: {
     fontSize: 18,
     fontWeight: "800",
     color: "#10B981",
+    textAlign: "right",
   },
   priceSubtext: {
     fontSize: 10,
     color: "#94A3B8",
+    textAlign: "right",
   },
   transitModeFlowRow: {
     flexDirection: "row",
     alignItems: "center",
+    flexWrap: "wrap",
     gap: 6,
+    rowGap: 6,
     marginBottom: 12,
   },
   modePill: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
   },
   modePillBus: {
     backgroundColor: "#EFF6FF",
@@ -1556,21 +1714,25 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     color: "#2563EB",
+    textAlign: "center",
   },
   modePillTextTrain: {
     fontSize: 11,
     fontWeight: "700",
     color: "#16A34A",
+    textAlign: "center",
   },
   modePillTextTuk: {
     fontSize: 11,
     fontWeight: "700",
     color: "#DB2777",
+    textAlign: "center",
   },
   modePillTextTaxi: {
     fontSize: 11,
     fontWeight: "700",
     color: "#D97706",
+    textAlign: "center",
   },
   modeFlowArrow: {
     fontSize: 11,
@@ -1579,6 +1741,8 @@ const styles = StyleSheet.create({
   metricsRow: {
     flexDirection: "row",
     alignItems: "center",
+    flexWrap: "wrap",
+    rowGap: 4,
     marginBottom: 10,
   },
   metricText: {
@@ -1622,11 +1786,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 11,
     alignItems: "center",
+    justifyContent: "center",
   },
   viewRouteButtonTextPrimary: {
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "700",
+    textAlign: "center",
   },
   viewRouteButtonSecondary: {
     backgroundColor: "#EFF6FF",
@@ -1635,11 +1801,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 11,
     alignItems: "center",
+    justifyContent: "center",
   },
   viewRouteButtonTextSecondary: {
     color: "#1D64EC",
     fontSize: 14,
     fontWeight: "700",
+    textAlign: "center",
   },
   compareAllButton: {
     backgroundColor: "#EFF6FF",
@@ -1648,11 +1816,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 13,
     alignItems: "center",
+    justifyContent: "center",
     marginTop: 6,
   },
   compareAllButtonText: {
     color: "#1D64EC",
     fontSize: 14,
     fontWeight: "700",
+    textAlign: "center",
   },
 });
