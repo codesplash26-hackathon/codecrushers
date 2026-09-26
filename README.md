@@ -183,7 +183,7 @@ The database is pre-seeded with test accounts ready for immediate evaluation:
 
 #### 1. Administrator Account (Admin Dashboard)
 * **Access URL:** `http://localhost:5173`
-* **Email:** `admin@bestroute.lk` *(or `admin@bestroute.com`)*
+* **Username:** `admin` 
 * **Password:** `admin`
 * **Role:** Platform Administrator
 * **Features to Test:**
