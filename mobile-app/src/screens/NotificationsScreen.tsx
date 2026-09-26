@@ -25,6 +25,7 @@ type NotificationsScreenNavigationProp = NativeStackNavigationProp<
 
 interface Props {
   navigation: NotificationsScreenNavigationProp;
+  hideBottomBar?: boolean;
 }
 
 export interface NotificationItem {
@@ -43,7 +44,7 @@ export interface NotificationItem {
   };
 }
 
-export default function NotificationsScreen({ navigation }: Props) {
+export default function NotificationsScreen({ navigation, hideBottomBar }: Props) {
   const { isDarkMode, colors } = useTheme();
   const [notifications, setNotifications] = useState<NotificationItem[]>([
     // TODAY
@@ -347,6 +348,8 @@ export default function NotificationsScreen({ navigation }: Props) {
             styles.headerTitle,
             isDarkMode && { color: colors.textPrimary },
           ]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
         >
           Notifications
         </Text>
@@ -407,11 +410,13 @@ export default function NotificationsScreen({ navigation }: Props) {
       </ScrollView>
 
       {/* Unified Fixed-Position Bottom Navigation Bar */}
-      <BottomNavigationBar
-        activeTab="alerts"
-        navigation={navigation}
-        unreadAlertsCount={unreadCount}
-      />
+      {!hideBottomBar && (
+        <BottomNavigationBar
+          activeTab="alerts"
+          navigation={navigation}
+          unreadAlertsCount={unreadCount}
+        />
+      )}
 
       {/* ================= DISRUPTION DETAIL MODAL ================= */}
       <Modal
@@ -617,6 +622,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   headerTitle: {
+    flex: 1,
+    marginRight: 8,
     fontSize: 26,
     fontWeight: "800",
     color: "#0F172A",
@@ -634,9 +641,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#F1F5F9",
   },
   markAllReadText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
     color: "#2563EB",
+    textAlign: "center",
   },
   // Scroll list
   scrollList: {
@@ -953,6 +961,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
+    textAlign: "center",
   },
   modalDismissBtn: {
     backgroundColor: "#F1F5F9",
@@ -965,5 +974,6 @@ const styles = StyleSheet.create({
     color: "#475569",
     fontSize: 14,
     fontWeight: "700",
+    textAlign: "center",
   },
 });
