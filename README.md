@@ -99,18 +99,18 @@ Currently, passengers may need to plan each part of such a journey separately. T
 
 ## 4. Technology Stack & Justifications
 
-| Component | Technology / Library | Justification |
-| :--- | :--- | :--- |
-| **Mobile / Passenger App** | **React Native + Expo + TypeScript** | Enables unified cross-platform mobile development (iOS/Android) and browser-accessible web bundling with Expo Web. TypeScript provides static type safety for complex transit and itinerary objects. |
-| **Admin Dashboard** | **React 18 + Vite** | Lightweight, high-performance administrative web application with instant Hot Module Replacement (HMR), component-driven state architecture, and fast load times. |
-| **Admin UI Styling** | **Vanilla CSS & Theme Variables** | Granular control over UI aesthetics, glassmorphism, responsive drawer navigation, custom modal systems, and dark/light color schemes without bulky utility frameworks. |
-| **Backend API** | **Node.js + Express.js** | Asynchronous, non-blocking I/O ideal for handling concurrent route queries, live incident updates, and RESTful service orchestration. |
-| **Database** | **MongoDB + Mongoose ODM** | Document-oriented NoSQL model perfectly suited for hierarchical transit itineraries, geo-coordinate pairs (`[longitude, latitude]`), flexible stop sequences, and evolving disruption logs. |
-| **Authentication** | **JWT (JSON Web Tokens) + Bcrypt** | Stateless, secure authentication for both mobile and web clients. Passwords hashed using standard cryptographic salt rounds. |
-| **Containerization** | **Docker & Docker Compose** | Guarantees consistent environment replication across Windows, macOS, and Linux with zero host dependency conflicts. |
-| **Web Server** | **Nginx (Alpine)** | Serves compiled static production bundles for both Admin Dashboard and Mobile Web applications with minimal memory footprint and instant startup. |
-| **API Testing** | **Postman** | Comprehensive testing of REST endpoints, status codes, payload validations, and authentication middleware. |
-| **UI/UX Design** | **Figma** | High-fidelity prototyping, design tokens, and user journey wireframing. |
+| Component                      | Technology / Library             | Purpose / Justification |
+|--------------------------------|----------------------------------|--------------------------|
+| Mobile Application             | React Native + Expo + TypeScript | Enables unified cross-platform mobile development (iOS/Android) and browser-accessible web bundling with Expo Web. TypeScript provides static type safety for complex transit and itinerary objects. |
+| Administrative Web Application | React + Vite                     | Provides a fast and interactive web dashboard for transportation management. |
+| Backend                        | Node.js + Express.js             | Provides scalable REST APIs and application services for journey operations. |
+| Database                       | MongoDB + Mongoose               | Provides flexible storage for users, transportation data, journeys, and logs. |
+| Authentication                 | JWT (JSON Web Tokens) + Bcrypt   | Provides secure token-based authentication and password hashing. |
+| Maps / Geolocation             | Mapping API                      | Supports map visualization, location-based features, and route-related data. |
+| Containerization               | Docker & Docker Compose          | Guarantees consistent environment replication across Windows, macOS, and Linux with zero host dependency conflicts. |
+| API Testing                    | Postman                          | Comprehensive testing of REST endpoints, status codes, payload validations, and authentication middleware. |
+| UI/UX Design                   | Figma                            | Supports interface design, prototyping, and user-flow visualization. |
+| Version Control                | Git + GitHub                     | Enables collaborative development and project version management. |
 
 ---
 
@@ -142,7 +142,7 @@ Evaluators can clone the repository and launch the complete multi-service system
 ### Step 1: Clone the Repository
 Open your terminal or command prompt and clone the repository:
 ```bash
-git clone https://github.com/kalansooriya12/codecrushers.git
+git clone https://github.com/codesplash26-hackathon/codecrushers
 cd codecrushers
 ```
 
@@ -264,7 +264,7 @@ To verify API responsiveness:
 curl http://localhost:5000/api/health
 # Expected Response: {"success":true,"message":"BestRoute API is healthy"}
 ```
-
+---
 ### 9.2 Viewing Logs
 To stream live logs from all services:
 ```bash
@@ -276,7 +276,7 @@ docker compose logs -f backend
 docker compose logs -f admin-dashboard
 docker compose logs -f mobile-app
 ```
-
+---
 ### 9.3 Stopping and Resetting the Containers
 * **To stop all services:**
   ```bash
@@ -286,7 +286,7 @@ docker compose logs -f mobile-app
   ```bash
   docker compose down -v
   ```
-  *(Upon the next `docker compose up --build`, the database will automatically re-seed from scratch.)*
+ 
 
 ---
 
@@ -309,7 +309,7 @@ If you wish to test the passenger experience on a physical smartphone rather tha
 
 ---
 
-### 9.5 Running Services Locally Without Docker (Bare-Metal)
+### 9.5 Running Services Locally Without Docker 
 If you wish to run services individually outside Docker:
 
 #### 1. Start MongoDB
@@ -461,6 +461,10 @@ The current prototype has the following limitations and assumptions:
 2. **Zero-Configuration Automated Database Seeding:**
    * *Rationale:* To eliminate manual setup steps for evaluators, an automatic seed check was introduced into `backend/src/server.js`. If MongoDB contains no user records, the server automatically populates realistic transit corridors, schedules, operator fleets, disruptions, and test accounts.
    * *Impact:* Evaluators can run a single command (`docker compose up --build`) and immediately log in and test all platform features without running database scripts or importing JSON collections manually.
+
+3. **Adoption of Expo for React Native Mobile Development:**
+   * *Rationale:* The original proposal specified React Native for the passenger mobile application. During development, Expo was adopted as the development and testing platform for the React Native application. Expo provides a streamlined development environment, simplified project configuration, device testing, and access to React Native capabilities required by the BestRoute mobile application.
+   * *Impact:* Simplified mobile application development and testing by enabling faster development builds, easier device testing through Expo Go, and more efficient integration of mobile features while retaining React Native as the core mobile framework.
 
 ---
 ## 14. Future Enhancements
