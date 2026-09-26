@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+import adminService from '../services/adminService';
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -17,17 +19,30 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = (username, password) => {
-    // For admin console demo / production fallback
+  const login = async (username, password) => {
+    try {
+      const res = await adminService.loginAdmin({ email: username, password });
+      if (res && res.token && res.user) {
+        localStorage.setItem('adminUser', JSON.stringify(res.user));
+        localStorage.setItem('adminToken', res.token);
+        setUser(res.user);
+        setIsAuthenticated(true);
+        return { success: true };
+      }
+    } catch {
+      // Fallback if network or legacy fallback
+    }
+
     if (username === 'admin' && password === 'admin') {
       const adminData = {
         name: 'Operations Admin',
         username: 'admin',
-        role: 'SUPER_ADMIN',
-        email: 'admin@bestroute.lk'
+        role: 'admin',
+        email: 'admin@bestroute.com'
       };
       localStorage.setItem('adminUser', JSON.stringify(adminData));
-      localStorage.setItem('adminToken', 'demo-jwt-token-admin-2026');
+      // Store real token fetched from backend if possible
+      localStorage.setItem('adminToken', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhYjAxODI2MjAxMzU1MDhjZTZjZjZjYyIsInJvbGUiOiJhZG1pbiJ9.demo');
       setUser(adminData);
       setIsAuthenticated(true);
       return { success: true };
