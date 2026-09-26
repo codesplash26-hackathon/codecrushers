@@ -692,7 +692,7 @@ const styles = StyleSheet.create({
   simulateDelayButton: {
     position: "absolute",
     top: Platform.OS === "ios" ? 52 : 38,
-    right: 16,
+    right: 64,
     backgroundColor: "#FFFBEB",
     borderWidth: 1,
     borderColor: "#FDE68A",
@@ -709,9 +709,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     color: "#B45309",
+    textAlign: "center",
   },
   simulateDelayTextActive: {
     color: "#DC2626",
+    textAlign: "center",
   },
 
   /* Watermark */
@@ -738,7 +740,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 18,
     paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -781,6 +783,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "700",
     color: "#10B981",
+    textAlign: "center",
   },
   stepConnectorActive: {
     flex: 1,
@@ -810,6 +813,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "800",
     color: "#2563EB",
+    textAlign: "center",
   },
   stepConnectorPending: {
     flex: 1,
@@ -841,6 +845,7 @@ const styles = StyleSheet.create({
   stepLabelPending: {
     fontSize: 10,
     color: "#94A3B8",
+    textAlign: "center",
   },
 
   /* Content Below Map */
