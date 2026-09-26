@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Disruption = require("../models/Disruption");
 const { processDisruptionTrigger } = require("../services/reroutingService");
 
@@ -19,27 +20,60 @@ const createDisruption = async (req, res, next) => {
       expectedEndTime,
       severity,
       affectedStops,
+      status,
+      service,
+      location,
+      mode,
     } = req.body;
 
-    if (!title) {
+    const disruptionTitle = title || service || (mode ? `${mode} Incident` : "Service Disruption");
+
+    if (!disruptionTitle) {
       return res.status(400).json({
         success: false,
-        message: "Title is required",
+        message: "Title or service name is required",
       });
     }
 
+    // Helper function to map UI types to Mongoose Enums
+    const mapType = (type) => {
+      if (!type) return "DELAY";
+      const u = type.toString().toUpperCase();
+      if (u.includes("CANCEL")) return "CANCELLATION";
+      if (u.includes("ROAD") || u.includes("DIVERT")) return "ROAD_CLOSURE";
+      if (u.includes("TRAFFIC")) return "TRAFFIC";
+      if (u.includes("DELAY")) return "DELAY";
+      return "ROUTE_INTERRUPTION";
+    };
+
+    const mapSeverity = (sev) => {
+      if (!sev) return "HIGH";
+      const u = sev.toString().toUpperCase();
+      if (u === "LOW") return "LOW";
+      if (u === "MEDIUM") return "MEDIUM";
+      if (u === "CRITICAL") return "CRITICAL";
+      return "HIGH";
+    };
+
+    const validService = affectedService && mongoose.Types.ObjectId.isValid(affectedService) ? affectedService : undefined;
+    const validRoute = affectedRoute && mongoose.Types.ObjectId.isValid(affectedRoute) ? affectedRoute : undefined;
+    const validStops = Array.isArray(affectedStops) ? affectedStops.filter(s => mongoose.Types.ObjectId.isValid(s)) : [];
+
+    const disruptionStatus = (status === "On Time" || status === "RESOLVED") ? "RESOLVED" : "ACTIVE";
+
     const disruption = await Disruption.create({
-      affectedService,
-      affectedRoute,
-      affectedTrip,
-      disruptionType,
-      title,
-      description,
-      delayMinutes: delayMinutes || 0,
+      affectedService: validService,
+      affectedRoute: validRoute,
+      affectedTrip: affectedTrip || (mode ? `${mode} trip` : undefined),
+      disruptionType: mapType(disruptionType || status),
+      title: disruptionTitle,
+      description: description || location || "Disruption reported",
+      delayMinutes: Number(delayMinutes) || 0,
       startTime: startTime || new Date(),
       expectedEndTime,
-      severity,
-      affectedStops: affectedStops || [],
+      status: disruptionStatus,
+      severity: mapSeverity(severity),
+      affectedStops: validStops,
       createdBy: req.user ? req.user._id : null,
     });
 
