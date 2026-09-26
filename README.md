@@ -151,7 +151,7 @@ The administrative dashboard supports:
 
 | Component                      | Technology                         | Purpose / Justification                                                    |
 | ------------------------------ | ---------------------------------- | -------------------------------------------------------------------------- |
-| Mobile Application             | React Native + Expo                | Cross-platform mobile development                                          |
+| Mobile Application             | React Native + Expo+ Typescript    | Cross-platform mobile development                                          |
 | Administrative Web Application | React + Vite                       | Interactive web-based dashboard                                            |
 | Backend                        | Node.js + Express.js               | REST API and application services                                          |
 | Database                       | MongoDB + Mongoose                 | Flexible storage for users, transportation data, journeys, and disruptions |
@@ -162,138 +162,176 @@ The administrative dashboard supports:
 | UI/UX Design                   | Figma                              | Interface design and prototyping                                           |
 | Version Control                | Git + GitHub                       | Collaborative development and version management                           |
 
-The technology choices follow the stack specified in the original proposal, including React Native, React, Node.js, Express.js, MongoDB, mapping services, JWT, Git/GitHub, Figma, and Postman.
+The implementation follows the core technology stack specified in the original proposal, including React Native, React, Node.js, Express.js, MongoDB, mapping services, JWT, Git/GitHub, Figma, and Postman. During development, TypeScript was introduced for frontend implementation, particularly within the React Native mobile application, to provide static type checking and improve code maintainability. This addition does not replace the core technologies declared in the original proposal but supports their implementation.
+
 
 ---
 
 ## 5. Repository File Structure
 
 ```text
-BestRoute/
-├── backend/                       # Node.js + Express.js API & Route Optimization Engine
+codecrushers/
+│
+├── admin-dashboard/                                    # Web Admin Portal (React + Vite)
+│   ├── public/                                         # Public static assets
 │   ├── src/
-│   │   ├── config/                # Database & Environment configuration
-│   │   │   ├── constants.js       # App constants (Modes, Preferences, Disruption types)
-│   │   │   └── db.js              # MongoDB database connection setup
-│   │   ├── controllers/           # HTTP Request Controllers
-│   │   │   ├── adminController.js
-│   │   │   ├── authController.js
-│   │   │   ├── disruptionController.js
-│   │   │   ├── journeyController.js
-│   │   │   ├── notificationController.js
-│   │   │   ├── routeController.js
-│   │   │   └── userController.js
-│   │   ├── engine/                # Core Optimization & Intelligence Layer
-│   │   │   ├── connectionRiskEvaluator.js  # Transfer buffer time risk evaluator
-│   │   │   ├── disruptionMonitor.js        # Active journey disruption detector
-│   │   │   ├── dynamicRerouter.js          # Real-time journey re-optimizer
-│   │   │   ├── multimodalGenerator.js      # Multimodal route combination generator
-│   │   │   └── routeScorer.js              # Multi-criteria route scoring engine
-│   │   ├── middlewares/           # Express Middlewares
-│   │   │   ├── authMiddleware.js       # JWT authentication validator
-│   │   │   ├── errorHandler.js         # Global error handler
-│   │   │   ├── roleMiddleware.js         # Role-based access control (RBAC)
-│   │   │   └── validationMiddleware.js   # Request schema validator
-│   │   ├── models/                # MongoDB (Mongoose) Data Models
-│   │   │   ├── Analytics.js            # Usage metrics & event logs
-│   │   │   ├── Disruption.js           # Delays, cancellations, road closures
-│   │   │   ├── Journey.js              # Planned & active journey records
-│   │   │   ├── Notification.js         # Push notification alerts
-│   │   │   ├── Preference.js           # Passenger optimization weights
-│   │   │   ├── Route.js                # Transit routes & fare matrices
-│   │   │   ├── Schedule.js             # Timetables & stop departure times
-│   │   │   ├── Stop.js                 # Stations & bus stop locations
-│   │   │   └── User.js                 # User profile & authentication
-│   │   ├── routes/                # Express API Route Handlers
-│   │   │   ├── adminRoutes.js
-│   │   │   ├── authRoutes.js
-│   │   │   ├── disruptionRoutes.js
-│   │   │   ├── journeyRoutes.js
-│   │   │   ├── notificationRoutes.js
-│   │   │   ├── routeRoutes.js
-│   │   │   └── userRoutes.js
-│   │   ├── seeds/                 # Transit data seeding script
-│   │   │   └── seedData.js
-│   │   ├── services/              # External Integrations & Gateway Services
-│   │   │   ├── mappingService.js       # Leaflet / Mapbox distance matrix service
-│   │   │   └── notificationService.js  # Push notification service gateway
-│   │   └── utils/                 # Utility Helper Functions
-│   │       ├── haversine.js            # Geospatial distance calculator
-│   │       └── logger.js               # Structured logger
-│   ├── .env.example               # Backend environment variables template
-│   ├── package.json               # Backend dependencies & npm scripts
-│   └── server.js                  # Main Express Server Entrypoint
+│   │   ├── assets/                                     # UI icons, logos, and images
+│   │   ├── components/                                 # Reusable dashboard UI components
+│   │   │   ├── Login.jsx                               # Admin authentication modal/card
+│   │   │   ├── Modal.jsx                               # Universal dynamic popup modal
+│   │   │   ├── Navbar.jsx                              # Top navigation bar with dark mode & notifications
+│   │   │   └── Sidebar.jsx                             # Collapsible navigation drawer with pinned footer
+│   │   ├── context/                                    # Global state providers
+│   │   │   ├── AuthContext.jsx                         # Admin authentication & token state
+│   │   │   └── ToastContext.jsx                        # Global toast notification management
+│   │   ├── pages/                                      # Admin view screens
+│   │   │   ├── AdminSecurityPage.jsx                   # Roles, permissions, audit logs & security settings
+│   │   │   ├── AnalyticsPage.jsx                       # Data visualization, passenger trends & insights
+│   │   │   ├── DashboardHome.jsx                       # Main overview dashboard with KPIs & active disruptions
+│   │   │   ├── DisruptionManagement.jsx                # Disruption broadcast, tracking & resolution screen
+│   │   │   ├── DriverApplicationsPage.jsx              # Driver verification & onboarding applications
+│   │   │   ├── DriverManagementPage.jsx                # Active driver fleet records & status
+│   │   │   ├── MonitoringPage.jsx                      # Real-time network health & service latency
+│   │   │   ├── RouteScheduleManagement.jsx             # Transit route builder & sequence manager
+│   │   │   ├── SchedulesManagement.jsx                 # Timetable & departure/arrival schedule manager
+│   │   │   ├── ServicesManagement.jsx                  # Multi-modal service & operator fleet management
+│   │   │   ├── SettingsPage.jsx                        # Platform configuration & preferences
+│   │   │   ├── StopsManagement.jsx                     # Bus stops, train stations & terminal coordinates
+│   │   │   ├── UsersPage.jsx                           # User management, role assignment & profile inspection
+│   │   │   └── VehicleManagementPage.jsx               # Vehicle registry, inspections & maintenance
+│   │   ├── services/                                   # API communication layer
+│   │   │   ├── adminService.js                         # REST client for administrative CRUD operations
+│   │   │   └── api.js                                  # Axios/Fetch base instance & auth interceptors
+│   │   ├── App.css                                     # Global dashboard styling & theme variables
+│   │   ├── App.jsx                                     # Main router & layout container
+│   │   ├── index.css                                   # Tailwind / CSS reset & typography imports
+│   │   └── main.jsx                                    # Application bootstrap & DOM entry point
+│   ├── eslint.config.js                                # Linter configuration
+│   ├── index.html                                      # HTML template
+│   ├── package.json                                    # Frontend dependencies & scripts
+│   └── vite.config.js                                  # Vite bundling & server configuration
 │
-├── mobile-app/                    # React Native Passenger Mobile Application (Expo)
+├── backend/                                            # Core REST API (Node.js, Express & MongoDB)
 │   ├── src/
-│   │   ├── components/            # Reusable UI Components
-│   │   ├── constants/             # Application Theme & System Constants
-│   │   │   └── theme.ts
-│   │   ├── navigations/           # React Navigation Setup
-│   │   │   └── AppNavigator.tsx   # Main Stack Navigator
-│   │   ├── screens/               # Mobile Screens & Pages
-│   │   │   ├── SplashScreen.tsx   # Animated Splash screen
-│   │   │   ├── OnboardingScreen.tsx # 3-step Multimodal Onboarding flow
-│   │   │   ├── loginscreen.tsx    # Authentication screen
-│   │   │   └── HomeScreen.tsx     # Main passenger landing screen
-│   │   └── services/              # API & Location Services
-│   │       └── api.js             # Axios API instance
-│   ├── App.tsx                    # Mobile App Main Root Component
-│   ├── app.json                   # Expo Application Configuration
-│   └── package.json               # Mobile dependencies & Expo scripts
+│   │   ├── config/                                     # System configuration & DB connections
+│   │   │   ├── connectionRisk.js                       # Connection risk thresholds & calculation parameters
+│   │   │   ├── constants.js                            # Enums (disruption types, severities, user roles)
+│   │   │   └── db.js                                   # Mongoose MongoDB connection handler
+│   │   ├── controllers/                                # Route controllers & business logic
+│   │   │   ├── adminController.js                      # Dashboard aggregate KPIs & audit stats
+│   │   │   ├── authController.js                       # User authentication, registration & JWT issuance
+│   │   │   ├── connectionRiskController.js             # Real-time transfer risk assessments
+│   │   │   ├── disruptionController.js                 # Incident management, re-routing triggers
+│   │   │   ├── journeyController.js                    # Passenger trip planning & execution
+│   │   │   ├── notificationController.js               # Push & in-app alerts dispatch
+│   │   │   ├── routeController.js                      # Transit route definitions & stop sequences
+│   │   │   ├── scheduleController.js                   # Timetable creation & departures lookup
+│   │   │   ├── stopController.js                       # Station/Stop geolocation & terminal info
+│   │   │   ├── transportServiceController.js           # Fleet operators & service categories
+│   │   │   └── userController.js                       # User account management & permissions
+│   │   ├── middleware/                                 # Request handling pipelines
+│   │   │   ├── authMiddleware.js                       # JWT verification & token authentication
+│   │   │   ├── errorHandler.js                         # Global centralized error handler
+│   │   │   └── roleMiddleware.js                       # Role-based access control (RBAC)
+│   │   ├── models/                                     # Mongoose data schemas
+│   │   │   ├── Disruption.js                           # Service interruptions, delays & diversions
+│   │   │   ├── Journey.js                              # Multi-modal passenger journey itineraries
+│   │   │   ├── Notification.js                         # User notification logs & read states
+│   │   │   ├── Route.js                                # Transit route lines & sequence associations
+│   │   │   ├── Schedule.js                             # Operating schedules & timetable entries
+│   │   │   ├── Stop.js                                 # Stations, bus stands & geographic coordinates
+│   │   │   ├── TransportService.js                     # Public/private transport agencies & modes
+│   │   │   └── User.js                                 # Registered passenger & administrator accounts
+│   │   ├── routes/                                     # Express endpoint definitions
+│   │   │   ├── adminRoutes.js                          # /api/admin
+│   │   │   ├── authRoutes.js                           # /api/auth
+│   │   │   ├── connectionRiskRoutes.js                 # /api/connection-risk
+│   │   │   ├── disruptionRoutes.js                     # /api/disruptions
+│   │   │   ├── journeyRoutes.js                        # /api/journeys
+│   │   │   ├── notificationRoutes.js                   # /api/notifications
+│   │   │   ├── routeRoutes.js                          # /api/routes
+│   │   │   ├── scheduleRoutes.js                       # /api/schedules
+│   │   │   ├── stopRoutes.js                           # /api/stops
+│   │   │   ├── transportServiceRoutes.js               # /api/services
+│   │   │   └── userRoutes.js                           # /api/users
+│   │   ├── services/                                   # Domain algorithms & background calculations
+│   │   │   ├── connectionRiskService.js                # Connection probability & delay buffer engine
+│   │   │   ├── disruptionService.js                    # Disruption lifecycle & status management
+│   │   │   ├── journeyService.js                       # Multi-modal pathfinding & routing algorithm
+│   │   │   ├── notificationService.js                  # Automated alert creation & triggers
+│   │   │   ├── reroutingService.js                     # Dynamic rerouting engine upon disruptions
+│   │   │   └── routeScoringService.js                  # Best-route scoring (time, cost, convenience)
+│   │   ├── seed_dashboard_data.js                      # Database initialization & sample data populator
+│   │   └── server.js                                   # Express app instantiation & listener
+│   ├── .env.example                                    # Environment configuration (Mongo URI, Port, JWT)
+│   └── package.json                                    # Backend dependencies & startup scripts
 │
-├── admin-dashboard/               # Administrative Web Dashboard (React + Vite)
+├── mobile-app/                                         # Passenger Mobile Client (React Native + Expo)
+│   ├── assets/                                         # App icons, splash screens & graphics
 │   ├── src/
-│   │   ├── components/            # Admin UI Components
-│   │   │   ├── AnalyticsChart.jsx       # Visual transit analytics chart
-│   │   │   ├── DisruptionForm.jsx       # Disruption broadcast form
-│   │   │   ├── MetricsCard.jsx          # KPI Metric summary card
-│   │   │   ├── Navbar.jsx               # Header navigation bar
-│   │   │   ├── RouteTable.jsx           # Route overview table
-│   │   │   ├── ScheduleEditor.jsx       # Timetable editor component
-│   │   │   ├── Sidebar.jsx              # Side navigation bar
-│   │   │   └── TransitMap.jsx           # Live transit monitoring map
-│   │   ├── context/               # React Context Providers
-│   │   │   ├── AdminContext.jsx
-│   │   │   └── AuthContext.jsx
-│   │   ├── pages/                 # Admin Dashboard Pages
-│   │   │   ├── AnalyticsPage.jsx        # Transportation usage analytics
-│   │   │   ├── DashboardHome.jsx        # Admin overview dashboard
-│   │   │   ├── DisruptionManagement.jsx # Incident & disruption control
-│   │   │   ├── RouteScheduleManagement.jsx # Timetable & route editor
-│   │   │   ├── ServicesManagement.jsx   # Operator & transport mode manager
-│   │   │   ├── SettingsPage.jsx         # System configuration page
-│   │   │   ├── TransitDataMonitoring.jsx # Real-time transit map monitor
-│   │   │   └── UsersPage.jsx            # User management page
-│   │   ├── services/              # Admin API Services
-│   │   │   ├── adminService.js
-│   │   │   ├── api.js
-│   │   │   ├── disruptionService.js
-│   │   │   └── routeService.js
-│   │   ├── utils/                 # Constants & Helper Functions
-│   │   │   └── constants.js
-│   │   ├── App.jsx                # Web App Main Component & Router
-│   │   └── main.jsx               # Vite Entrypoint
-│   ├── index.html                 # HTML Template
-│   ├── package.json               # Web Dashboard dependencies & scripts
-│   └── vite.config.js             # Vite configuration
+│   │   ├── components/                                 # Reusable mobile UI components
+│   │   │   ├── BottomNavigationBar.tsx                 # Persistent tab navigation bar
+│   │   │   ├── RealisticRouteMap.tsx                   # Interactive map view with route polyline & stops
+│   │   │   └── ThemeToggle.tsx                         # Light/Dark mode switcher
+│   │   ├── constants/                                  # Visual design tokens
+│   │   │   └── theme.ts                                # Color palettes, typography & spacing rules
+│   │   ├── context/                                    # Application state
+│   │   │   └── ThemeContext.tsx                        # Mobile theme provider
+│   │   ├── navigations/                                # Navigation stacks
+│   │   │   └── AppNavigator.tsx                        # React Navigation stack & screen routing
+│   │   ├── screens/                                    # Mobile application screens
+│   │   │   ├── AvailableVehiclesScreen.tsx             # Nearby taxis, tuk-tuks & buses
+│   │   │   ├── CompareRoutesScreen.tsx                 # Side-by-side multi-route evaluation
+│   │   │   ├── DriverRegistrationScreen.tsx            # Driver onboarding form
+│   │   │   ├── ForgotPasswordScreen.tsx                # Password recovery flow
+│   │   │   ├── HomeScreen.tsx                          # Main passenger discovery & search hub
+│   │   │   ├── JourneysScreen.tsx                      # Saved itineraries & journey history
+│   │   │   ├── LiveTrackingScreen.tsx                  # Real-time GPS vehicle position tracking
+│   │   │   ├── loginscreen.tsx                         # User login screen
+│   │   │   ├── NotificationsScreen.tsx                 # Passenger travel alert notifications
+│   │   │   ├── OnboardingScreen.tsx                    # First-time introduction walkthrough
+│   │   │   ├── ProfileScreen.tsx                       # User profile, history & preferences
+│   │   │   ├── RegisterScreen.tsx                      # New passenger registration
+│   │   │   ├── RideProgressScreen.tsx                  # In-transit navigation & step-by-step guidance
+│   │   │   ├── RouteDetailScreen.tsx                   # Single route stop sequence, timetable & fare
+│   │   │   ├── RouteResultsScreen.tsx                  # Ranked route recommendations
+│   │   │   └── SplashScreen.tsx                        # App launch splash animation
+│   │   └── services/                                   # Network & API client
+│   │       ├── api.ts                                  # Mobile API client configuration
+│   │       └── authService.ts                          # Authentication & local secure storage
+│   ├── app.json                                        # Expo application manifest
+│   ├── App.tsx                                         # Root mobile component
+│   ├── babel.config.js                                 # Babel compilation rules
+│   ├── metro.config.js                                 # Metro bundler config
+│   ├── package.json                                    # Mobile dependencies
+│   ├── tailwind.config.js                              # NativeWind / Tailwind styling config
+│   └── tsconfig.json                                   # TypeScript compiler options
 │
-├── data/                          # Datasets & Seed Files
-│   ├── fares.json                 # Transport fare matrices
-│   ├── routes.json                # Bus & Train route definitions
-│   ├── sample_disruptions.json    # Test disruption data
-│   ├── schedules.json             # Timetables & stop departure times
-│   └── stops.json                 # Station & bus stop coordinates
+├── data/                                               # Mock datasets & initial seed files
+│   ├── fares.json                                      # Base transit fare matrices
+│   ├── routes.json                                     # Seed route definitions
+│   ├── sample_disruptions.json                         # Predefined disruption incidents
+│   ├── schedules.json                                  # Timetable departure records
+│   └── stops.json                                      # Terminal & station geolocation seeds
 │
-├── docs/                          # Architecture & API Specifications
-│   ├── API_SPECIFICATION.md       # Complete REST API Endpoint Documentation
-│   └── ARCHITECTURE.md            # System Architecture & Optimization Formulas
+├── docs/                                               # Technical & API Documentation
+│   ├── api/                                            # Individual endpoint specifications
+│   │   ├── connection-risk.md                          # Connection risk API documentation
+│   │   ├── disruptions.md                              # Disruption broadcast API documentation
+│   │   ├── notifications.md                            # Push notification API documentation
+│   │   └── rerouting.md                                # Rerouting engine API documentation
+│   ├── API_SPECIFICATION.md                            # Complete REST API specification
+│   └── ARCHITECTURE.md                                 # High-level system architecture & diagrams
 │
-├── .env.example                   # Master Environment Template
-├── .gitignore                     # Git exclusion rules
-└── README.md                      # Project Documentation (This File)
-```
+├── Documentation/                                      # Project Management & Design Reports
+│   ├── System-Design/                                  # Diagrams & technical design artifacts
+│   ├── Team-Charter/                                   # Team roles, responsibilities & milestones
+│   └── testing-reports/                                # Unit & integration test outcomes
+├── .gitignore                                          
+├── logo.png                                            # BestRoute platform branding logo
+└── README.md                                           # Comprehensive project overview & setup guide
 
+```
 ---
 
 ## 6. Setup and Run Instructions
@@ -467,7 +505,11 @@ Location information is intended to be collected and processed only when require
 
 ### Technology & Technical Approach Changes
 
-The original proposal specified the primary technologies and technical approach that would be used during development. The project is being implemented using the declared core technologies, including React Native, React, Node.js, Express.js, MongoDB, JWT, and multi-criteria route optimization.
+The original proposal specified the primary technologies and technical approach for the project. The core technologies remain unchanged, including React Native, React, Node.js, Express.js, MongoDB, JWT, and multi-criteria route optimization.
+
+During development, TypeScript was introduced for frontend implementation, particularly in the React Native mobile application. TypeScript was adopted to provide static type checking, improve code reliability, reduce type-related errors, and support maintainable development as the application grows.
+
+This change is an implementation-level addition to the existing React/React Native stack and does not change the overall system architecture or the core technologies declared in the original proposal.
 
 
 ---
