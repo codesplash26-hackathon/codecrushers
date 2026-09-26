@@ -233,6 +233,30 @@ export default function LoginScreen({ navigation }: Props) {
               )}
             </TouchableOpacity>
 
+            {/* Quick Demo Fill for Evaluators */}
+            <View style={styles.demoFillContainer}>
+              <TouchableOpacity
+                onPress={() => {
+                  setUsername("passenger@bestroute.lk");
+                  setPassword("password123");
+                }}
+                style={styles.demoChip}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.demoChipText}>⚡ Fill Demo Passenger</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setUsername("admin");
+                  setPassword("admin123");
+                }}
+                style={styles.demoChip}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.demoChipText}>⚡ Fill Demo Admin</Text>
+              </TouchableOpacity>
+            </View>
+
             {/* OR Divider */}
             <View style={styles.dividerRow}>
               <View
@@ -652,5 +676,25 @@ const styles = StyleSheet.create({
   footerLink: {
     color: "#2563EB",
     fontWeight: "700",
+  },
+  demoFillContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  demoChip: {
+    backgroundColor: "#EFF6FF",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+  },
+  demoChipText: {
+    fontSize: 11.5,
+    fontWeight: "600",
+    color: "#1D4ED8",
   },
 });
