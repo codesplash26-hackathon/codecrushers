@@ -91,6 +91,26 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 import ResponsiveContainer from "../components/ResponsiveContainer";
 
+const routeTitleMap: Record<string, string> = {
+  Splash: "Welcome",
+  Onboarding: "Onboarding",
+  Login: "Login",
+  Register: "Create Account",
+  ForgotPassword: "Forgot Password",
+  Home: "Dashboard",
+  Journeys: "My Journeys",
+  Notifications: "Alerts & Notifications",
+  Profile: "My Profile",
+  RouteResults: "Search Results",
+  RouteDetail: "Route Details",
+  LiveTracking: "Live Tracking",
+  AvailableVehicles: "Available Vehicles",
+  RideProgress: "Ride Progress",
+  DriverRegistration: "Driver Registration",
+  DriverDashboard: "Driver Console",
+  CompareRoutes: "Compare Routes",
+};
+
 export default function AppNavigator() {
   const { isDarkMode, colors } = useTheme();
 
@@ -108,43 +128,57 @@ export default function AppNavigator() {
 
   return (
     <ResponsiveContainer>
-      <NavigationContainer theme={navigationTheme}>
+      <NavigationContainer
+        theme={navigationTheme}
+        documentTitle={{
+          enabled: true,
+          formatter: (options, route) => {
+            const pageName =
+              options?.title ||
+              (route?.name ? routeTitleMap[route.name] || route.name : "Home");
+            return `BestRoute | ${pageName}`;
+          },
+        }}
+      >
         <Stack.Navigator
           initialRouteName="Splash"
           screenOptions={{ headerShown: false }}
         >
-          <Stack.Screen name="Splash" component={SplashScreen} />
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Register" component={RegisterScreen} />
-          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-          <Stack.Screen name="Home" component={MainTabsScreen} />
-          <Stack.Screen name="Journeys">
+          <Stack.Screen name="Splash" component={SplashScreen} options={{ title: "Welcome" }} />
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ title: "Onboarding" }} />
+          <Stack.Screen name="Login" component={LoginScreen} options={{ title: "Login" }} />
+          <Stack.Screen name="Register" component={RegisterScreen} options={{ title: "Create Account" }} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ title: "Forgot Password" }} />
+          <Stack.Screen name="Home" component={MainTabsScreen} options={{ title: "Dashboard" }} />
+          <Stack.Screen name="Journeys" options={{ title: "My Journeys" }}>
             {(props) => <MainTabsScreen {...props} initialTab="journeys" />}
           </Stack.Screen>
-          <Stack.Screen name="Notifications">
+          <Stack.Screen name="Notifications" options={{ title: "Alerts & Notifications" }}>
             {(props) => <MainTabsScreen {...props} initialTab="alerts" />}
           </Stack.Screen>
-          <Stack.Screen name="Profile">
+          <Stack.Screen name="Profile" options={{ title: "My Profile" }}>
             {(props) => <MainTabsScreen {...props} initialTab="profile" />}
           </Stack.Screen>
-          <Stack.Screen name="RouteResults" component={RouteResultsScreen} />
-          <Stack.Screen name="RouteDetail" component={RouteDetailScreen} />
-          <Stack.Screen name="LiveTracking" component={LiveTrackingScreen} />
+          <Stack.Screen name="RouteResults" component={RouteResultsScreen} options={{ title: "Search Results" }} />
+          <Stack.Screen name="RouteDetail" component={RouteDetailScreen} options={{ title: "Route Details" }} />
+          <Stack.Screen name="LiveTracking" component={LiveTrackingScreen} options={{ title: "Live Tracking" }} />
           <Stack.Screen
             name="AvailableVehicles"
             component={AvailableVehiclesScreen}
+            options={{ title: "Available Vehicles" }}
           />
-          <Stack.Screen name="RideProgress" component={RideProgressScreen} />
+          <Stack.Screen name="RideProgress" component={RideProgressScreen} options={{ title: "Ride Progress" }} />
           <Stack.Screen
             name="DriverRegistration"
             component={DriverRegistrationScreen}
+            options={{ title: "Driver Registration" }}
           />
           <Stack.Screen
             name="DriverDashboard"
             component={DriverDashboardScreen}
+            options={{ title: "Driver Console" }}
           />
-          <Stack.Screen name="CompareRoutes" component={CompareRoutesScreen} />
+          <Stack.Screen name="CompareRoutes" component={CompareRoutesScreen} options={{ title: "Compare Routes" }} />
         </Stack.Navigator>
       </NavigationContainer>
     </ResponsiveContainer>
