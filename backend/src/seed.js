@@ -61,7 +61,23 @@ async function seedDatabase(force = false) {
     preferences: "fastest",
   });
 
-  console.log(`Created admin (${adminUser.email}) and passenger (${passengerUser.email})`);
+  const hashedGooglePassword = await bcrypt.hash("google_oauth_pass", 10);
+  await User.create({
+    name: "Malith Perera",
+    email: "malith.perera@gmail.com",
+    password: hashedGooglePassword,
+    role: "passenger",
+    preferences: "fastest",
+  });
+  await User.create({
+    name: "CodeCrushers User",
+    email: "user.codecrushers@gmail.com",
+    password: hashedGooglePassword,
+    role: "passenger",
+    preferences: "fastest",
+  });
+
+  console.log(`Created admin (${adminUser.email}), passenger (${passengerUser.email}), and Google demo users`);
 
   // 2. Seed Stops
   console.log("Seeding Sri Lankan Transit Stops...");

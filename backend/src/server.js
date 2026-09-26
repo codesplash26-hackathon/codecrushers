@@ -3,6 +3,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const connectDB = require("./config/db");
+const seedDatabase = require("./seed");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const transportServiceRoutes = require("./routes/transportServiceRoutes");
@@ -21,7 +22,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-connectDB();
+(async () => {
+  await connectDB();
+  try {
+    await seedDatabase(false);
+  } catch (err) {
+    console.warn("Auto-seed notice:", err.message);
+  }
+})();
 
 app.get("/", (req, res) => {
   res.json({

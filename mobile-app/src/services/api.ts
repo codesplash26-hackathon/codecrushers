@@ -37,6 +37,11 @@ const getAutoDetectedHost = (): string => {
     // fallback
   }
 
+  if (Platform.OS === "web" && typeof window !== "undefined" && window.location?.hostname) {
+    const host = window.location.hostname || "localhost";
+    return `http://${host}:5000/api`;
+  }
+
   if (Platform.OS === "android") {
     return "http://10.0.2.2:5000/api";
   }
