@@ -10,8 +10,9 @@ const transportServiceSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["bus", "train", "taxi", "three_wheeler", "walking"],
+      enum: ["bus", "train", "taxi", "three_wheeler", "tuk-tuk", "tuk", "three-wheeler", "walking"],
       required: true,
+      lowercase: true,
     },
 
     operator: {
@@ -19,10 +20,29 @@ const transportServiceSchema = new mongoose.Schema(
       trim: true,
     },
 
+    routes: {
+      type: Number,
+      default: 0,
+    },
+
+    vehicles: {
+      type: Number,
+      default: 0,
+    },
+
+    icon: {
+      type: String,
+    },
+
+    modeColor: {
+      type: String,
+    },
+
     status: {
       type: String,
       enum: ["active", "inactive", "delayed", "cancelled"],
       default: "active",
+      lowercase: true,
     },
   },
   {
