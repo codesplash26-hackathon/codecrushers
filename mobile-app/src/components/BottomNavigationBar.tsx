@@ -13,32 +13,38 @@ export type NavTab = "home" | "journeys" | "alerts" | "profile";
 
 interface BottomNavigationBarProps {
   activeTab: NavTab;
-  navigation: any;
+  navigation?: any;
   unreadAlertsCount?: number;
+  onTabPress?: (tab: NavTab) => void;
 }
 
 export default function BottomNavigationBar({
   activeTab,
   navigation,
   unreadAlertsCount = 2,
+  onTabPress,
 }: BottomNavigationBarProps) {
   const { isDarkMode, colors } = useTheme();
   const insets = useSafeAreaInsets();
 
   const handleTabPress = (tab: NavTab) => {
     if (tab === activeTab) return;
+    if (onTabPress) {
+      onTabPress(tab);
+      return;
+    }
     switch (tab) {
       case "home":
-        navigation.navigate("Home");
+        navigation?.navigate("Home");
         break;
       case "journeys":
-        navigation.navigate("Journeys");
+        navigation?.navigate("Journeys");
         break;
       case "alerts":
-        navigation.navigate("Notifications");
+        navigation?.navigate("Notifications");
         break;
       case "profile":
-        navigation.navigate("Profile");
+        navigation?.navigate("Profile");
         break;
     }
   };
@@ -231,6 +237,7 @@ const styles = StyleSheet.create({
   navLabel: {
     fontSize: 11,
     fontWeight: "600",
+    textAlign: "center",
   },
   navLabelActive: {
     color: "#1D64EC",
