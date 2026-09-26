@@ -309,7 +309,7 @@ If you wish to test the passenger experience on a physical smartphone rather tha
 
 ---
 
-### 9.5 Running Services Locally Without Docker (Bare-Metal)
+### 9.5 Running Services Locally Without Docker 
 If you wish to run services individually outside Docker:
 
 #### 1. Start MongoDB
