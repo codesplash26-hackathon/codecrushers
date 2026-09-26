@@ -4,14 +4,14 @@ import logoImg from '../assets/logo.png';
 
 const Login = () => {
   const { login } = useAuth();
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const res = login(username, password);
+    const res = await login(username, password);
     if (!res.success) {
       setError(res.message);
     }
@@ -94,7 +94,7 @@ const Login = () => {
                 className="form-input"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin"
+                placeholder="Enter username"
                 required
               />
             </div>
@@ -106,7 +106,7 @@ const Login = () => {
                 className="form-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Enter password"
                 required
               />
             </div>
