@@ -99,18 +99,18 @@ Currently, passengers may need to plan each part of such a journey separately. T
 
 ## 4. Technology Stack & Justifications
 
-| Component | Technology / Library | Justification |
-| :--- | :--- | :--- |
-| **Mobile / Passenger App** | **React Native + Expo + TypeScript** | Enables unified cross-platform mobile development (iOS/Android) and browser-accessible web bundling with Expo Web. TypeScript provides static type safety for complex transit and itinerary objects. |
-| **Admin Dashboard** | **React 18 + Vite** | Lightweight, high-performance administrative web application with instant Hot Module Replacement (HMR), component-driven state architecture, and fast load times. |
-| **Admin UI Styling** | **Vanilla CSS & Theme Variables** | Granular control over UI aesthetics, glassmorphism, responsive drawer navigation, custom modal systems, and dark/light color schemes without bulky utility frameworks. |
-| **Backend API** | **Node.js + Express.js** | Asynchronous, non-blocking I/O ideal for handling concurrent route queries, live incident updates, and RESTful service orchestration. |
-| **Database** | **MongoDB + Mongoose ODM** | Document-oriented NoSQL model perfectly suited for hierarchical transit itineraries, geo-coordinate pairs (`[longitude, latitude]`), flexible stop sequences, and evolving disruption logs. |
-| **Authentication** | **JWT (JSON Web Tokens) + Bcrypt** | Stateless, secure authentication for both mobile and web clients. Passwords hashed using standard cryptographic salt rounds. |
-| **Containerization** | **Docker & Docker Compose** | Guarantees consistent environment replication across Windows, macOS, and Linux with zero host dependency conflicts. |
-| **Web Server** | **Nginx (Alpine)** | Serves compiled static production bundles for both Admin Dashboard and Mobile Web applications with minimal memory footprint and instant startup. |
-| **API Testing** | **Postman** | Comprehensive testing of REST endpoints, status codes, payload validations, and authentication middleware. |
-| **UI/UX Design** | **Figma** | High-fidelity prototyping, design tokens, and user journey wireframing. |
+| Component                      | Technology / Library             | Purpose / Justification |
+|--------------------------------|----------------------------------|--------------------------|
+| Mobile Application             | React Native + Expo + TypeScript | Enables unified cross-platform mobile development (iOS/Android) and browser-accessible web bundling with Expo Web. TypeScript provides static type safety for complex transit and itinerary objects. |
+| Administrative Web Application | React + Vite                     | Provides a fast and interactive web dashboard for transportation management. |
+| Backend                        | Node.js + Express.js             | Provides scalable REST APIs and application services for journey operations. |
+| Database                       | MongoDB + Mongoose               | Provides flexible storage for users, transportation data, journeys, and logs. |
+| Authentication                 | JWT (JSON Web Tokens) + Bcrypt   | Provides secure token-based authentication and password hashing. |
+| Maps / Geolocation             | Mapping API                      | Supports map visualization, location-based features, and route-related data. |
+| Containerization               | Docker & Docker Compose          | Guarantees consistent environment replication across Windows, macOS, and Linux with zero host dependency conflicts. |
+| API Testing                    | Postman                          | Comprehensive testing of REST endpoints, status codes, payload validations, and authentication middleware. |
+| UI/UX Design                   | Figma                            | Supports interface design, prototyping, and user-flow visualization. |
+| Version Control                | Git + GitHub                     | Enables collaborative development and project version management. |
 
 ---
 
