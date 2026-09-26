@@ -25,6 +25,10 @@ import './App.css';
 const AdminConsole = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
 
+  React.useEffect(() => {
+    document.title = 'BestRoute Admin Dashboard';
+  }, []);
+
   const tabTitles = {
     dashboard: 'Transportation Overview',
     disruptions: 'Service Disruptions',
