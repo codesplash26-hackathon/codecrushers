@@ -167,7 +167,34 @@ The implementation follows the core technology stack specified in the original p
 
 ---
 
-## 5. Repository File Structure
+## 5. Quick Start
+
+The complete BestRoute system can be started using Docker Compose.
+
+```bash
+git clone <repository-url>
+cd Codecrushers
+docker compose up --build
+```
+
+After the containers start:
+
+* **Admin Dashboard:** http://localhost:5173
+* **Backend API:** http://localhost:5000
+* **Mobile Application:** http://localhost:8081
+
+To stop the system:
+
+```bash
+docker compose down 
+```
+
+For detailed setup instructions, see [Setup and Run Instructions](#7._Setup_and_Run_Instructions).
+
+---
+
+
+## 6. Repository File Structure
 
 ```text
 codecrushers/
@@ -333,129 +360,347 @@ codecrushers/
 
 ```
 ---
+## 7. Setup and Run Instructions
 
-## 6. Setup and Run Instructions
+The recommended way to run the BestRoute system is using Docker Compose. Docker Compose starts the required database, backend, administrative dashboard, and mobile application services together.
 
-### 6.1 Prerequisites
+### 7.1 Prerequisites
 
 Install the following before running the project:
 
-* **Node.js** (LTS version recommended)
-* **npm**
-* **MongoDB Atlas account or MongoDB instance**
 * **Git**
-* **Expo Go** mobile application for testing the React Native application
-* A code editor such as **Visual Studio Code**
+* **Docker Desktop** with Docker Compose support
+
+No separate MongoDB installation is required because MongoDB runs as a Docker container.
+
+Node.js and npm are also not required for the Docker-based setup.
 
 ---
 
-### 6.2 Clone the Repository
+### 7.2 Clone the Repository
+
+Clone the repository and navigate to the project directory:
 
 ```bash
 git clone <repository-url>
-cd BestRoute
+cd CodeCrushers
 ```
 
 ---
 
-### 6.3 Backend Setup
+### 7.3 Environment Configuration
 
-Navigate to the backend directory:
+The Docker Compose configuration provides the required configuration for the backend service, including:
 
-```bash
-cd backend
-```
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Create a `.env` file based on `.env.example`.
-
-Example:
-
-```env
+```text
 PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
+MONGO_URI=mongodb://mongodb:27017/bestroute
+JWT_SECRET=<configured by Docker Compose>
 ```
 
-Start the backend server:
+The backend connects to the MongoDB Docker service using the service name `mongodb`.
 
-```bash
-npm run dev
-```
+No MongoDB Atlas account or separate MongoDB installation is required when using the Docker Compose setup.
 
-The backend API will run on the configured local port.
 
 ---
 
-### 6.4 Mobile Application Setup
+### 7.4 Build and Start the Complete System
 
-Open a new terminal and navigate to:
+From the root directory of the repository, run:
+
+```bash
+docker compose up --build
+```
+
+This command builds and starts the following services:
+
+* **MongoDB** – Database service
+* **Backend** – Node.js + Express.js API
+* **Administrative Dashboard** – React + Vite web application
+* **Mobile Application** – React Native + Expo application container
+
+The first build may take some time because Docker needs to download the required images and build the application containers.
+
+---
+
+### 7.5 Accessing the Services
+
+After the containers start successfully, the services are available through the following ports.
+
+| Service                  | Address                 | Purpose                       |
+| ------------------------ | ----------------------- | ----------------------------- |
+| MongoDB                  | `localhost:27017`       | Database service              |
+| Backend API              | `http://localhost:5000` | REST API and backend services |
+| Administrative Dashboard | `http://localhost:5173` | Web-based admin dashboard     |
+| Mobile Application       | `http://localhost:8081` | Mobile application container  |
+
+The MongoDB service is used internally by the backend and normally does not need to be accessed directly through a browser.
+
+Open the following address in a web browser to access the administrative dashboard:
+
+```text
+http://localhost:5173
+```
+
+The backend API is available at:
+
+```text
+http://localhost:5000
+```
+
+---
+
+### 7.6 Docker Compose Services
+
+The `docker-compose.yml` file defines the following services:
+
+#### MongoDB
+
+```text
+mongodb
+```
+
+Uses the `mongo:7.0` Docker image and stores database data in the `mongo_data` Docker volume.
+
+#### Backend
+
+```text
+backend
+```
+
+Builds the Node.js + Express.js backend from the `backend/Dockerfile`.
+
+The backend is exposed on:
+
+```text
+http://localhost:5000
+```
+
+The backend depends on the MongoDB service.
+
+#### Administrative Dashboard
+
+```text
+admin-dashboard
+```
+
+Builds the administrative web application from the `admin-dashboard/Dockerfile`.
+
+The dashboard is exposed on:
+
+```text
+http://localhost:5173
+```
+
+#### Mobile Application
+
+```text
+mobile-app
+```
+
+Builds the passenger mobile application from the `mobile-app/Dockerfile`.
+
+The mobile application service is exposed on:
+
+```text
+http://localhost:8081
+```
+
+---
+
+### 7.7 Stopping the Application
+
+To stop the running services, press:
+
+```text
+Ctrl + C
+```
+
+or run:
+
+```bash
+docker compose down
+```
+
+To stop the services and remove the stored MongoDB Docker volume:
+
+```bash
+docker compose down -v
+```
+
+> Removing the volume deletes the MongoDB data stored by the Docker Compose environment.
+
+---
+
+### 7.8 Rebuilding the Application
+
+If changes are made to the source code or Docker configuration, rebuild the services using:
+
+```bash
+docker compose up --build
+```
+
+To run the containers in the background:
+
+```bash
+docker compose up --build -d
+```
+
+To view running containers:
+
+```bash
+docker compose ps
+```
+
+To view service logs:
+
+```bash
+docker compose logs
+```
+
+---
+
+### 7.9 Verifying the Setup
+
+After running:
+
+```bash
+docker compose up --build
+```
+
+verify that all four services start successfully:
+
+```text
+mongodb
+backend
+admin-dashboard
+mobile-app
+```
+
+Then verify that:
+
+1. The backend starts on port `5000`.
+2. MongoDB starts successfully.
+3. The administrative dashboard loads at `http://localhost:5173`.
+4. The backend can connect to MongoDB.
+5. The mobile application container starts on port `8081`.
+6. Authentication and the main application functionality can be tested successfully.
+
+If a service fails to start, check the Docker Compose logs:
+
+```bash
+docker compose logs
+```
+---
+### 7.10 Running the Mobile Application with Expo Go
+
+The passenger mobile application is developed using **React Native and Expo**. Although the mobile application is included as a Docker Compose service, the Expo development server must be accessible from the device running Expo Go.
+
+After starting the Docker services:
+
+```bash
+docker compose up --build
+```
+
+the mobile application development server runs on port `8081`.
+
+#### Option 1: Run using Expo Go on a Physical Device
+
+1. Install **Expo Go** on the Android or iOS device.
+2. Connect the mobile device and the development computer to the same Wi-Fi network.
+3. From the project root, navigate to the mobile application:
 
 ```bash
 cd mobile-app
 ```
 
-Install dependencies:
-
-```bash
-npm install
-```
-
-Start the Expo development server:
+4. Start the Expo development server:
 
 ```bash
 npx expo start
 ```
 
-The application can then be tested using **Expo Go** on a compatible mobile device.
+5. Expo will display a QR code in the terminal or browser.
+6. Scan the QR code using Expo Go.
+7. The BestRoute passenger application will open on the device.
 
----
+> If the Expo development server is already running through Docker, use the Expo server provided by the Docker container instead of starting a second Expo server. Ensure that the Expo/Metro port and network configuration allow the physical device to connect to the container.
 
-### 6.5 Administrative Dashboard Setup
+#### Option 2: Run the Mobile Application Locally
 
-Open another terminal and navigate to:
-
-```bash
-cd admin-dashboard
-```
-
-Install dependencies:
+For mobile development and testing, the Expo application can also be started directly from the `mobile-app` directory.
 
 ```bash
+cd mobile-app
 npm install
+npx expo start
 ```
 
-Start the development server:
+Then:
 
-```bash
-npm run dev
+1. Open **Expo Go** on the mobile device.
+2. Scan the displayed QR code.
+3. Ensure the mobile device and development computer are connected to the same network.
+
+#### Mobile Application API Configuration
+
+When testing the mobile application on a physical device, the API base URL should point to an address accessible from the mobile device.
+
+For example:
+
+```text
+http://<YOUR-COMPUTER-IP>:5000
 ```
 
-The Vite development server will provide the local URL for the administrative dashboard.
+Do not use:
+
+```text
+http://localhost:5000
+```
+
+when accessing the backend from a physical mobile device, because `localhost` refers to the mobile device itself.
+
+The backend must therefore be accessible on the local network, and the required firewall and Docker port configuration must allow the mobile device to reach port `5000`.
+
+
 
 ---
 
-## 7. Environment Variables
+## 8. Environment Variables and Configuration
 
-Environment-specific configuration should not be committed to the repository.
+The Docker Compose configuration provides the required backend environment variables.
 
-The backend requires configuration such as:
+### Backend Configuration
+
+The following variables are configured for the backend service:
 
 ```env
-PORT=
-MONGO_URI=
-JWT_SECRET=
+PORT=5000
+MONGO_URI=mongodb://mongodb:27017/bestroute
+JWT_SECRET=<configured by Docker Compose>
 ```
+
+### Variable Description
+
+| Variable     | Purpose                                            |
+| ------------ | -------------------------------------------------- |
+| `PORT`       | Defines the port used by the backend API           |
+| `MONGO_URI`  | Defines the MongoDB connection used by the backend |
+| `JWT_SECRET` | Secret used for JWT-based authentication           |
+
+The `MONGO_URI` uses:
+
+```text
+mongodb://mongodb:27017/bestroute
+```
+
+because `mongodb` is the MongoDB service name defined in `docker-compose.yml`.
 
 
 ---
 
-## 8. Known Limitations and Assumptions
+## 9. Known Limitations and Assumptions
 
 The current prototype has the following limitations and assumptions:
 
@@ -472,7 +717,7 @@ The current prototype has the following limitations and assumptions:
 These limitations are consistent with the challenges and mitigation strategies identified in the original project proposal.
 
 ---
-## 9. Security Considerations
+## 10. Security Considerations
 
 The system incorporates security measures including:
 
@@ -489,7 +734,7 @@ Location information is intended to be collected and processed only when require
 
 ---
 
-## 10. Change Log
+## 11. Change Log
 
 ### Version 1.0.0 – September 2026
 
@@ -514,7 +759,7 @@ This change is an implementation-level addition to the existing React/React Nati
 
 ---
 
-## 11. Future Enhancements
+## 12. Future Enhancements
 
 Potential future improvements include:
 
