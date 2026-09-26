@@ -56,6 +56,11 @@ export const adminService = {
   updateSettings: (data) => fetchApi('/admin/settings', { method: 'PUT', body: JSON.stringify(data) }),
   resetSettings: () => fetchApi('/admin/settings/reset', { method: 'POST' }),
   reseedDatabase: () => fetchApi('/admin/settings/reseed', { method: 'POST' }),
+
+  // Driver Applications
+  getDriverApplications: (status) => fetchApi(`/driver-applications${status ? `?status=${status}` : ''}`),
+  updateDriverApplicationStatus: (id, status) =>
+    fetchApi(`/driver-applications/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
 };
 
 export default adminService;

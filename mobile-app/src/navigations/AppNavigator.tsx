@@ -15,6 +15,7 @@ import LiveTrackingScreen from "../screens/LiveTrackingScreen";
 import AvailableVehiclesScreen from "../screens/AvailableVehiclesScreen";
 import RideProgressScreen from "../screens/RideProgressScreen";
 import DriverRegistrationScreen from "../screens/DriverRegistrationScreen";
+import DriverDashboardScreen from "../screens/DriverDashboardScreen";
 import CompareRoutesScreen from "../screens/CompareRoutesScreen";
 
 export type RootStackParamList = {
@@ -77,6 +78,7 @@ export type RootStackParamList = {
       }
     | undefined;
   DriverRegistration: undefined;
+  DriverDashboard: undefined;
   CompareRoutes:
     | {
         from?: string;
@@ -134,6 +136,10 @@ export default function AppNavigator() {
         <Stack.Screen
           name="DriverRegistration"
           component={DriverRegistrationScreen}
+        />
+        <Stack.Screen
+          name="DriverDashboard"
+          component={DriverDashboardScreen}
         />
         <Stack.Screen name="CompareRoutes" component={CompareRoutesScreen} />
       </Stack.Navigator>

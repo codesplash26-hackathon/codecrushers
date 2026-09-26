@@ -320,6 +320,100 @@ export const api = {
       }
     );
   },
+
+  // Driver Application & Console
+  async submitDriverApplication(data: {
+    fullName: string;
+    phone: string;
+    nic: string;
+    licenseNumber: string;
+    vehicleType: string;
+    vehicleNo: string;
+    vehicleModel?: string;
+    color?: string;
+    email?: string;
+    userId?: string;
+  }) {
+    return apiRequest<{
+      success: boolean;
+      message: string;
+      data: any;
+    }>("/driver-applications", {
+      method: "POST",
+      body: data,
+    });
+  },
+
+  async getMyDriverApplicationStatus(params?: {
+    phone?: string;
+    email?: string;
+    userId?: string;
+  }) {
+    const query = new URLSearchParams();
+    if (params?.phone) query.append("phone", params.phone);
+    if (params?.email) query.append("email", params.email);
+    if (params?.userId) query.append("userId", params.userId);
+    const qs = query.toString();
+    const res = await apiRequest<{
+      success: boolean;
+      data: any;
+      userRole?: string;
+      driverStatus?: string;
+    }>(`/driver-applications/my-status${qs ? `?${qs}` : ""}`);
+
+    if (res.success && res.data) {
+      const innerData = res.data.data;
+      if (!innerData || (!innerData._id && !innerData.applicationId)) {
+        return {
+          ...res,
+          data: {
+            hasApplication: false,
+            data: null,
+            status: null,
+            userRole: res.data.userRole || "passenger",
+            driverStatus: res.data.driverStatus || "none",
+          },
+        };
+      }
+
+      const rawStatus = innerData.status || res.data.driverStatus || "";
+      const status =
+        rawStatus.toLowerCase() === "approved"
+          ? "Approved"
+          : rawStatus.toLowerCase() === "rejected"
+          ? "Rejected"
+          : rawStatus.toLowerCase() === "pending"
+          ? "Pending"
+          : null;
+
+      const normalized: any = {
+        ...innerData,
+        hasApplication: true,
+        status,
+        userRole: res.data.userRole || (status === "Approved" ? "driver" : "passenger"),
+        driverStatus: res.data.driverStatus || (status ? status.toLowerCase() : "none"),
+        data: innerData,
+      };
+
+      return {
+        ...res,
+        data: normalized,
+      };
+    }
+
+    return res;
+  },
+
+  async toggleDriverOnline(isOnline: boolean) {
+    return apiRequest<{
+      success: boolean;
+      isOnline: boolean;
+      message: string;
+    }>("/driver-applications/toggle-online", {
+      method: "PUT",
+      body: { isOnline },
+    });
+  },
 };
 
 export default api;

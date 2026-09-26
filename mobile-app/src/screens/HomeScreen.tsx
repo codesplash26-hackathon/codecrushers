@@ -2138,7 +2138,11 @@ export default function HomeScreen({ navigation, hideBottomBar }: Props) {
                 style={styles.popupActionItem}
                 onPress={() => {
                   setIsProfilePopupVisible(false);
-                  navigation.navigate("DriverRegistration");
+                  if (currentUser?.role === "driver") {
+                    navigation.navigate("DriverDashboard");
+                  } else {
+                    navigation.navigate("DriverRegistration");
+                  }
                 }}
                 activeOpacity={0.7}
               >
@@ -2150,7 +2154,9 @@ export default function HomeScreen({ navigation, hideBottomBar }: Props) {
                       isDarkMode && { color: colors.textPrimary },
                     ]}
                   >
-                    Become a Driver
+                    {currentUser?.role === "driver"
+                      ? "Driver Console & Trips"
+                      : "Become a Driver"}
                   </Text>
                 </View>
                 <Text

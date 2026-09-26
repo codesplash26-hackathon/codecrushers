@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { View, StyleSheet, BackHandler } from "react-native";
+import { View, StyleSheet, BackHandler, Platform, TouchableOpacity, Text } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import BottomNavigationBar, { NavTab } from "../components/BottomNavigationBar";
 import HomeScreen from "./HomeScreen";
@@ -56,6 +56,21 @@ export default function MainTabsScreen({ navigation, route, initialTab }: MainTa
   );
 
   const [liveAlertsCount, setLiveAlertsCount] = useState<number>(0);
+  const [isDriverUser, setIsDriverUser] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkDriverRole = async () => {
+      try {
+        const u = await (await import("../services/authService")).default.getCurrentUser();
+        if (u && u.role === "driver") {
+          setIsDriverUser(true);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    checkDriverRole();
+  }, [activeTab]);
 
   // Sync route params when navigated to with new params
   useEffect(() => {
@@ -219,6 +234,20 @@ export default function MainTabsScreen({ navigation, route, initialTab }: MainTa
         )}
       </View>
 
+      {/* Floating Driver Console Quick-Switch Pill for Approved Drivers */}
+      {isDriverUser && (
+        <TouchableOpacity
+          style={styles.floatingDriverBadge}
+          onPress={() => (navigation?.navigate as any)("DriverDashboard")}
+          activeOpacity={0.85}
+        >
+          <View style={styles.floatingDriverPulse} />
+          <Text style={styles.floatingDriverText}>
+            🚖 Driver Console Active · Switch Mode ➔
+          </Text>
+        </TouchableOpacity>
+      )}
+
       {/* Static Bottom Navigation Bar */}
       <BottomNavigationBarComponent
         activeTab={activeTab}
@@ -243,5 +272,36 @@ const styles = StyleSheet.create({
   },
   hiddenPage: {
     display: "none",
+  },
+  floatingDriverBadge: {
+    position: "absolute",
+    bottom: 74,
+    alignSelf: "center",
+    backgroundColor: "#1E293B",
+    borderColor: "#3B82F6",
+    borderWidth: 1.5,
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    zIndex: 99,
+    ...Platform.select({
+      web: { boxShadow: "0 4px 14px rgba(0, 0, 0, 0.25)" },
+      default: { elevation: 6 },
+    }),
+  },
+  floatingDriverPulse: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#10B981",
+  },
+  floatingDriverText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.3,
   },
 });

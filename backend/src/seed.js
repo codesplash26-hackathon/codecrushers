@@ -10,6 +10,7 @@ const Schedule = require("./models/Schedule");
 const TransportService = require("./models/TransportService");
 const Disruption = require("./models/Disruption");
 const Journey = require("./models/Journey");
+const DriverApplication = require("./models/DriverApplication");
 const { DISRUPTION_TYPES, DISRUPTION_SEVERITY, DISRUPTION_STATUS } = require("./config/constants");
 
 const MONGO_URI =
@@ -389,6 +390,67 @@ async function seedDatabase(force = false) {
   }
   await Journey.insertMany(sampleJourneys);
   console.log("Created 24 sample commuter journeys");
+
+  // 8. Seed Driver Applications
+  console.log("Seeding Driver Applications...");
+  await DriverApplication.deleteMany({});
+
+  await DriverApplication.insertMany([
+    {
+      applicationId: "DAR01",
+      user: passengerUser._id,
+      fullName: "Kasun Perera",
+      phone: "+94 77 123 4567",
+      nic: "982345678V",
+      licenseNumber: "B 1234567",
+      vehicleType: "Taxi",
+      vehicleNo: "WP CAB-1234",
+      vehicleModel: "Toyota Prius",
+      color: "Silver",
+      status: "Pending",
+      submitted: "2024-01-15",
+    },
+    {
+      applicationId: "DAR02",
+      fullName: "Nimal Silva",
+      phone: "+94 71 234 5678",
+      nic: "871234567V",
+      licenseNumber: "B 7654321",
+      vehicleType: "Tuk-tuk",
+      vehicleNo: "WP TUK-3321",
+      vehicleModel: "Bajaj RE 4S",
+      color: "Red",
+      status: "Approved",
+      submitted: "2024-01-14",
+    },
+    {
+      applicationId: "DAR03",
+      fullName: "Priya Fernando",
+      phone: "+94 76 345 6789",
+      nic: "951234567V",
+      licenseNumber: "B 5432167",
+      vehicleType: "Taxi",
+      vehicleNo: "WP CAB-5512",
+      vehicleModel: "Suzuki Alto",
+      color: "White",
+      status: "Rejected",
+      submitted: "2024-01-13",
+    },
+    {
+      applicationId: "DAR04",
+      fullName: "Roshan Jayawardena",
+      phone: "+94 77 456 7890",
+      nic: "921234567V",
+      licenseNumber: "B 9876543",
+      vehicleType: "Tuk-tuk",
+      vehicleNo: "CP TUK-0098",
+      vehicleModel: "TVS King",
+      color: "Blue",
+      status: "Pending",
+      submitted: "2024-01-12",
+    },
+  ]);
+  console.log("Created 4 sample driver applications");
 
   console.log("\n===========================================");
   console.log(" DATABASE SEEDING COMPLETED SUCCESSFULLY!");

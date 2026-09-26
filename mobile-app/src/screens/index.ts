@@ -10,4 +10,5 @@ export { default as ProfileScreen } from "./ProfileScreen";
 export { default as AvailableVehiclesScreen } from "./AvailableVehiclesScreen";
 export { default as RideProgressScreen } from "./RideProgressScreen";
 export { default as DriverRegistrationScreen } from "./DriverRegistrationScreen";
+export { default as DriverDashboardScreen } from "./DriverDashboardScreen";
 export { default as CompareRoutesScreen } from "./CompareRoutesScreen";
