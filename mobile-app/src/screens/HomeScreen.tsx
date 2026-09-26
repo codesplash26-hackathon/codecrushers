@@ -28,6 +28,7 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<
 
 interface Props {
   navigation: HomeScreenNavigationProp;
+  hideBottomBar?: boolean;
 }
 
 interface QuickAccessItem {
@@ -47,7 +48,7 @@ interface NearbyStopItem {
   type: "bus" | "train";
 }
 
-export default function HomeScreen({ navigation }: Props) {
+export default function HomeScreen({ navigation, hideBottomBar }: Props) {
   const { isDarkMode, toggleTheme, colors } = useTheme();
 
   // Main screen states
@@ -192,16 +193,34 @@ export default function HomeScreen({ navigation }: Props) {
   const handleApplyCustomize = () => {
     setSelectedOptimization(primaryPreference);
     setIsCustomizeVisible(false);
+    const filterKey: "recommended" | "fastest" | "cheapest" | "reliable" =
+      primaryPreference === "cheapest"
+        ? "cheapest"
+        : primaryPreference === "fastest"
+        ? "fastest"
+        : primaryPreference === "reliable"
+        ? "reliable"
+        : "recommended";
     navigation.navigate("RouteResults", {
       from: fromLocation,
       to: toLocation || "Colombo Fort",
+      initialFilter: filterKey,
     });
   };
 
   const handleFindRoutes = () => {
+    const filterKey: "recommended" | "fastest" | "cheapest" | "reliable" =
+      selectedOptimization === "cheapest"
+        ? "cheapest"
+        : selectedOptimization === "fastest"
+        ? "fastest"
+        : selectedOptimization === "reliable"
+        ? "reliable"
+        : "recommended";
     navigation.navigate("RouteResults", {
       from: fromLocation,
       to: toLocation || "Colombo Fort",
+      initialFilter: filterKey,
     });
   };
 
@@ -253,9 +272,9 @@ export default function HomeScreen({ navigation }: Props) {
             >
           {/* Top Bar Header */}
           <View style={styles.topBar}>
-            <View>
-              <Text style={styles.greetingText}>Good morning 👋</Text>
-              <Text style={styles.heroTitle}>Where are you going?</Text>
+            <View style={{ flex: 1, marginRight: 12 }}>
+              <Text style={styles.greetingText} numberOfLines={1}>Good morning 👋</Text>
+              <Text style={styles.heroTitle} numberOfLines={1} adjustsFontSizeToFit>Where are you going?</Text>
             </View>
 
             <View style={styles.topBarActions}>
@@ -545,6 +564,8 @@ export default function HomeScreen({ navigation }: Props) {
                           isDarkMode && { color: colors.textSecondary },
                           isSelected && styles.datePillTextActive,
                         ]}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
                       >
                         {date}
                       </Text>
@@ -585,6 +606,8 @@ export default function HomeScreen({ navigation }: Props) {
                           isDarkMode && { color: colors.textSecondary },
                           isSelected && styles.timePillTextActive,
                         ]}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
                       >
                         {time}
                       </Text>
@@ -803,6 +826,8 @@ export default function HomeScreen({ navigation }: Props) {
                   styles.recentRoute,
                   isDarkMode && { color: colors.textPrimary },
                 ]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
               >
                 Kandy City <Text style={styles.arrowText}>➔</Text> Colombo Fort
               </Text>
@@ -860,6 +885,8 @@ export default function HomeScreen({ navigation }: Props) {
                   styles.recentRoute,
                   isDarkMode && { color: colors.textPrimary },
                 ]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
               >
                 University of Sri Jay. <Text style={styles.arrowText}>➔</Text> Kandy
               </Text>
@@ -964,7 +991,9 @@ export default function HomeScreen({ navigation }: Props) {
       </ScrollView>
 
       {/* Unified Fixed-Position Bottom Navigation Bar */}
-      <BottomNavigationBar activeTab="home" navigation={navigation} />
+      {!hideBottomBar && (
+        <BottomNavigationBar activeTab="home" navigation={navigation} />
+      )}
 
       {/* ================= LOCATION SEARCH MODAL ================= */}
       <Modal
@@ -2498,6 +2527,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "600",
     color: "#334155",
+    textAlign: "center",
   },
   datePillTextActive: {
     color: "#FFFFFF",
@@ -2520,6 +2550,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "600",
     color: "#334155",
+    textAlign: "center",
   },
   timePillTextActive: {
     color: "#FFFFFF",
@@ -2536,6 +2567,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "700",
+    textAlign: "center",
   },
 
   /* Section Styles */
@@ -2626,6 +2658,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
+    textAlign: "center",
   },
 
   /* Recent Journeys Cards */
@@ -2722,22 +2755,26 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "800",
     color: "#1D64EC",
+    textAlign: "center",
   },
   summaryNumberGreen: {
     fontSize: 20,
     fontWeight: "800",
     color: "#10B981",
+    textAlign: "center",
   },
   summaryNumberTeal: {
     fontSize: 22,
     fontWeight: "800",
     color: "#0891B2",
+    textAlign: "center",
   },
   summaryLabel: {
     fontSize: 11,
     color: "#64748B",
     fontWeight: "500",
     marginTop: 4,
+    textAlign: "center",
   },
 
   /* Bottom Navigation Bar */
