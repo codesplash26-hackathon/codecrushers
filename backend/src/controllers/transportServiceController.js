@@ -3,19 +3,40 @@ const TransportService = require("../models/TransportService");
 // Create a transportation service
 const createTransportService = async (req, res) => {
   try {
-    const { name, type, operator, status } = req.body;
+    const { name, type, mode, operator, status, routes, vehicles, icon, modeColor } = req.body;
 
-    if (!name || !type) {
+    const serviceName = name || req.body.serviceName;
+    if (!serviceName) {
       return res.status(400).json({
-        message: "Name and type are required",
+        message: "Service name is required",
       });
     }
 
+    let serviceType = (type || mode || "bus").toLowerCase();
+    if (serviceType.includes("tuk") || serviceType.includes("three")) {
+      serviceType = "three_wheeler";
+    } else if (serviceType.includes("train")) {
+      serviceType = "train";
+    } else if (serviceType.includes("taxi")) {
+      serviceType = "taxi";
+    } else {
+      serviceType = "bus";
+    }
+
+    let serviceStatus = (status || "active").toLowerCase();
+    if (serviceStatus !== "inactive" && serviceStatus !== "delayed" && serviceStatus !== "cancelled") {
+      serviceStatus = "active";
+    }
+
     const service = await TransportService.create({
-      name,
-      type,
-      operator,
-      status,
+      name: serviceName,
+      type: serviceType,
+      operator: operator || "Official Operator",
+      status: serviceStatus,
+      routes: Number(routes) || 0,
+      vehicles: Number(vehicles) || 0,
+      icon,
+      modeColor,
     });
 
     res.status(201).json({
