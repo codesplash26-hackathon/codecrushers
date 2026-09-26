@@ -462,6 +462,10 @@ The current prototype has the following limitations and assumptions:
    * *Rationale:* To eliminate manual setup steps for evaluators, an automatic seed check was introduced into `backend/src/server.js`. If MongoDB contains no user records, the server automatically populates realistic transit corridors, schedules, operator fleets, disruptions, and test accounts.
    * *Impact:* Evaluators can run a single command (`docker compose up --build`) and immediately log in and test all platform features without running database scripts or importing JSON collections manually.
 
+3. **Adoption of Expo for React Native Mobile Development:**
+   * *Rationale:* The original proposal specified React Native for the passenger mobile application. During development, Expo was adopted as the development and testing platform for the React Native application. Expo provides a streamlined development environment, simplified project configuration, device testing, and access to React Native capabilities required by the BestRoute mobile application.
+   * *Impact:* Simplified mobile application development and testing by enabling faster development builds, easier device testing through Expo Go, and more efficient integration of mobile features while retaining React Native as the core mobile framework.
+
 ---
 ## 14. Future Enhancements
 
