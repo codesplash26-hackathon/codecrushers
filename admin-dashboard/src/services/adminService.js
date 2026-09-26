@@ -50,6 +50,10 @@ export const adminService = {
 
   // Notifications
   getNotifications: () => fetchApi('/notifications'),
+  getUnreadNotifications: () => fetchApi('/notifications/unread'),
+  markNotificationRead: (id) => fetchApi(`/notifications/${id}/read`, { method: 'PATCH' }),
+  markAllNotificationsRead: () => fetchApi('/notifications/read-all', { method: 'PATCH' }),
+  deleteNotification: (id) => fetchApi(`/notifications/${id}`, { method: 'DELETE' }),
 
   // System Settings
   getSettings: () => fetchApi('/admin/settings'),
