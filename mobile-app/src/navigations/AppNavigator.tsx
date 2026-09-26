@@ -89,6 +89,8 @@ export type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+import ResponsiveContainer from "../components/ResponsiveContainer";
+
 export default function AppNavigator() {
   const { isDarkMode, colors } = useTheme();
 
@@ -105,44 +107,46 @@ export default function AppNavigator() {
   };
 
   return (
-    <NavigationContainer theme={navigationTheme}>
-      <Stack.Navigator
-        initialRouteName="Splash"
-        screenOptions={{ headerShown: false }}
-      >
-        <Stack.Screen name="Splash" component={SplashScreen} />
-        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-        <Stack.Screen name="Home" component={MainTabsScreen} />
-        <Stack.Screen name="Journeys">
-          {(props) => <MainTabsScreen {...props} initialTab="journeys" />}
-        </Stack.Screen>
-        <Stack.Screen name="Notifications">
-          {(props) => <MainTabsScreen {...props} initialTab="alerts" />}
-        </Stack.Screen>
-        <Stack.Screen name="Profile">
-          {(props) => <MainTabsScreen {...props} initialTab="profile" />}
-        </Stack.Screen>
-        <Stack.Screen name="RouteResults" component={RouteResultsScreen} />
-        <Stack.Screen name="RouteDetail" component={RouteDetailScreen} />
-        <Stack.Screen name="LiveTracking" component={LiveTrackingScreen} />
-        <Stack.Screen
-          name="AvailableVehicles"
-          component={AvailableVehiclesScreen}
-        />
-        <Stack.Screen name="RideProgress" component={RideProgressScreen} />
-        <Stack.Screen
-          name="DriverRegistration"
-          component={DriverRegistrationScreen}
-        />
-        <Stack.Screen
-          name="DriverDashboard"
-          component={DriverDashboardScreen}
-        />
-        <Stack.Screen name="CompareRoutes" component={CompareRoutesScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <ResponsiveContainer>
+      <NavigationContainer theme={navigationTheme}>
+        <Stack.Navigator
+          initialRouteName="Splash"
+          screenOptions={{ headerShown: false }}
+        >
+          <Stack.Screen name="Splash" component={SplashScreen} />
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+          <Stack.Screen name="Home" component={MainTabsScreen} />
+          <Stack.Screen name="Journeys">
+            {(props) => <MainTabsScreen {...props} initialTab="journeys" />}
+          </Stack.Screen>
+          <Stack.Screen name="Notifications">
+            {(props) => <MainTabsScreen {...props} initialTab="alerts" />}
+          </Stack.Screen>
+          <Stack.Screen name="Profile">
+            {(props) => <MainTabsScreen {...props} initialTab="profile" />}
+          </Stack.Screen>
+          <Stack.Screen name="RouteResults" component={RouteResultsScreen} />
+          <Stack.Screen name="RouteDetail" component={RouteDetailScreen} />
+          <Stack.Screen name="LiveTracking" component={LiveTrackingScreen} />
+          <Stack.Screen
+            name="AvailableVehicles"
+            component={AvailableVehiclesScreen}
+          />
+          <Stack.Screen name="RideProgress" component={RideProgressScreen} />
+          <Stack.Screen
+            name="DriverRegistration"
+            component={DriverRegistrationScreen}
+          />
+          <Stack.Screen
+            name="DriverDashboard"
+            component={DriverDashboardScreen}
+          />
+          <Stack.Screen name="CompareRoutes" component={CompareRoutesScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </ResponsiveContainer>
   );
 }

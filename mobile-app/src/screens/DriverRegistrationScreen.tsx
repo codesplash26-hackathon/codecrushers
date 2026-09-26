@@ -776,24 +776,6 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
               >
                 PERSONAL INFORMATION
               </Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setFullName("Kasun Perera");
-                  setPhone("+94 77 123 4567");
-                  setNic("982345678V");
-                  setLicenseNumber("B 1234567");
-                  setLicenseUploaded(true);
-                  setPhotoUploaded(true);
-                  setRegistration("WP CAB-1234");
-                  setModel("Toyota Prius");
-                  setColor("Silver");
-                  setVehicleDocsUploaded(true);
-                }}
-                style={styles.sampleDataBtn}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.sampleDataBtnText}>⚡ Fill Demo</Text>
-              </TouchableOpacity>
             </View>
 
             {/* Full Name */}
