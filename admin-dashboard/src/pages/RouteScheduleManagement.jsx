@@ -49,61 +49,52 @@ const RouteScheduleManagement = () => {
   const [scheduleDays, setScheduleDays] = useState('Mon-Sun (Daily)');
   const [scheduleFrequency, setScheduleFrequency] = useState('Every 20 mins');
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await adminService.getRoutes();
-        if (res.success && Array.isArray(res.routes) && res.routes.length > 0) {
-          const apiRoutes = res.routes.map((r, idx) => ({
-            id: r._id || `R00${idx + 1}`,
-            name: r.name || `${r.startLocation?.name || 'Kandy'} ➔ ${r.endLocation?.name || 'Colombo'}`,
-            mode: r.type?.toLowerCase().includes('train') ? 'Train' : 'Bus',
-            stops: r.intermediateStops?.length || 12,
-            departure: '6:00 AM',
-            arrival: `${r.estimatedDurationMinutes || 180} min`,
-            fare: `Rs.${r.baseFare || 160}`,
-            status: 'Active',
-          }));
-          setRoutesData(apiRoutes);
-        }
-      } catch {
-        // Fallback
+  const fetchRoutes = async () => {
+    try {
+      const res = await adminService.getRoutes();
+      if (res.success && Array.isArray(res.routes) && res.routes.length > 0) {
+        const apiRoutes = res.routes.map((r, idx) => ({
+          id: r._id || `R00${idx + 1}`,
+          name: r.name || `${r.startLocation?.name || 'Kandy'} ➔ ${r.endLocation?.name || 'Colombo'}`,
+          mode: (r.type?.toLowerCase().includes('train') || r.name?.toLowerCase().includes('express') || r.name?.toLowerCase().includes('rail')) ? 'Train' : 'Bus',
+          stops: r.stops?.length || r.intermediateStops?.length || 12,
+          departure: r.departure || '6:00 AM',
+          arrival: r.arrival || `${r.estimatedDurationMinutes || 180} min`,
+          fare: `Rs.${r.baseFare || 160}`,
+          status: r.active === false ? 'Delayed' : 'Active',
+        }));
+        setRoutesData(apiRoutes);
       }
-    })();
+    } catch (err) {
+      console.error('Failed to fetch routes:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchRoutes();
   }, []);
 
   const handleAddRoute = async (e) => {
     e.preventDefault();
     if (!routeName) return;
 
-    const newId = `R00${routesData.length + 1}`;
-    const newRoute = {
-      id: newId,
-      name: routeName,
-      mode,
-      stops: Number(stopsCount),
-      departure,
-      arrival,
-      fare: `Rs.${fare}`,
-      status: 'Active',
-    };
-
-    setRoutesData([...routesData, newRoute]);
-
     try {
       await adminService.createRoute({
         name: routeName,
         type: mode.toLowerCase(),
-        baseFare: Number(fare),
+        baseFare: Number(fare) || 150,
         estimatedDurationMinutes: 120,
+        departure: departure || '6:30 AM',
+        arrival: arrival || '8:30 AM',
+        active: true,
       });
-      addToast(`New route ${newId} (${routeName}) created!`, 'success');
-    } catch {
-      addToast(`New route ${newId} (${routeName}) created locally`, 'success');
+      addToast(`New route "${routeName}" created in database!`, 'success');
+      setIsModalOpen(false);
+      setRouteName('');
+      await fetchRoutes();
+    } catch (err) {
+      addToast(`Failed to create route: ${err.message}`, 'error');
     }
-
-    setIsModalOpen(false);
-    setRouteName('');
   };
 
   // Open Edit Modal
@@ -119,26 +110,25 @@ const RouteScheduleManagement = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveEdit = (e) => {
+  const handleSaveEdit = async (e) => {
     e.preventDefault();
-    setRoutesData(prev => prev.map(r => {
-      if (r.id === editingRouteId) {
-        return {
-          ...r,
+    try {
+      if (editingRouteId && !editingRouteId.startsWith('R00')) {
+        await adminService.updateRoute(editingRouteId, {
           name: editRouteName,
-          mode: editMode,
-          stops: Number(editStops),
+          type: editMode.toLowerCase(),
+          baseFare: Number(editFare) || 150,
           departure: editDeparture,
           arrival: editArrival,
-          fare: `Rs.${editFare}`,
-          status: editStatus,
-        };
+          active: editStatus === 'Active',
+        });
       }
-      return r;
-    }));
-
-    addToast(`Route ${editRouteName} updated successfully!`, 'success');
-    setIsEditModalOpen(false);
+      addToast(`Route ${editRouteName} updated successfully!`, 'success');
+      setIsEditModalOpen(false);
+      await fetchRoutes();
+    } catch (err) {
+      addToast(`Failed to update route: ${err.message}`, 'error');
+    }
   };
 
   // Open Stops Modal
