@@ -33,6 +33,7 @@ type JourneysScreenRouteProp = RouteProp<
 interface Props {
   navigation: JourneysScreenNavigationProp;
   route?: JourneysScreenRouteProp;
+  hideBottomBar?: boolean;
 }
 
 export type JourneyTab = "upcoming" | "completed" | "saved";
@@ -71,10 +72,16 @@ export interface JourneyItem {
   };
 }
 
-export default function JourneysScreen({ navigation, route }: Props) {
+export default function JourneysScreen({ navigation, route, hideBottomBar }: Props) {
   const { isDarkMode, colors } = useTheme();
   const initialTab = route?.params?.initialTab || "completed";
   const [activeTab, setActiveTab] = useState<JourneyTab>(initialTab);
+
+  useEffect(() => {
+    if (route?.params?.initialTab) {
+      setActiveTab(route.params.initialTab);
+    }
+  }, [route?.params?.initialTab]);
   const [selectedJourney, setSelectedJourney] = useState<JourneyItem | null>(null);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [savedJourneys, setSavedJourneys] = useState<JourneyItem[]>([
@@ -831,7 +838,9 @@ export default function JourneysScreen({ navigation, route }: Props) {
       </ScrollView>
 
       {/* Unified Fixed-Position Bottom Navigation Bar */}
-      <BottomNavigationBar activeTab="journeys" navigation={navigation} />
+      {!hideBottomBar && (
+        <BottomNavigationBar activeTab="journeys" navigation={navigation} />
+      )}
 
       {/* ================= JOURNEY DETAIL MODAL ================= */}
       <Modal

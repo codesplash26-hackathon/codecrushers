@@ -25,6 +25,7 @@ type NotificationsScreenNavigationProp = NativeStackNavigationProp<
 
 interface Props {
   navigation: NotificationsScreenNavigationProp;
+  hideBottomBar?: boolean;
 }
 
 export interface NotificationItem {
@@ -43,7 +44,7 @@ export interface NotificationItem {
   };
 }
 
-export default function NotificationsScreen({ navigation }: Props) {
+export default function NotificationsScreen({ navigation, hideBottomBar }: Props) {
   const { isDarkMode, colors } = useTheme();
   const [notifications, setNotifications] = useState<NotificationItem[]>([
     // TODAY
@@ -409,11 +410,13 @@ export default function NotificationsScreen({ navigation }: Props) {
       </ScrollView>
 
       {/* Unified Fixed-Position Bottom Navigation Bar */}
-      <BottomNavigationBar
-        activeTab="alerts"
-        navigation={navigation}
-        unreadAlertsCount={unreadCount}
-      />
+      {!hideBottomBar && (
+        <BottomNavigationBar
+          activeTab="alerts"
+          navigation={navigation}
+          unreadAlertsCount={unreadCount}
+        />
+      )}
 
       {/* ================= DISRUPTION DETAIL MODAL ================= */}
       <Modal
