@@ -1,24 +1,21 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  Dimensions,
   ScrollView,
   NativeSyntheticEvent,
   NativeScrollEvent,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigations/AppNavigator";
-import { COLORS } from "../constants/theme";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 type OnboardingScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -61,13 +58,24 @@ const SLIDES: SlideData[] = [
 ];
 
 export default function OnboardingScreen({ navigation }: Props) {
-  const { isDarkMode, colors } = useTheme();
+  const { isDarkMode, colors, theme } = useTheme();
+  const { width: screenWidth } = useWindowDimensions();
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
 
+  // Maintain carousel alignment when theme changes or screen metrics change
+  useEffect(() => {
+    if (currentIndex > 0 && scrollRef.current) {
+      scrollRef.current.scrollTo({
+        x: currentIndex * screenWidth,
+        animated: false,
+      });
+    }
+  }, [theme, screenWidth]);
+
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / SCREEN_WIDTH);
+    const index = Math.round(offsetX / screenWidth);
     if (index !== currentIndex && index >= 0 && index < SLIDES.length) {
       setCurrentIndex(index);
     }
@@ -77,7 +85,7 @@ export default function OnboardingScreen({ navigation }: Props) {
     if (currentIndex < SLIDES.length - 1) {
       const nextIndex = currentIndex + 1;
       scrollRef.current?.scrollTo({
-        x: nextIndex * SCREEN_WIDTH,
+        x: nextIndex * screenWidth,
         animated: true,
       });
       setCurrentIndex(nextIndex);
@@ -107,7 +115,7 @@ export default function OnboardingScreen({ navigation }: Props) {
           <Text
             style={[
               styles.skipText,
-              isDarkMode && { color: colors.textSecondary },
+              { color: isDarkMode ? colors.textSecondary : colors.primary },
             ]}
           >
             Skip
@@ -126,9 +134,13 @@ export default function OnboardingScreen({ navigation }: Props) {
         onMomentumScrollEnd={handleScroll}
         style={styles.scrollView}
         scrollEventThrottle={16}
+        removeClippedSubviews={false}
       >
         {SLIDES.map((slide, index) => (
-          <View key={slide.id} style={styles.slideContainer}>
+          <View
+            key={slide.id}
+            style={[styles.slideContainer, { width: screenWidth }]}
+          >
             {/* Top Graphic Card */}
             <View style={styles.cardWrapper}>
               {index === 0 && <PlanJourneyIllustration />}
@@ -141,7 +153,7 @@ export default function OnboardingScreen({ navigation }: Props) {
               <Text
                 style={[
                   styles.title,
-                  isDarkMode && { color: colors.textPrimary },
+                  { color: colors.textPrimary },
                 ]}
               >
                 {slide.title}
@@ -149,7 +161,7 @@ export default function OnboardingScreen({ navigation }: Props) {
               <Text
                 style={[
                   styles.subtitle,
-                  isDarkMode && { color: colors.textSecondary },
+                  { color: colors.textSecondary },
                 ]}
               >
                 {slide.subtitle}
@@ -162,7 +174,7 @@ export default function OnboardingScreen({ navigation }: Props) {
       {/* Persistent Bottom Action Area */}
       <View style={[styles.bottomBar, { backgroundColor: colors.screenBg }]}>
         <TouchableOpacity
-          style={styles.actionButton}
+          style={[styles.actionButton, { backgroundColor: colors.primary }]}
           onPress={handleNext}
           activeOpacity={0.88}
         >
@@ -186,17 +198,16 @@ function PlanJourneyIllustration() {
     <View
       style={[
         styles.illustrationCard,
-        styles.journeyBg,
-        isDarkMode && {
-          backgroundColor: colors.cardBg,
+        {
+          backgroundColor: isDarkMode ? colors.cardBg : colors.bgLightBlue,
           borderColor: colors.cardBorder,
           borderWidth: 1,
         },
       ]}
     >
       {/* Soft floating background pastel orbs */}
-      <View style={[styles.orbTopLeftBlue, isDarkMode && { opacity: 0.15 }]} />
-      <View style={[styles.orbBottomRightBlue, isDarkMode && { opacity: 0.15 }]} />
+      <View style={[styles.orbTopLeftBlue, { opacity: isDarkMode ? 0.15 : 0.8 }]} />
+      <View style={[styles.orbBottomRightBlue, { opacity: isDarkMode ? 0.15 : 0.9 }]} />
 
       {/* S-curved journey route visualization */}
       <View style={styles.routeCanvas}>
@@ -205,8 +216,8 @@ function PlanJourneyIllustration() {
           <View
             style={[
               styles.originOuterRing,
-              isDarkMode && {
-                backgroundColor: colors.cardBg,
+              {
+                backgroundColor: isDarkMode ? colors.cardBg : "#FFFFFF",
                 borderColor: colors.primary,
               },
             ]}
@@ -214,7 +225,7 @@ function PlanJourneyIllustration() {
             <View
               style={[
                 styles.originInnerDot,
-                isDarkMode && { backgroundColor: colors.primary },
+                { backgroundColor: colors.primary },
               ]}
             />
           </View>
@@ -224,19 +235,19 @@ function PlanJourneyIllustration() {
         <View
           style={[
             styles.trackLineSegment1,
-            isDarkMode && { borderColor: colors.primary },
+            { borderColor: colors.primary },
           ]}
         />
         <View
           style={[
             styles.trackLineSegment2,
-            isDarkMode && { borderColor: colors.primary },
+            { borderColor: colors.primary },
           ]}
         />
         <View
           style={[
             styles.trackLineSegment3,
-            isDarkMode && { borderTopColor: colors.primary },
+            { borderTopColor: colors.primary },
           ]}
         />
 
@@ -245,24 +256,32 @@ function PlanJourneyIllustration() {
           <View
             style={[
               styles.transitNodeBadgeBlue,
-              isDarkMode && {
-                backgroundColor: "rgba(59, 130, 246, 0.2)",
-                borderColor: "rgba(59, 130, 246, 0.4)",
+              {
+                backgroundColor: isDarkMode
+                  ? "rgba(59, 130, 246, 0.2)"
+                  : "#EFF6FF",
+                borderColor: isDarkMode
+                  ? "rgba(59, 130, 246, 0.4)"
+                  : "#BFDBFE",
               },
             ]}
           >
-            <View style={styles.innerDotBlue} />
+            <View style={[styles.innerDotBlue, { backgroundColor: colors.bus }]} />
           </View>
           <View
             style={[
               styles.transitTagBlue,
-              isDarkMode && { backgroundColor: "rgba(59, 130, 246, 0.25)" },
+              {
+                backgroundColor: isDarkMode
+                  ? "rgba(59, 130, 246, 0.25)"
+                  : "#E0EDFE",
+              },
             ]}
           >
             <Text
               style={[
                 styles.transitTagTextBlue,
-                isDarkMode && { color: "#93C5FD" },
+                { color: isDarkMode ? "#93C5FD" : colors.bus },
               ]}
             >
               Bus
@@ -275,24 +294,32 @@ function PlanJourneyIllustration() {
           <View
             style={[
               styles.transitNodeBadgeGreen,
-              isDarkMode && {
-                backgroundColor: "rgba(34, 197, 94, 0.2)",
-                borderColor: "rgba(34, 197, 94, 0.4)",
+              {
+                backgroundColor: isDarkMode
+                  ? "rgba(34, 197, 94, 0.2)"
+                  : "#F0FDF4",
+                borderColor: isDarkMode
+                  ? "rgba(34, 197, 94, 0.4)"
+                  : "#BBF7D0",
               },
             ]}
           >
-            <View style={styles.innerDotGreen} />
+            <View style={[styles.innerDotGreen, { backgroundColor: colors.train }]} />
           </View>
           <View
             style={[
               styles.transitTagGreen,
-              isDarkMode && { backgroundColor: "rgba(34, 197, 94, 0.25)" },
+              {
+                backgroundColor: isDarkMode
+                  ? "rgba(34, 197, 94, 0.25)"
+                  : "#DCFCE7",
+              },
             ]}
           >
             <Text
               style={[
                 styles.transitTagTextGreen,
-                isDarkMode && { color: "#86EFAC" },
+                { color: isDarkMode ? "#86EFAC" : colors.train },
               ]}
             >
               Train
@@ -305,24 +332,32 @@ function PlanJourneyIllustration() {
           <View
             style={[
               styles.transitNodeBadgePink,
-              isDarkMode && {
-                backgroundColor: "rgba(244, 63, 94, 0.2)",
-                borderColor: "rgba(244, 63, 94, 0.4)",
+              {
+                backgroundColor: isDarkMode
+                  ? "rgba(244, 63, 94, 0.2)"
+                  : "#FDF2F8",
+                borderColor: isDarkMode
+                  ? "rgba(244, 63, 94, 0.4)"
+                  : "#FBCFE8",
               },
             ]}
           >
-            <View style={styles.innerDotPink} />
+            <View style={[styles.innerDotPink, { backgroundColor: colors.tuk }]} />
           </View>
           <View
             style={[
               styles.transitTagPink,
-              isDarkMode && { backgroundColor: "rgba(244, 63, 94, 0.25)" },
+              {
+                backgroundColor: isDarkMode
+                  ? "rgba(244, 63, 94, 0.25)"
+                  : "#FCE7F3",
+              },
             ]}
           >
             <Text
               style={[
                 styles.transitTagTextPink,
-                isDarkMode && { color: "#FDA4AF" },
+                { color: isDarkMode ? "#FDA4AF" : colors.tuk },
               ]}
             >
               Tuk
@@ -353,17 +388,16 @@ function ChooseMattersIllustration() {
     <View
       style={[
         styles.illustrationCard,
-        styles.mattersBg,
-        isDarkMode && {
-          backgroundColor: colors.cardBg,
+        {
+          backgroundColor: isDarkMode ? colors.cardBg : colors.bgLightMint,
           borderColor: colors.cardBorder,
           borderWidth: 1,
         },
       ]}
     >
       {/* Soft floating background pastel orbs */}
-      <View style={[styles.orbTopLeftMint, isDarkMode && { opacity: 0.15 }]} />
-      <View style={[styles.orbBottomRightMint, isDarkMode && { opacity: 0.15 }]} />
+      <View style={[styles.orbTopLeftMint, { opacity: isDarkMode ? 0.15 : 0.8 }]} />
+      <View style={[styles.orbBottomRightMint, { opacity: isDarkMode ? 0.15 : 0.9 }]} />
 
       {/* 3 Comparison Cards */}
       <View style={styles.cardsRow}>
@@ -372,21 +406,21 @@ function ChooseMattersIllustration() {
           style={[
             styles.optionCard,
             styles.fastestCard,
-            isDarkMode && {
-              backgroundColor: colors.cardSecondaryBg,
+            {
+              backgroundColor: isDarkMode ? colors.cardSecondaryBg : "#FFFFFF",
               borderColor: colors.primary,
             },
           ]}
         >
-          <View style={styles.fastestBadge}>
+          <View style={[styles.fastestBadge, { backgroundColor: colors.primary }]}>
             <Text style={styles.badgeTextWhite}>⚡ Fastest</Text>
           </View>
           <View style={styles.optionBody}>
-            <Text style={[styles.timeText, { color: COLORS.fastest }]}>1h 20m</Text>
+            <Text style={[styles.timeText, { color: colors.fastest }]}>1h 20m</Text>
             <Text
               style={[
                 styles.priceText,
-                isDarkMode && { color: colors.textSecondary },
+                { color: colors.textSecondary },
               ]}
             >
               Rs.450
@@ -394,10 +428,14 @@ function ChooseMattersIllustration() {
             <View
               style={[
                 styles.progressTrack,
-                isDarkMode && { backgroundColor: "rgba(255,255,255,0.08)" },
+                {
+                  backgroundColor: isDarkMode
+                    ? "rgba(255,255,255,0.08)"
+                    : "#F1F5F9",
+                },
               ]}
             >
-              <View style={[styles.progressBar, { backgroundColor: COLORS.fastest, width: "75%" }]} />
+              <View style={[styles.progressBar, { backgroundColor: colors.fastest, width: "75%" }]} />
             </View>
           </View>
         </View>
@@ -407,21 +445,21 @@ function ChooseMattersIllustration() {
           style={[
             styles.optionCard,
             styles.cheapestCard,
-            isDarkMode && {
-              backgroundColor: colors.cardSecondaryBg,
+            {
+              backgroundColor: isDarkMode ? colors.cardSecondaryBg : "#FFFFFF",
               borderColor: colors.cardBorder,
             },
           ]}
         >
           <View style={styles.cheapestBadge}>
-            <Text style={styles.badgeTextOrange}>🔥 Cheapest</Text>
+            <Text style={[styles.badgeTextOrange, { color: colors.cheapest }]}>🔥 Cheapest</Text>
           </View>
           <View style={styles.optionBody}>
-            <Text style={[styles.timeText, { color: COLORS.cheapest }]}>2h 05m</Text>
+            <Text style={[styles.timeText, { color: colors.cheapest }]}>2h 05m</Text>
             <Text
               style={[
                 styles.priceText,
-                isDarkMode && { color: colors.textSecondary },
+                { color: colors.textSecondary },
               ]}
             >
               Rs.220
@@ -429,10 +467,14 @@ function ChooseMattersIllustration() {
             <View
               style={[
                 styles.progressTrack,
-                isDarkMode && { backgroundColor: "rgba(255,255,255,0.08)" },
+                {
+                  backgroundColor: isDarkMode
+                    ? "rgba(255,255,255,0.08)"
+                    : "#F1F5F9",
+                },
               ]}
             >
-              <View style={[styles.progressBar, { backgroundColor: COLORS.cheapest, width: "45%" }]} />
+              <View style={[styles.progressBar, { backgroundColor: colors.cheapest, width: "45%" }]} />
             </View>
           </View>
         </View>
@@ -442,21 +484,21 @@ function ChooseMattersIllustration() {
           style={[
             styles.optionCard,
             styles.reliableCard,
-            isDarkMode && {
-              backgroundColor: colors.cardSecondaryBg,
+            {
+              backgroundColor: isDarkMode ? colors.cardSecondaryBg : "#FFFFFF",
               borderColor: colors.cardBorder,
             },
           ]}
         >
           <View style={styles.reliableBadge}>
-            <Text style={styles.badgeTextPurple}>♡ Reliable</Text>
+            <Text style={[styles.badgeTextPurple, { color: colors.reliable }]}>♡ Reliable</Text>
           </View>
           <View style={styles.optionBody}>
-            <Text style={[styles.timeText, { color: COLORS.reliable }]}>1h 35m</Text>
+            <Text style={[styles.timeText, { color: colors.reliable }]}>1h 35m</Text>
             <Text
               style={[
                 styles.priceText,
-                isDarkMode && { color: colors.textSecondary },
+                { color: colors.textSecondary },
               ]}
             >
               Rs.320
@@ -464,10 +506,14 @@ function ChooseMattersIllustration() {
             <View
               style={[
                 styles.progressTrack,
-                isDarkMode && { backgroundColor: "rgba(255,255,255,0.08)" },
+                {
+                  backgroundColor: isDarkMode
+                    ? "rgba(255,255,255,0.08)"
+                    : "#F1F5F9",
+                },
               ]}
             >
-              <View style={[styles.progressBar, { backgroundColor: COLORS.reliable, width: "85%" }]} />
+              <View style={[styles.progressBar, { backgroundColor: colors.reliable, width: "85%" }]} />
             </View>
           </View>
         </View>
@@ -487,24 +533,23 @@ function StayAheadIllustration() {
     <View
       style={[
         styles.illustrationCard,
-        styles.disruptionsBg,
-        isDarkMode && {
-          backgroundColor: colors.cardBg,
+        {
+          backgroundColor: isDarkMode ? colors.cardBg : colors.bgLightPeach,
           borderColor: colors.cardBorder,
           borderWidth: 1,
         },
       ]}
     >
       {/* Soft floating background pastel orbs */}
-      <View style={[styles.orbTopLeftPeach, isDarkMode && { opacity: 0.15 }]} />
-      <View style={[styles.orbBottomRightPeach, isDarkMode && { opacity: 0.15 }]} />
+      <View style={[styles.orbTopLeftPeach, { opacity: isDarkMode ? 0.15 : 0.6 }]} />
+      <View style={[styles.orbBottomRightPeach, { opacity: isDarkMode ? 0.15 : 0.8 }]} />
 
       <View style={styles.disruptionsFlow}>
         {/* Top Card: Disruption Warning */}
         <View
           style={[
             styles.warningCard,
-            isDarkMode && {
+            {
               backgroundColor: colors.alertBg,
               borderColor: colors.alertBorder,
             },
@@ -513,7 +558,11 @@ function StayAheadIllustration() {
           <View
             style={[
               styles.warningIconBadge,
-              isDarkMode && { backgroundColor: "rgba(245, 158, 11, 0.25)" },
+              {
+                backgroundColor: isDarkMode
+                  ? "rgba(245, 158, 11, 0.25)"
+                  : "#FDE68A",
+              },
             ]}
           >
             <View style={styles.warningDot} />
@@ -524,7 +573,7 @@ function StayAheadIllustration() {
               <Text
                 style={[
                   styles.warningTitle,
-                  isDarkMode && { color: colors.alertText },
+                  { color: colors.alertText },
                 ]}
               >
                 Train delayed 15 min
@@ -533,7 +582,7 @@ function StayAheadIllustration() {
             <Text
               style={[
                 styles.warningSubtext,
-                isDarkMode && { color: colors.alertSubtext },
+                { color: colors.alertSubtext },
               ]}
             >
               Connection at risk
@@ -546,13 +595,13 @@ function StayAheadIllustration() {
           <View
             style={[
               styles.dashedVerticalLine,
-              isDarkMode && { borderColor: colors.textMuted },
+              { borderColor: colors.textMuted },
             ]}
           />
           <Text
             style={[
               styles.downArrow,
-              isDarkMode && { color: colors.textMuted },
+              { color: colors.textMuted },
             ]}
           >
             ▼
@@ -563,7 +612,7 @@ function StayAheadIllustration() {
         <View
           style={[
             styles.successCard,
-            isDarkMode && {
+            {
               backgroundColor: colors.successBg,
               borderColor: colors.successBorder,
             },
@@ -572,18 +621,29 @@ function StayAheadIllustration() {
           <View
             style={[
               styles.successIconBadge,
-              isDarkMode && { backgroundColor: "rgba(16, 185, 129, 0.25)" },
+              {
+                backgroundColor: isDarkMode
+                  ? "rgba(16, 185, 129, 0.25)"
+                  : "#A7F3D0",
+              },
             ]}
           >
             <View style={styles.successDot} />
           </View>
           <View style={styles.alertContent}>
             <View style={styles.alertTitleRow}>
-              <Text style={styles.alertCheck}>✓</Text>
+              <Text
+                style={[
+                  styles.alertCheck,
+                  { color: colors.successText },
+                ]}
+              >
+                ✓
+              </Text>
               <Text
                 style={[
                   styles.successTitle,
-                  isDarkMode && { color: colors.successText },
+                  { color: colors.successText },
                 ]}
               >
                 Alternative found
@@ -592,7 +652,7 @@ function StayAheadIllustration() {
             <Text
               style={[
                 styles.successSubtext,
-                isDarkMode && { color: colors.successSubtext },
+                { color: colors.successSubtext },
               ]}
             >
               Bus → Train → Bus — Low risk
@@ -632,7 +692,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   slideContainer: {
-    width: SCREEN_WIDTH,
     alignItems: "center",
     paddingHorizontal: 24,
   },
@@ -650,6 +709,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden",
     position: "relative",
+    borderWidth: 1,
+    borderColor: "transparent",
   },
   journeyBg: {
     backgroundColor: "#F0F6FF",
